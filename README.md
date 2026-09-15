@@ -175,6 +175,10 @@ nothing and say so.
 
 ---
 
+Notes toward the tooling feedback the submission asks for are in
+[`docs/FEEDBACK-NOTES.md`](docs/FEEDBACK-NOTES.md), written as things are observed rather than recalled
+at the end — and deliberately silent about tools that have not been used yet.
+
 ## Repository map
 
 ```
