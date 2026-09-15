@@ -88,6 +88,27 @@ async function run(clean = false) {
 const FRAME_CASE = { 37: 'F-017', 41: 'F-017', 58: 'F-093', 96: 'F-093', 104: 'F-093', 131: 'F-131', 168: 'F-131' };
 
 function linkFramesToCases(frames) {
+  // The twin that failed once and never again. It is circled like the others because it really did
+  // fail — but it is marked differently, because nothing was filed from it.
+  (RUN?.unproven || []).forEach((u) => {
+    const index = RUN.failedBranchIndexes.find((i) => !(i in FRAME_CASE));
+    const frame = frames[index];
+    if (!frame) return;
+    frame.classList.add('is-linked', 'is-unproven');
+    frame.setAttribute('role', 'button');
+    frame.setAttribute('tabindex', '0');
+    frame.setAttribute('title', `${u.id} — failed once, refused, not filed`);
+    const openAbstain = () => {
+      const target = $('#abstain');
+      target.hidden = false;
+      target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    };
+    frame.addEventListener('click', openAbstain);
+    frame.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAbstain(); }
+    });
+  });
+
   Object.entries(FRAME_CASE).forEach(([i, id]) => {
     const frame = frames[Number(i)];
     if (!frame) return;

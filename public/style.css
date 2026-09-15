@@ -142,6 +142,11 @@ section:first-child { border-top: 0; }
 }
 @keyframes circle { to { opacity: 1; transform: rotate(-4deg) scale(1); } }
 
+/* Failed once, never again: circled, because it happened — but dashed and amber, because
+   nothing was filed from it. */
+.frame.is-unproven { background: #2a2416; border-color: var(--amber); }
+.frame.is-unproven::after { border-style: dashed; border-color: var(--amber); }
+
 .frame.is-linked { cursor: pointer; }
 .frame.is-linked:focus-visible { outline: 2px solid var(--silver); outline-offset: 3px; }
 
@@ -154,6 +159,7 @@ section:first-child { border-top: 0; }
 .sw--live { background: #2a2416; border-color: var(--amber); }
 .sw--pass { background: #16241c; border-color: #26402f; }
 .sw--fail { background: #2a1512; border-color: var(--grease); }
+.sw--unproven { background: #2a2416; border-color: var(--amber); border-style: dashed; }
 
 /* ── filed failures ──────────────────────────────────────────── */
 .filed h2, .abstain h2, .how h2, .plan h2 { font-size: 30px; }
