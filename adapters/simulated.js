@@ -20,12 +20,16 @@ const FAILING = {
   37: 'F-017', 41: 'F-017',
   58: 'F-093', 96: 'F-093', 104: 'F-093',
   131: 'F-131', 168: 'F-131',
+  // Exactly one twin, exactly once. This is deliberate: the verifier must have something real to
+  // refuse, or the "refused to file" card in the interface would be a story rather than a result.
+  76: 'F-076',
 };
 
 const OUTPUT = {
   'F-017': { code: 1, stdout: '228/500 orders drifted   INVARIANT VIOLATED' },
   'F-093': { code: 1, stdout: 'charges=2   duplicate side effect' },
   'F-131': { code: 1, stdout: 'checkout healthy at t+380s   RECOVERY LAG 290s' },
+  'F-076': { code: 1, stdout: 'GET /search 500   (not seen again on re-run)' },
 };
 
 class SimulatedSandboxes {

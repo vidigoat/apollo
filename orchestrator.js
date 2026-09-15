@@ -76,7 +76,9 @@ async function runPremortem({ adapter = new SimulatedSandboxes(), total = TOTAL_
   const unproven = [];
   for (const [caseId, count] of Object.entries(occurrences)) {
     const verdict = verify(caseId, count);
-    const detail = SEEDED_FAILURES.find((f) => f.id === caseId);
+    // A case with no write-up is one the verifier refused; it still gets reported as unproven,
+    // never silently dropped.
+    const detail = SEEDED_FAILURES.find((f) => f.id === caseId) || { id: caseId, title: 'Unreproducible failure' };
     (verdict.upheld ? filed : unproven).push({ ...detail, occurrences: count, verification: verdict });
   }
 

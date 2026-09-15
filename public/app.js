@@ -199,10 +199,23 @@ function renderFiled() {
 }
 
 function renderAbstain() {
+  // Prefer what the run actually refused. The static copy is only a fallback for a corpus that
+  // happens to produce nothing unproven — the card should never be a story.
+  const real = RUN && RUN.unproven && RUN.unproven[0];
   const a = REPORT.abstained;
-  $('#ab-title').textContent = `${a.id} — ${a.title}`;
-  $('#ab-why').textContent = a.why;
-  $('#ab-verdict').textContent = a.verdict;
+
+  if (real) {
+    $('#ab-title').textContent = `${real.id} — ${real.title}`;
+    $('#ab-why').textContent =
+      `${real.verification.reason} One twin failed; the same scenario was run again and the failure did not ` +
+      `return. The examiner had a theory. The reviewer would not uphold it on a single observation.`;
+    $('#ab-verdict').textContent = "NOT FILED — recorded as unproven, with the reviewer's objection attached.";
+  } else {
+    $('#ab-title').textContent = `${a.id} — ${a.title}`;
+    $('#ab-why').textContent = a.why;
+    $('#ab-verdict').textContent = a.verdict;
+  }
+
   $('#abstain').hidden = false;
 }
 
