@@ -59,6 +59,8 @@ serious rather than invented.
 
 ## Definition of done for any change
 
-- A full run still completes and the filed count still matches the circled frames.
-- The abstain case still appears — the refusal is the trust story.
+- `npm test` passes — the scenario families and the orchestrator, 11 checks.
+- A full run still completes: `GET /api/run` files three cases and refuses one.
+- `GET /api/run?clean=1` still comes back with nothing to say.
+- The abstain case still appears, and is still driven by a real single sighting rather than copy.
 - If you touched the adapter interface, both adapters still satisfy it.
