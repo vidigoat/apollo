@@ -143,11 +143,23 @@ the one that should come back with nothing to say.
 
 ## What is real and what is simulated
 
-`TODO` — state this plainly and early. Reviewers trust a project that draws the line itself.
+Stated plainly, because a project that draws this line itself is easier to trust than one that makes a
+reviewer go looking.
 
-- **Real:** orchestration, wave scheduling, the verify-or-abstain gate, the proof loop, the report, the interface.
-- **Simulated today:** the Sandboxes adapter, against a fixed corpus, so the demo is deterministic.
-- **One file to swap:** [`adapters/`](adapters/) — `simulated.js` out, `contree.js` in.
+| piece | status |
+|---|---|
+| Orchestration — boot, fork in waves, run each twin's probe, collect verdicts | **live** (`orchestrator.js`) |
+| The wave cap, and releasing every branch it forks | **live**, and tested |
+| Verification — a failure is filed only once reproduced more than once | **live** |
+| Scenario families and their injectors | **live** (`scenarios/`) |
+| The interface, driven by a genuine run via `/api/run` | **live** |
+| The sandbox itself | **simulated** (`adapters/simulated.js`) — a fixed corpus, no network, so the demo is deterministic |
+| Scenario authorship by Nemotron, advisories via Tavily | stubbed — `writeScenarios()` returns the final shape, waiting on keys |
+| Proposing and proving a fix by re-forking | described in the report, not yet executed |
+
+The seam is one file. `adapters/simulated.js` out, `adapters/contree.js` in, and the same orchestration
+runs against Nebius Token Factory — the engine cannot tell the difference, which is the point of the
+interface it is written against.
 
 ---
 
