@@ -37,6 +37,7 @@
     </p>
     <div class="controls">
       <button id="run" class="btn-run">Run the pre-mortem</button>
+      <button id="run-clean" class="btn-ghost">Run it on a healthy build</button>
       <output id="status" class="status">idle — 200 scenarios queued</output>
     </div>
   </div>
@@ -47,7 +48,19 @@
     <span><i class="sw sw--live"></i>running</span>
     <span><i class="sw sw--pass"></i>survived</span>
     <span><i class="sw sw--fail"></i>failed, reproduced</span>
+    <span class="hint">circled frames open the failure they produced</span>
   </div>
+</section>
+
+<!-- ─────────────────────────── clean result ─────────────────────────── -->
+<section class="clean" id="clean" hidden>
+  <h2>Nothing to report</h2>
+  <p class="lede">
+    Two hundred twins, the same two hundred scenarios, run against a build with the three faults already
+    fixed. Every one survived, so Cassandra has nothing to say — and says so, rather than filling the
+    space with things that might go wrong.
+  </p>
+  <p class="clean__stat"><b>200</b> ran · <b>0</b> reproduced · <b>0</b> filed</p>
 </section>
 
 <!-- ─────────────────────────── filed failures ─────────────────────────── -->

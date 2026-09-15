@@ -4,6 +4,7 @@ const $ = (s) => document.querySelector(s);
 const sheetEl = $('#sheet');
 const statusEl = $('#status');
 const runBtn = $('#run');
+const cleanBtn = $('#run-clean');
 
 let PLAN = null;
 let REPORT = null;
@@ -28,14 +29,16 @@ async function boot() {
   statusEl.textContent = `idle — ${PLAN.total} scenarios queued`;
 }
 
-async function run() {
+async function run(clean = false) {
   runBtn.disabled = true;
+  cleanBtn.disabled = true;
   const frames = [...sheetEl.children];
   frames.forEach((f) => (f.className = 'frame'));
   $('#filed').hidden = true;
   $('#abstain').hidden = true;
+  $('#clean').hidden = true;
 
-  const failSet = new Set(PLAN.failedBranchIndexes);
+  const failSet = new Set(clean ? [] : PLAN.failedBranchIndexes);
   const step = reduced ? 0 : 1;
 
   for (let w = 0; w < PLAN.waves; w++) {
@@ -53,15 +56,55 @@ async function run() {
     }
   }
 
-  statusEl.textContent =
-    `${PLAN.total} twins run · ${PLAN.failedBranchIndexes.length} branches failed · ` +
-    `${REPORT.filed.length} filed after verification · $${REPORT.cost.usd} · ${REPORT.wall.seconds}s`;
-  $('#slate-filed').textContent = REPORT.filed.length;
+  if (clean) {
+    statusEl.textContent = `${PLAN.total} twins run · 0 reproduced · nothing filed · $0.38`;
+    $('#slate-filed').textContent = '0';
+    $('#clean').hidden = false;
+    $('#clean').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+  } else {
+    statusEl.textContent =
+      `${PLAN.total} twins run · ${PLAN.failedBranchIndexes.length} branches failed · ` +
+      `${REPORT.filed.length} filed after verification · $${REPORT.cost.usd} · ${REPORT.wall.seconds}s`;
+    $('#slate-filed').textContent = REPORT.filed.length;
 
-  renderFiled();
-  renderAbstain();
+    renderFiled();
+    linkFramesToCases(frames);
+    renderAbstain();
+  }
+  cleanBtn.disabled = false;
   runBtn.disabled = false;
   runBtn.textContent = 'Run again';
+}
+
+/* Which circled frame belongs to which filed failure. A frame is evidence, so it should
+   take you to the case it produced. */
+const FRAME_CASE = { 37: 'F-017', 41: 'F-017', 58: 'F-093', 96: 'F-093', 104: 'F-093', 131: 'F-131', 168: 'F-131' };
+
+function linkFramesToCases(frames) {
+  Object.entries(FRAME_CASE).forEach(([i, id]) => {
+    const frame = frames[Number(i)];
+    if (!frame) return;
+    frame.classList.add('is-linked');
+    frame.setAttribute('role', 'button');
+    frame.setAttribute('tabindex', '0');
+    frame.setAttribute('title', `${id} — open this failure`);
+
+    const open = () => {
+      const target = document.querySelector(`[data-case="${id}"]`);
+      if (!target) return;
+      target.classList.add('is-open');
+      target.querySelector('.case__head').setAttribute('aria-expanded', 'true');
+      target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      target.classList.remove('is-flash');
+      void target.offsetWidth;
+      target.classList.add('is-flash');
+    };
+
+    frame.addEventListener('click', open);
+    frame.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+    });
+  });
 }
 
 function colourLog(lines) {
@@ -93,6 +136,7 @@ function renderFiled() {
   REPORT.filed.forEach((f, idx) => {
     const el = document.createElement('article');
     el.className = 'case' + (idx === 0 ? ' is-open' : '');
+    el.dataset.case = f.id;
     el.innerHTML = `
       <div class="case__head" role="button" tabindex="0" aria-expanded="${idx === 0}">
         <span class="case__id">${f.id}</span>
@@ -155,5 +199,6 @@ function renderAbstain() {
   $('#abstain').hidden = false;
 }
 
-runBtn.addEventListener('click', run);
+runBtn.addEventListener('click', () => run(false));
+cleanBtn.addEventListener('click', () => run(true));
 boot();
