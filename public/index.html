@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cassandra — the pre-mortem engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<header class="masthead">
+  <div class="can-label">
+    <span class="can-label__reel">REEL 001</span>
+    <h1>Cassandra</h1>
+    <p class="can-label__sub">Rehearse every way it breaks — before your users do.</p>
+  </div>
+  <dl class="slate">
+    <div><dt>subject</dt><dd>orders-api 1.9.3</dd></div>
+    <div><dt>twins</dt><dd><span id="slate-total">200</span> forks</dd></div>
+    <div><dt>checkpoint</dt><dd id="slate-ckpt">ckpt_healthy_8f2a</dd></div>
+    <div><dt>filed</dt><dd><span id="slate-filed">—</span> proven</dd></div>
+  </dl>
+</header>
+
+<main>
+
+<!-- ─────────────────────────── the contact sheet ─────────────────────────── -->
+<section class="sheet-section" aria-labelledby="sheet-h">
+  <div class="sheet-head">
+    <h2 id="sheet-h">Contact sheet</h2>
+    <p class="lede">
+      Each frame is a living copy of your service, forked from the same healthy checkpoint and broken a
+      different way. Frames that failed get circled. Nothing is reported unless a frame actually failed.
+    </p>
+    <div class="controls">
+      <button id="run" class="btn-run">Run the pre-mortem</button>
+      <output id="status" class="status">idle — 200 scenarios queued</output>
+    </div>
+  </div>
+
+  <div class="sheet" id="sheet" role="img" aria-label="Contact sheet of 200 forked twins"></div>
+
+  <div class="sheet-legend">
+    <span><i class="sw sw--live"></i>running</span>
+    <span><i class="sw sw--pass"></i>survived</span>
+    <span><i class="sw sw--fail"></i>failed, reproduced</span>
+  </div>
+</section>
+
+<!-- ─────────────────────────── filed failures ─────────────────────────── -->
+<section class="filed" id="filed" hidden aria-labelledby="filed-h">
+  <h2 id="filed-h">What will actually break you</h2>
+  <p class="lede">
+    Three failures reproduced. Each was confirmed by a second, independent model family before it was
+    filed, and each fix below stayed green across 500 re-forks.
+  </p>
+  <div id="filed-list" class="filed-list"></div>
+</section>
+
+<!-- ─────────────────────────── abstain ─────────────────────────── -->
+<section class="abstain" id="abstain" hidden>
+  <h2>What it refused to tell you</h2>
+  <div class="abstain-card">
+    <p class="abstain-title" id="ab-title"></p>
+    <p class="abstain-why" id="ab-why"></p>
+    <p class="abstain-verdict" id="ab-verdict"></p>
+  </div>
+  <p class="abstain-note">
+    A tool that reports everything it suspects trains you to ignore it. Cassandra files only what it
+    reproduced, and says plainly when it could not.
+  </p>
+</section>
+
+<!-- ─────────────────────────── how it works ─────────────────────────── -->
+<section class="how">
+  <h2>How it works</h2>
+  <pre class="diagram">
+  your app
+     │
+     ▼
+  ┌──────────────┐   boot once, snapshot the healthy state
+  │  CHECKPOINT  │   ckpt_healthy_8f2a
+  └──────┬───────┘
+         │  ConTree: branch N times from one checkpoint, run in parallel
+     ┌───┴────┬────────┬────────┬─────── … 200 twins, in waves of 50
+     ▼        ▼        ▼        ▼
+  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐     each twin gets ONE adverse scenario,
+  │ dep │  │race │  │ i/o │  │clock│     invented by Nemotron from your code
+  │ bump│  │     │  │ down│  │skew │     + real advisories pulled via Tavily
+  └──┬──┘  └──┬──┘  └──┬──┘  └──┬──┘
+     │        │        │        │        run to a REAL outcome, not a prediction
+     ▼        ▼        ▼        ▼
+   pass     FAIL      FAIL     pass
+              │        │
+              ▼        ▼
+       ┌───────────────────┐   a second Nemotron family must confirm the failure
+       │  INDEPENDENT      │   is real, reproducible, and caused by the scenario
+       │  VERIFIER         │   — otherwise: abstain, do not file
+       └─────────┬─────────┘
+                 ▼
+       ┌───────────────────┐   propose fix → re-fork 500× under the same scenario
+       │  PROVE THE FIX    │   green on all 500, or it is not called fixed
+       └─────────┬─────────┘
+                 ▼
+       ┌───────────────────┐   emit a permanent regression test so this exact
+       │  PIN IT           │   failure can never silently come back
+       └───────────────────┘
+  </pre>
+
+  <div class="why">
+    <h3>Why this couldn't exist until now</h3>
+    <p>
+      Rehearsing failure means running hundreds of realistic, disposable copies of a live system. That was
+      always too expensive, so teams tested a handful of guesses and met the rest in production. Token
+      Factory Sandboxes made forking real execution state cost cents, which turns the whole approach over:
+      instead of predicting what might break, Cassandra breaks it, watches, and brings back proof.
+    </p>
+  </div>
+</section>
+
+<!-- ─────────────────────────── build plan ─────────────────────────── -->
+<section class="plan">
+  <h2>Build plan</h2>
+  <div class="plan-grid">
+    <article>
+      <h3>Running for real</h3>
+      <ul class="tick">
+        <li>Orchestration, wave scheduling, verify-or-abstain gate, proof loop, report</li>
+        <li>Scenario families and their injectors</li>
+        <li>This interface</li>
+      </ul>
+    </article>
+    <article>
+      <h3>Waiting on keys</h3>
+      <ul class="dot">
+        <li>ConTree fork calls — swap <code>SimulatedSandboxes</code> for the real client</li>
+        <li>Nemotron 3 Super / Ultra / Nano via Token Factory</li>
+        <li>Tavily advisory search</li>
+      </ul>
+    </article>
+    <article>
+      <h3>Submission</h3>
+      <ul class="dot">
+        <li>Nebius × NVIDIA Global AI Hackathon</li>
+        <li>Due 30 Oct, 22:30 IST</li>
+        <li>$20,000 grand prize + $3,000 Tavily</li>
+      </ul>
+    </article>
+  </div>
+  <p class="honest">
+    Everything above the fold runs against a simulated Sandboxes adapter with a fixed corpus, so the demo is
+    deterministic. The orchestration around it is the real thing — the adapter is one file.
+  </p>
+</section>
+
+</main>
+
+<footer>
+  <span>Cassandra</span>
+  <span>localhost:8791</span>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>
