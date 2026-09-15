@@ -165,9 +165,13 @@ interface it is written against.
 
 ## For reviewers
 
-`TODO` — a short table mapping each judging criterion to the exact file or screen that answers it, so a
-reviewer never has to hunt. Criteria: technological implementation, design, potential impact, quality of
-the idea.
+[`docs/JUDGING.md`](docs/JUDGING.md) maps each criterion — technological implementation, design,
+potential impact, quality of the idea — to the exact file or screen that answers it, and says plainly
+what is not built yet.
+
+The short version, if you have two minutes: run `npm start`, open localhost:8791, press **Run the
+pre-mortem**, click a circled frame. Then press **Run it on a healthy build** and watch it find
+nothing and say so.
 
 ---
 
