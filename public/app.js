@@ -8,6 +8,7 @@ const cleanBtn = $('#run-clean');
 
 let PLAN = null;
 let REPORT = null;
+let RUN = null; // the last real orchestration result
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -38,7 +39,12 @@ async function run(clean = false) {
   $('#abstain').hidden = true;
   $('#clean').hidden = true;
 
-  const failSet = new Set(clean ? [] : PLAN.failedBranchIndexes);
+  // Ask the server to actually run it: boot a checkpoint, fork it in waves, let the probes decide.
+  // Nothing below is scripted — the circled frames are whichever branches genuinely failed.
+  statusEl.textContent = 'booting the twin…';
+  RUN = await (await fetch(`/api/run${clean ? '?clean=1' : ''}`)).json();
+
+  const failSet = new Set(RUN.failedBranchIndexes);
   const step = reduced ? 0 : 1;
 
   for (let w = 0; w < PLAN.waves; w++) {
@@ -56,17 +62,18 @@ async function run(clean = false) {
     }
   }
 
-  if (clean) {
-    statusEl.textContent = `${PLAN.total} twins run · 0 reproduced · nothing filed · $0.38`;
+  if (RUN.filed.length === 0) {
+    statusEl.textContent = `${RUN.total} twins run · 0 reproduced · nothing filed · ${RUN.wallMs}ms`;
     $('#slate-filed').textContent = '0';
     $('#clean').hidden = false;
     $('#clean').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
   } else {
     statusEl.textContent =
-      `${PLAN.total} twins run · ${PLAN.failedBranchIndexes.length} branches failed · ` +
-      `${REPORT.filed.length} filed after verification · $${REPORT.cost.usd} · ${REPORT.wall.seconds}s`;
-    $('#slate-filed').textContent = REPORT.filed.length;
+      `${RUN.total} twins run · ${RUN.failedBranchIndexes.length} branches failed · ` +
+      `${RUN.filed.length} filed after verification · $${REPORT.cost.usd} · ${RUN.wallMs}ms`;
+    $('#slate-filed').textContent = RUN.filed.length;
 
+    REPORT.filed = RUN.filed;
     renderFiled();
     linkFramesToCases(frames);
     renderAbstain();

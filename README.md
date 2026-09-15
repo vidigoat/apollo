@@ -130,9 +130,14 @@ the video instead.
 ```bash
 git clone <repo>
 cd cassandra
-cp .env.example .env    # add NEBIUS_API_KEY, TAVILY_API_KEY
-node server.js          # http://localhost:8791
+cp .env.example .env    # NEBIUS_API_KEY, TAVILY_API_KEY — not needed for the simulated adapter
+npm start               # http://localhost:8791
+npm test                # scenario families + orchestrator
 ```
+
+`GET /api/run` performs a real run — boots a checkpoint, forks it in waves, and lets each twin's probe
+decide the verdict. `GET /api/run?clean=1` runs the same scenarios against a healthy build, which is
+the one that should come back with nothing to say.
 
 ---
 

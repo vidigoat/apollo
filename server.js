@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const engine = require('./engine');
+const { runPremortem } = require('./orchestrator');
 
 const PORT = 8791;
 const PUBLIC = path.join(__dirname, 'public');
@@ -18,6 +19,16 @@ http
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (url.pathname === '/api/plan') return send(res, 200, JSON.stringify(engine.plan()), 'application/json');
     if (url.pathname === '/api/report') return send(res, 200, JSON.stringify(engine.report()), 'application/json');
+
+    // A genuine run: boots a checkpoint, forks it in waves, and lets the probes decide.
+    if (url.pathname === '/api/run') {
+      const clean = url.searchParams.get('clean') === '1';
+      // A healthy build is the same corpus with nothing left to find.
+      const adapter = clean ? new (require('./adapters/simulated').SimulatedSandboxes)({ failing: {} }) : undefined;
+      return runPremortem(adapter ? { adapter } : {})
+        .then((r) => send(res, 200, JSON.stringify(r), 'application/json'))
+        .catch((e) => send(res, 500, JSON.stringify({ error: e.message }), 'application/json'));
+    }
 
     const rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
     const file = path.join(PUBLIC, rel);
