@@ -69,7 +69,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in about two seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 154 checks across 12 suites
+npm test          # 164 checks across 13 suites
 ```
 
 There is no `npm install` step because there is nothing to install — zero dependencies,
@@ -511,7 +511,7 @@ npm test
 ```
 
 ```
-12 suites · 154 checks
+13 suites · 164 checks
 all green
 ```
 
@@ -530,6 +530,9 @@ What the suites actually protect:
   strategy that ran rather than the one we wanted; a dead machine never becomes a quiet package
 - **`differ/diff.test.js`** — severity is arithmetic; cross-strategy comparison throws
 - **`runPair.test.js`** — one checkpoint for both twins; the wave cap; nothing leaks on failure
+- **`judge/nemotron.test.js`** — the request this client actually sends, which no other suite sees
+  because the rest use stubs: temperature 0, JSON response format, and cost arithmetic that can
+  never produce a `$NaN` on the page
 - **`judge/judge.test.js`** — quiet packages never reach a model; rules can force a look; an
   accusation needs two models; junk replies are discarded; injection cannot escape the fence
 - **`evidence/tavily.test.js`** — a changelog must match the version it excuses; absence is never
