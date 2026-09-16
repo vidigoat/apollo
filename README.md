@@ -163,7 +163,7 @@ WHAT WATCHING BEHAVIOUR CANNOT SEE
 
   money-fmt@2.4.2  — no observable behavioural change at all
   $ node probe/invariant-totals.js
-  228/500 orders drifted by +0.01   INVARIANT VIOLATED
+  5/500 orders drifted by +0.01   INVARIANT VIOLATED
   Rounding mode changed from HALF_EVEN to HALF_UP in a patch release. The test suite passes.
 
 ──────────────────────────────────────────────────────────────────────────────
@@ -188,6 +188,13 @@ uninstalled in a week.
 patch release. Zero observable behavioural difference: it touched nothing new and called nobody.
 Stakeout cannot see it, and says so on the page rather than quietly not mentioning it. A tool that
 only advertises its hits is not a security tool.
+
+That `5/500` is computed by `probe/invariant-totals.js`, which you can run. It is deliberately
+unimpressive — exact half-cents are rare in floating point, so the two rounding modes disagree far
+less often than you would guess. An earlier draft of this README said `228/500`, which was a number
+nobody had computed. In a project whose argument is that a detection you cannot reproduce is a
+magic trick, that was the worst possible place to keep one, so the corpus now calls the probe
+instead of quoting it, and a test fails if the two ever disagree.
 
 ---
 
@@ -438,6 +445,8 @@ scripts/demo.js          the whole argument in a terminal
 scripts/test.js          runs every suite; never lets an early failure hide a later one
 scripts/capture.js       the README's screenshots, from a real run, via headless Chrome
 scripts/real.js          the same pipeline against real packages from the real registry
+scripts/preflight.js     checks the live APIs once keys exist — model ids, reply shapes, sandboxes
+probe/invariant-totals.js  the domain check that catches what behaviour-watching cannot
 ```
 
 Zero runtime dependencies. Zero build step. CommonJS, Node 20+.

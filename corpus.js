@@ -71,10 +71,19 @@ const BEHAVIOUR = {
  * caught by the invariant probe, not by the transcript, and it is here to make the point that
  * behaviour-watching is not sufficient on its own and the project does not pretend otherwise.
  */
+const { run: invariantRun } = require('./probe/invariant-totals');
+
+// Computed, not written down. The first version of this file quoted "228/500", which was a number
+// somebody made up — and in a project whose argument is that a detection you cannot reproduce is a
+// magic trick, that was the worst possible place to put one. Running it gives 5/500: exact
+// half-cents are rare in floating point, so HALF_EVEN and HALF_UP disagree less often than you
+// would guess. Five orders in five hundred, silently wrong, with the test suite green.
+const invariant = invariantRun();
+
 const INVARIANT_FAILURES = {
   'money-fmt@2.4.2': {
     probe: 'node probe/invariant-totals.js',
-    output: '228/500 orders drifted by +0.01   INVARIANT VIOLATED',
+    output: `${invariant.drifted}/${invariant.total} orders drifted by +0.01   INVARIANT VIOLATED`,
     note: 'Rounding mode changed from HALF_EVEN to HALF_UP in a patch release. The test suite passes.',
   },
 };

@@ -78,6 +78,14 @@ const planted = (id) => CHANGED.find((c) => c.planted === id);
     const admission = INVARIANT_FAILURES[`${p.pkg}@${p.to}`];
     assert.ok(admission, 'the miss must be documented somewhere the interface can show it');
     assert.ok(admission.probe && admission.output && admission.note);
+
+    // The number in that output must come from actually running the probe, never from prose.
+    const { run } = require('./probe/invariant-totals');
+    const r = run();
+    assert.ok(r.drifted > 0, 'the probe no longer demonstrates the defect it is here to demonstrate');
+    assert.match(admission.output, new RegExp(`^${r.drifted}/${r.total}\\b`),
+      'the admission quotes a number the probe does not produce');
+    assert.equal(run().drifted, r.drifted, 'the probe is not deterministic, so nobody can check it');
   });
 
   await it('PLANTED-3 is the hard negative: real new behaviour, honestly documented', () => {
