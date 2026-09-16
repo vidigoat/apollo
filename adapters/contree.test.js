@@ -128,7 +128,7 @@ const adapter = (o = {}) => new ConTreeSandboxes({ apiKey: 'test-key', image: 'n
     const a = adapter(s);
     const [b] = await a.fork('ckpt_1', 1);
     const r = await a.run(b, 'node -e 0', { step: 'import' });
-    assert.deepEqual(r.observed, { net: [], dns: [], fs: [], env: [], proc: [] });
+    assert.deepEqual(r.observed, { net: [], dns: [], fs: [], env: [], proc: [], exec: [] });
   });
 
   await it('translates whatever the sandbox calls things into the schema', async () => {

@@ -8,6 +8,7 @@ const $ = (s) => document.querySelector(s);
 const stripEl = $('#strip');
 const statusEl = $('#status');
 const runBtn = $('#run');
+const strategySel = $('#strategy');
 const realBtn = $('#run-real');
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -37,6 +38,14 @@ async function boot() {
       'packages instead, start the server with STAKEOUT_ALLOW_LOCAL=1 — read adapters/local.js first.';
   }
   note.hidden = false;
+
+  // Reading the same corpus three ways is the clearest thing this project can show, so it is a
+  // control rather than a paragraph. Ordered weakest first, because that is the order in which the
+  // findings appear.
+  strategySel.innerHTML = (TREE.strategies || ['fsdiff', 'proxy', 'nodert', 'ebpf'])
+    .map((s) => `<option value="${s}">${s}</option>`).join('');
+  strategySel.value = 'ebpf';
+  $('#watched').hidden = false;
 
   stripEl.innerHTML = '';
   for (let i = 0; i < TREE.moved * 2; i++) {
@@ -232,7 +241,7 @@ async function run() {
   statusEl.textContent = 'booting one healthy machine…';
   await sleep(500);
 
-  const result = await (await fetch('/api/run')).json();
+  const result = await (await fetch(`/api/run?strategy=${encodeURIComponent(strategySel.value)}`)).json();
 
   // One mark per twin, lighting up as the waves go.
   for (let i = 0; i < marks.length; i++) {
@@ -273,6 +282,9 @@ function blindPanel(p) {
 }
 
 runBtn.addEventListener('click', run);
+// Changing who watched re-runs immediately: the point is watching the wall change, not reading
+// about the fact that it would.
+strategySel.addEventListener('change', () => { if (!runBtn.disabled) run(); });
 realBtn.addEventListener('click', runReal);
 
 /**

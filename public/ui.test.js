@@ -127,7 +127,9 @@ async function renderedPage(treeExtra = {}) {
     window: { matchMedia: () => ({ matches: true }) }, // reduced motion: no sleeping in tests
     setTimeout,
     console,
-    fetch: async (url) => ({ json: async () => routes[url] }),
+    // Route on the path, ignoring the query string — the page asks for /api/run?strategy=… now,
+    // and a stub that only matches exact URLs tests the stub rather than the page.
+    fetch: async (url) => ({ json: async () => routes[String(url).split('?')[0]] }),
   };
   vm.runInNewContext(APP, ctx, { filename: 'app.js' });
 

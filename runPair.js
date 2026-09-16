@@ -40,10 +40,12 @@ async function runPair({ adapter, checkpoint, pkg, from, to, strategy }) {
  * hundred, and running the other eleven hundred and sixty would be theatre. The full-tree sweep is
  * a separate, deliberate thing — a cold start, not the everyday product.
  */
-async function runAll({ adapter, image = 'ghcr.io/demo/orders-api:1.9.3', changed, wave = WAVE, onPair = () => {} }) {
+async function runAll({ adapter, image = 'ghcr.io/demo/orders-api:1.9.3', changed, wave = WAVE, onPair = () => {}, strategy: want } = {}) {
   const startedAt = Date.now();
   const checkpoint = await adapter.boot(image);
-  const strategy = bestStrategy(adapter);
+  // An explicit strategy is how the interface shows the same corpus read three ways. Falling back
+  // to the strongest the adapter admits to is what a real run does.
+  const strategy = want || bestStrategy(adapter);
 
   const results = [];
   const perWave = Math.max(1, Math.floor(wave / 2)); // each package needs two branches

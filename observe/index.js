@@ -64,7 +64,7 @@ function commandsFor({ pkg, version, strategy }) {
  */
 async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdiff' }) {
   const steps = commandsFor({ pkg, version, strategy });
-  const raw = { net: [], dns: [], fs: [], env: [], proc: [] };
+  const raw = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
   const timing = {};
   const result = {};
 
@@ -84,7 +84,7 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
 
     // An adapter that can observe returns structured behaviour alongside the exit code.
     if (out.observed) {
-      ['net', 'dns', 'fs', 'env', 'proc'].forEach((field) => {
+      ['net', 'dns', 'fs', 'env', 'proc', 'exec'].forEach((field) => {
         if (out.observed[field]) raw[field].push(...out.observed[field]);
       });
     }

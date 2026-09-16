@@ -10,6 +10,7 @@ const { lookUp } = require('./evidence/tavily');
 const { observePackage, bestStrategy } = require('./observe');
 const { diff } = require('./differ/diff');
 const { CHANGED, TOTAL, PUBLIC_RECORD, INVARIANT_FAILURES } = require('./corpus');
+const { STRATEGIES } = require('./transcript/schema');
 
 const PORT = Number(process.env.PORT) || 8791;
 const PUBLIC = path.join(__dirname, 'public');
@@ -120,6 +121,7 @@ http
           moved: CHANGED.length,
           unchanged: TOTAL - CHANGED.length,
           realAllowed: realAllowed(),
+          strategies: STRATEGIES,
           realJobs: REAL_JOBS.map(([pkg, from, to]) => ({ pkg, from, to })),
           packages: CHANGED.map(({ pkg, from, to }) => ({ pkg, from, to })),
         }),
@@ -130,7 +132,12 @@ http
     /* A real run: fork the same checkpoint twice per package, install and import both, diff. */
     if (url.pathname === '/api/run') {
       const adapter = new SimulatedSandboxes();
-      return runAll({ adapter, changed: CHANGED })
+      // ?strategy= lets the page read the same corpus three ways. Anything it does not recognise
+      // falls through to the strongest the adapter supports, rather than failing the run.
+      const want = STRATEGIES.includes(url.searchParams.get('strategy'))
+        ? url.searchParams.get('strategy')
+        : undefined;
+      return runAll({ adapter, changed: CHANGED, strategy: want })
         .then(async (r) => {
           const pairs = r.results.map((p) => ({
             pkg: p.pkg,

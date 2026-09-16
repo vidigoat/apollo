@@ -171,3 +171,6 @@ footer { max-width: 1120px; margin: 0 auto; padding: 22px 24px; border-top: 1px 
 .realnote { font-family: var(--mono); font-size: 12px; color: var(--dim); margin-top: 14px; max-width: 80ch; }
 .lede--small { font-size: 13px; font-family: var(--mono); line-height: 1.7; margin-top: 10px; }
 .lede--small code { color: var(--silver); }
+.watched { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.watched select { font-family: var(--mono); font-size: 12px; color: var(--silver); background: var(--panel);
+  border: 1px solid var(--rule); border-radius: 4px; padding: 3px 6px; margin-left: 4px; }

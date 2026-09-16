@@ -149,6 +149,9 @@ function normaliseTrace(t) {
     fs: (t.files || []).map((f) => ({ op: f.op || 'write', path: f.path })),
     env: t.env_read || [],
     proc: (t.processes || []).map((p) => ({ argv: p.argv || [p.cmd] })),
+    // A kernel tracer cannot produce this; a runtime probe can. Mapped anyway so the shape is the
+    // same whatever produced it — CAN_SEE decides whether it survives.
+    exec: (t.exec || []).map((e) => ({ how: e.how, sample: e.sample })),
   };
 }
 

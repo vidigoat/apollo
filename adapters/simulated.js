@@ -70,6 +70,10 @@ class SimulatedSandboxes {
         fs: b.fs || [],
         env: b.env || [],
         proc: b.proc || [],
+        // Reported unconditionally. Whether it survives is transcript()'s decision, based on what
+        // the strategy says it can see — an adapter that filtered here would be making that call
+        // twice, in two places, which is how they drift apart.
+        exec: b.exec || [],
       },
     };
   }
