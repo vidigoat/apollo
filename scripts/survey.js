@@ -56,7 +56,11 @@ const C = process.stdout.isTTY
   : { dim: '', red: '', amber: '', green: '', bold: '', off: '' };
 const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
 
-(async () => {
+module.exports = { PAIRS };
+
+if (require.main === module) main();
+
+async function main() {
   let machines;
   try {
     machines = new LocalMachines({ timeoutMs: 120_000 });
@@ -140,4 +144,4 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
   console.log(`  ${C.dim}Watched with "${strategy}" — Node's API surface only. A native addon goes underneath it.${C.off}\n`);
 
   machines.cleanup();
-})();
+}

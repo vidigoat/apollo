@@ -115,6 +115,11 @@ keep installed and one you mute in a week.
 
 Run it twice and the second costs nothing — `Cache: 20 free, 0 learned`.
 
+The same twenty are behind the page's **Run against the real registry** button, so the wall you
+scroll can be the actual registry rather than a fixture. A row answered from cache says so, and
+shows no side-by-side columns — the diff survives, the two full recordings it came from do not, and
+two empty panels would read as "nothing happened".
+
 ### Point it at your own repository
 
 This is the one that matters. It reads your actual `package-lock.json`, compares it to the same file

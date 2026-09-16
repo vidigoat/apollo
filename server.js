@@ -42,11 +42,7 @@ const publicRecordFor = (pkg, version) => lookUp(pkg, version, { recorded: PUBLI
  * environment variable at BOTH versions and is correctly reported as unchanged, and one that
  * actually changed. The middle case is the one that shows we are watching rather than guessing.
  */
-const REAL_JOBS = [
-  ['left-pad', '1.2.0', '1.3.0'],   // observably silent at both versions
-  ['debug', '4.3.4', '4.4.0'],      // genuinely active — reads DEBUG — and unchanged
-  ['picocolors', '1.0.0', '1.1.1'], // the one that actually changed
-];
+const REAL_JOBS = require('./scripts/survey').PAIRS;
 
 const realAllowed = () => process.env.STAKEOUT_ALLOW_LOCAL === '1';
 
@@ -58,7 +54,11 @@ const realAllowed = () => process.env.STAKEOUT_ALLOW_LOCAL === '1';
  */
 async function realRun() {
   const { LocalMachines } = require('./adapters/local');
-  const machines = new LocalMachines();
+  const { BehaviourCache } = require('./cache');
+  const machines = new LocalMachines({ timeoutMs: 120_000 });
+  // The same cache the CLI uses. The first live run is slow; every one after it is not, which is
+  // what makes twenty real packages a thing you can put behind a button at all.
+  const cache = new BehaviourCache();
   const strategy = bestStrategy(machines);
   const checkpoint = await machines.boot();
   const pairs = [];
@@ -68,32 +68,46 @@ async function realRun() {
     for (const [pkg, from, to] of REAL_JOBS) {
       const [a, b] = await machines.fork(checkpoint, 2);
       try {
-        const [before, after] = await Promise.all([
+        const job = { pkg, from, to, strategy };
+        const known = cache.get(job);
+        const [before, after] = known ? [null, null] : await Promise.all([
           observePackage({ adapter: machines, branch: a, pkg, version: from, strategy }),
           observePackage({ adapter: machines, branch: b, pkg, version: to, strategy }),
         ]);
-        const d = diff(before, after);
+        const d = known || diff(before, after);
+        if (!known) cache.put(job, d);
         pairs.push({
-          pkg, from, to, diff: d, before, after,
+          pkg, from, to, diff: d,
+          // A cached answer has the diff and not the two transcripts it came from. The wall reads
+          // the diff; the columns need the transcripts, so a cached row says so rather than
+          // rendering two empty panels that would read as "nothing happened".
+          before, after, fromCache: Boolean(known),
           record: d.changed ? await publicRecordFor(pkg, to) : null,
           invariant: null,
         });
+      } catch (e) {
+        // A package that will not install here is a fact about that package, not the end of a run.
+        pairs.push({ pkg, from, to, failed: true, reason: String(e.message).slice(0, 160) });
       } finally {
         await machines.discard(a);
         await machines.discard(b);
       }
     }
 
-    const judged = await judgeRun(pairs);
-    pairs.forEach((p, i) => { p.judgement = judged.results[i]; });
+    // A package that would not install is a fact about that package, not part of the wall. Counted
+    // separately and never folded into "behaved identically", which would be a lie by omission.
+    const runnable = pairs.filter((p) => !p.failed);
+    const judged = await judgeRun(runnable);
+    runnable.forEach((p, i) => { p.judgement = judged.results[i]; });
 
     return {
       live: true,
+      failed: pairs.filter((p) => p.failed).length,
       tree: { total: REAL_JOBS.length, moved: REAL_JOBS.length },
       strategy,
-      canSee: pairs[0]?.diff.canSee ?? null,
-      twinsForked: REAL_JOBS.length * 2,
-      quiet: pairs.filter((p) => !p.diff.changed).length,
+      canSee: runnable[0]?.diff.canSee ?? null,
+      twinsForked: runnable.length * 2,
+      quiet: runnable.filter((p) => !p.diff.changed).length,
       wallMs: Date.now() - started,
       sandboxUsd: 0,
       modelUsd: judged.costUsd,
@@ -101,7 +115,7 @@ async function realRun() {
       accused: judged.accused,
       simulatedJudgement: judged.simulated,
       costUsd: judged.costUsd,
-      pairs,
+      pairs: runnable,
     };
   } finally {
     machines.cleanup();

@@ -30,8 +30,10 @@ async function boot() {
   if (TREE.realAllowed) {
     realBtn.hidden = false;
     note.textContent =
-      `Live runs are on. "Run against the real registry" installs ${TREE.realJobs.map((j) => j.pkg).join(', ')} ` +
-      'from npm and runs them here — really, not from a fixture. It takes about a minute.';
+      `Live runs are on. "Run against the real registry" installs ${TREE.realJobs.length} genuinely ` +
+      `popular packages from npm — ${TREE.realJobs.slice(0, 5).map((j) => j.pkg).join(', ')} and ${TREE.realJobs.length - 5} more — ` +
+      'and runs both versions of each here. None of them is chosen for being interesting; that is ' +
+      'what makes the result a baseline. Slow the first time, free after that.';
   } else {
     note.textContent =
       'This run is a fixture, so it is deterministic and anyone can check it. To watch real ' +
@@ -95,11 +97,13 @@ function row(p) {
         ${quiet ? '<span class="pair__verdict">no behavioural change</span>'
                 : `<span class="pair__verdict is-changed">${esc(p.judgement?.verdict?.meaning || d.reasons[0] || 'changed')}</span>`}
       </header>
-      ${quiet ? '' : `
+      ${quiet ? '' : p.before && p.after ? `
       <div class="pair__cols">
         <div class="col"><span class="col__v">${esc(p.from)}</span><ul>${lines(p.before, d, 'before')}</ul></div>
         <div class="col"><span class="col__v">${esc(p.to)}</span><ul>${lines(p.after, d, 'after')}</ul></div>
-      </div>`}
+      </div>` : `
+      <p class="pair__cached">Answered from cache — the difference is above; the two full
+      recordings it came from were not kept. <code>--no-cache</code> re-runs it.</p>`}
     </article>`;
 }
 
