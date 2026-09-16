@@ -67,7 +67,7 @@ cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
 STAKEOUT_ALLOW_LOCAL=1 npm start   # ...with a second button that runs against the real registry
-npm test          # 143 checks across 11 suites
+npm test          # 153 checks across 12 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
@@ -469,7 +469,7 @@ npm test
 ```
 
 ```
-11 suites · 143 checks
+12 suites · 153 checks
 all green
 ```
 
@@ -494,6 +494,9 @@ What the suites actually protect:
   stated as proof; an outage must not look like "no record found"
 - **`adapters/contree.test.js`** — the two adapters stay interchangeable; missing ≠ empty; a failed
   delete still frees the slot
+- **`adapters/local.test.js`** — the one that really executes code: it refuses to run unless
+  somebody meant it, twins are genuinely separate directories so neither can contaminate the other,
+  nothing survives cleanup, and a lost report never reads as a quiet package
 - **`corpus.test.js`** — holds the README's own arithmetic: 1,214 packages, 14 moved, 10 quiet,
   exactly one alarming, and each plant still doing the job it was planted for
 - **`server.test.js`** — the API contract over real HTTP. The list of fields it requires is
