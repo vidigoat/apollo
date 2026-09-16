@@ -93,18 +93,25 @@
      │        │
      ▼        ▼
   TRANSCRIPT  TRANSCRIPT     net · dns · files · env · processes
-     └────┬───┘
+     └────┬───┘              normalised: temp dirs, pids and hashes removed, so two
+          │                  identical runs of the same version compare equal
           ▼
     BEHAVIOURAL DIFF      pure arithmetic — no model involved, reproducible by anyone
+          │               severity: alarming / notable / minor / none
+          ▼
+    NEMOTRON NANO 30B     triage — worth a bigger model's time?
+          │               runs on the 14 that moved, never on the 1,200 that did not
+          ▼
+    NEMOTRON ULTRA 550B   meaning — what does this change appear to be DOING?
           │
           ▼
-    is the change meaningful?        ← Nemotron reads the diff, not the package
+    TAVILY                does the open web know? a changelog, an advisory, or nothing
           │
           ▼
-    does the open web know about it? ← Tavily: a changelog, an advisory, or nothing
-          │
-          ▼
-    a second model family must agree before anything is called malicious
+    NEMOTRON SUPER 120B   veto — a second model must agree before anything is accused
+
+    7 model calls for a 1,214-package tree. Running the 550B on everything is the
+    obvious design and the one that makes a tool like this unaffordable.
   </pre>
 
   <div class="why">
