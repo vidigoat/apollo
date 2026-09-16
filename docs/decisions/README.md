@@ -15,6 +15,7 @@ Each record says what was decided, what it cost, and what would have to be true 
 | 005 | [A missing observation is not an empty one](005-missing-is-not-empty.md) | Accepted |
 | 006 | [Triage before judgement](006-triage-before-judgement.md) | Accepted |
 | 007 | [The corpus contains packages we should miss](007-plants-that-punish-paranoia.md) | Accepted |
+| 008 | [At least one observer has to actually run](008-one-observer-must-be-real.md) | Accepted |
 
 Numbering is chronological. 001 and 002 were written before the project pivoted from chaos
 rehearsal to behavioural diffing; both survived it, and each carries a note saying how.

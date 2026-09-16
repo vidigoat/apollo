@@ -515,6 +515,7 @@ what would have to be true to change it. Written for whoever picks this up next,
 | [005](docs/decisions/005-missing-is-not-empty.md) | A missing observation is not an empty one | the most important invariant here |
 | [006](docs/decisions/006-triage-before-judgement.md) | Triage before judgement | |
 | [007](docs/decisions/007-plants-that-punish-paranoia.md) | The corpus contains packages we should miss | |
+| [008](docs/decisions/008-one-observer-must-be-real.md) | At least one observer has to actually run | why `nodert` exists |
 
 ---
 

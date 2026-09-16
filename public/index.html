@@ -137,14 +137,19 @@
         <li>Pair running: two twins per package from one checkpoint, waves, every branch released</li>
         <li>Severity by rules, not by judgement — a model can explain a finding, never escalate one</li>
         <li>Triage economics: 7 model calls for a 1,214-package tree</li>
+        <li>One observer that has actually watched something: <code>nodert</code> installs real
+            packages from the real registry and reports what they reached for. It found that
+            picocolors 1.1.1 reads NO_COLOR, CI and FORCE_COLOR, which 1.0.0 did not.</li>
         <li>This interface, driven by an actual run</li>
       </ul>
     </article>
     <article>
       <h3>Simulated today</h3>
       <ul class="dot">
-        <li>The sandbox itself — <code>adapters/simulated.js</code>, a fixed corpus, no network</li>
-        <li>Observation: the strategies are written, none has watched a real kernel yet</li>
+        <li>This page's run — <code>adapters/simulated.js</code>, a fixed corpus, no network, so
+            the demo is deterministic and anyone can check it</li>
+        <li>The kernel-level strategies (eBPF, egress proxy): written, none has watched a real
+            kernel yet</li>
         <li>Nemotron and Tavily fall back to a local stand-in with no key set — and every
             simulated answer says so, right where it appears</li>
       </ul>
