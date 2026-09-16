@@ -14,7 +14,8 @@
     "demo": "node scripts/demo.js",
     "capture": "node scripts/capture.js",
     "real": "node scripts/real.js",
-    "preflight": "node scripts/preflight.js"
+    "preflight": "node scripts/preflight.js",
+    "lockfile": "node scripts/lockfile-run.js"
   },
   "keywords": [
     "supply-chain",

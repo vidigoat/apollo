@@ -83,7 +83,47 @@ STAKEOUT_ALLOW_LOCAL=1 npm start   # adds a button that runs against the real np
 npm run preflight                  # check the live APIs, once keys exist
 ```
 
-And then, on real packages from the real registry, on your own machine:
+### Point it at your own repository
+
+This is the one that matters. It reads your actual `package-lock.json`, compares it to the same file
+at an earlier commit, and runs the packages that really moved:
+
+```bash
+npm run lockfile -- --against HEAD~20 --dry-run          # what moved. needs nothing at all.
+STAKEOUT_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/my-project
+```
+
+```
+  STAKEOUT  /tmp/demo
+
+  HEAD → working tree   (lockfile v3 → v3)
+  3 packages · 3 moved · 0 added · 0 removed · 0 untouched
+
+  Watching with "nodert". Two twins per package, from one prepared directory.
+
+  left-pad                    1.2.0 → 1.3.0  none
+  ms                          2.1.2 → 2.1.3  none
+  picocolors                  1.0.0 → 1.1.1  minor
+      reads 3 environment variables it did not read before
+      nemotron: Reads CI, FORCE_COLOR, NO_COLOR, which the previous version never read.
+      web: Nothing on the open web mentions this version.
+      call: triage saw nothing that needs a human tonight
+
+  2 of 3 behaved identically at both versions.
+  Accused: nothing          Machines left open: 0 ✓
+```
+
+Start with `--dry-run`. It needs no credentials, no network and no permission, and it answers the
+question worth asking first — *how much of this upgrade is even worth looking at* — usually with a
+much smaller number than anyone expects. Run against this repository's own history it reported `29
+packages · 0 moved · 4 added`, and noticed that `supports-color` was present at two different
+versions at once.
+
+All three lockfile formats are read (npm 5–6 nested, npm 7–8 doubled, npm 9+ paths). A format it
+does not recognise **throws**, because the alternative is reporting an empty tree, and there is no
+more dangerous answer here than "nothing to check".
+
+And then, on a fixed list of real packages from the real registry:
 
 ```bash
 STAKEOUT_ALLOW_LOCAL=1 npm run real                      # a short default list
@@ -482,6 +522,7 @@ scripts/demo.js          the whole argument in a terminal
 scripts/test.js          runs every suite; never lets an early failure hide a later one
 scripts/capture.js       the README's screenshots, from a real run, via headless Chrome
 scripts/real.js          the same pipeline against real packages from the real registry
+scripts/lockfile-run.js  the same pipeline against YOUR repository, across two commits
 scripts/preflight.js     checks the live APIs once keys exist — model ids, reply shapes, sandboxes
 probe/invariant-totals.js  the domain check that catches what behaviour-watching cannot
 ```
