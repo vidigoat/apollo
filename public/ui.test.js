@@ -77,6 +77,9 @@ function domFromHtml() {
         return els.get(id);
       },
       createElement: () => makeEl(null),
+      getElementById: (id) => els.get(id) || null,
+      querySelectorAll: () => [],
+      body: makeEl('body'),
     },
     get: (id) => els.get(id),
   };
@@ -112,6 +115,8 @@ async function renderedPage() {
 
   const ctx = {
     document: dom.document,
+    location: { search: '' }, // the capture hook is off unless a test turns it on
+    URLSearchParams,
     window: { matchMedia: () => ({ matches: true }) }, // reduced motion: no sleeping in tests
     setTimeout,
     console,

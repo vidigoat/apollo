@@ -32,7 +32,7 @@
 <main>
 
 <!-- ─────────────────────── the run ─────────────────────── -->
-<section class="run-section">
+<section class="run-section" id="run-section">
   <h2>The run</h2>
   <p class="lede">
     Two twins per package, forked from one healthy checkpoint at the same instant — so anything
@@ -74,10 +74,10 @@
 </section>
 
 <!-- ─────────────────────── how ─────────────────────── -->
-<section class="how">
+<section class="how" id="how-section">
   <h2>How it works</h2>
   <pre class="diagram">
-  your lockfile                    40 of 1,214 packages actually moved
+  your lockfile                    14 of 1,214 packages actually moved
         │                          the rest are not re-run — that would be theatre
         ▼
   ┌─────────────┐   boot once, snapshot a healthy machine
@@ -128,7 +128,8 @@
       <ul class="tick">
         <li>The transcript schema, normalisation, and the behavioural differ — pure and tested</li>
         <li>Pair running: two twins per package from one checkpoint, waves, every branch released</li>
-        <li>Severity by rules, not by judgement</li>
+        <li>Severity by rules, not by judgement — a model can explain a finding, never escalate one</li>
+        <li>Triage economics: 7 model calls for a 1,214-package tree</li>
         <li>This interface, driven by an actual run</li>
       </ul>
     </article>
@@ -137,7 +138,8 @@
       <ul class="dot">
         <li>The sandbox itself — <code>adapters/simulated.js</code>, a fixed corpus, no network</li>
         <li>Observation: the strategies are written, none has watched a real kernel yet</li>
-        <li>Nemotron judgement and Tavily evidence — the shapes are fixed, the calls are not wired</li>
+        <li>Nemotron and Tavily fall back to a local stand-in with no key set — and every
+            simulated answer says so, right where it appears</li>
       </ul>
     </article>
     <article>

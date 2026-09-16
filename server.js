@@ -9,7 +9,7 @@ const { judgeRun } = require('./judge');
 const { lookUp } = require('./evidence/tavily');
 const { CHANGED, TOTAL, PUBLIC_RECORD, INVARIANT_FAILURES } = require('./corpus');
 
-const PORT = 8791;
+const PORT = Number(process.env.PORT) || 8791;
 const PUBLIC = path.join(__dirname, 'public');
 const TYPES = {
   '.html': 'text/html; charset=utf-8',

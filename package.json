@@ -11,7 +11,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node scripts/test.js",
-    "demo": "node scripts/demo.js"
+    "demo": "node scripts/demo.js",
+    "capture": "node scripts/capture.js"
   },
   "keywords": [
     "supply-chain",

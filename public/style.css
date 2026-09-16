@@ -21,6 +21,10 @@
 
 * { box-sizing: border-box; }
 
+/* The attribute must win. Any element given `display` by a class here — .masthead and footer are
+   both flex — would otherwise ignore `hidden` entirely, because a class beats the UA stylesheet. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0; background: var(--ink); color: var(--silver);
   font-family: var(--body); font-size: 16px; line-height: 1.6;

@@ -209,4 +209,27 @@ async function run() {
 }
 
 runBtn.addEventListener('click', run);
-boot();
+
+/**
+ * Capture hook, for generating the README's screenshots from a real run rather than drawing them.
+ *
+ *   ?run=1              start a run without a click
+ *   &only=<section-id>  show just that section, at the top of the window
+ *
+ * `only` rather than scrolling to an anchor: a scroll position depends on fonts, wrapping and when
+ * the run finished, so it framed two of the five sections at empty space. Hiding the rest is
+ * deterministic. It changes nothing a visitor sees — see docs/images/README.md.
+ */
+boot().then(() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get('run') !== '1') return;
+  return run().then(() => {
+    const only = q.get('only');
+    if (only) {
+      document.querySelectorAll('.masthead, main > section, footer').forEach((el) => { el.hidden = true; });
+      const target = document.getElementById(only);
+      if (target) target.hidden = false;
+    }
+    document.body.dataset.ready = '1'; // what the capture script waits for
+  });
+});

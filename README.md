@@ -65,6 +65,7 @@ cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
 npm test          # 72 checks across 6 suites
+npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
 Node 20+. There is no `npm install` step because there is nothing to install — zero dependencies,
@@ -144,9 +145,9 @@ only advertises its hits is not a security tool.
 
 ## Screenshots
 
-> **Status: placeholders.** Every image below has a capture recipe in
-> [`docs/images/README.md`](docs/images/README.md). They are committed as the real run exists and is
-> reproducible — `npm start` produces exactly these screens today.
+Generated from a real run, not drawn: `npm run capture` starts the server, drives headless Chrome
+through the same page a visitor sees, and writes these five files. No number in them has been
+retouched, because none of them has been touched at all.
 
 | | |
 |---|---|
@@ -347,6 +348,7 @@ server.js                zero-dependency dev server; /api/tree and /api/run
 public/                  the behavioural diff wall
 scripts/demo.js          the whole argument in a terminal
 scripts/test.js          runs every suite; never lets an early failure hide a later one
+scripts/capture.js       the README's screenshots, from a real run, via headless Chrome
 ```
 
 Zero runtime dependencies. Zero build step. CommonJS, Node 20+.
