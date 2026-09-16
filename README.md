@@ -756,7 +756,8 @@ what would have to be true to change it. Written for whoever picks this up next,
 ## Submission
 
 **Nebius × NVIDIA Global AI Hackathon** — deadline 30 October 2026, 22:30 IST.
-The recording script is [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md).
+The recording script is [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md); the submission text is
+[`docs/SUBMISSION.md`](docs/SUBMISSION.md).
 
 - **Nebius Token Factory Sandboxes / ConTree** is not decoration here. Forking a live checkpoint is
   the only reason both twins can start from a provably identical state, and that identity is the
