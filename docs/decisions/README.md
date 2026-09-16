@@ -20,3 +20,8 @@ Each record says what was decided, what it cost, and what would have to be true 
 
 Numbering is chronological. 001 and 002 were written before the project pivoted from chaos
 rehearsal to behavioural diffing; both survived it, and each carries a note saying how.
+
+## A convention, not a decision
+
+Never cite a check count in prose. It goes stale within the hour and reads as carelessness to
+exactly the reviewer it was written for. Say "every suite" and let `npm test` print the number.

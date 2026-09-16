@@ -69,7 +69,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in about two seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 182 checks across 14 suites
+npm test          # every suite, reported together
 ```
 
 There is no `npm install` step because there is nothing to install — zero dependencies,
@@ -539,9 +539,13 @@ npm test
 ```
 
 ```
-14 suites · 182 checks
+14 suites · 183 checks
 all green
 ```
+
+That number is printed by the runner, not typed here — it was `182` in this paragraph an hour after
+it stopped being true, which is the argument for not quoting counts in prose at all. Everywhere else
+in this README says "every suite".
 
 The runner deliberately does not chain suites with `&&`. That stops at the first failure and
 reports a smaller number of checks than the project has, which reads like success.
