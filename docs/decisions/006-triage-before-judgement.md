@@ -19,7 +19,7 @@ product. Most of a dependency tree is boring, and paying frontier prices to be t
 that shows up on someone's invoice as a reason to cancel.
 
 The measured result on the reference corpus: **7 model calls for a 1,214-package tree.** Ten of the
-fourteen packages that moved never reach a model at all, and the 1,200 that did not move are never
+packages that moved never reach a model at all, and the 1,200 that did not move are never
 re-run in the first place — re-running what did not change is theatre.
 
 ## The subtlety

@@ -4,7 +4,7 @@
 
 ## The decision
 
-Three packages are planted in the corpus. Only one of them is something Stakeout should catch.
+Four packages are planted in the corpus, and only two of them are things Stakeout should catch.
 
 - **PLANTED-1** `express-fileupload@2.1.1` — credential read plus exfiltration at import time.
   *Should be caught.*
@@ -19,7 +19,8 @@ A benchmark whose plants are all true positives can be won by flagging everythin
 alerts on every diff scores perfectly on it, and is useless in practice — the failure mode of most
 supply-chain scanners is not blindness, it is noise.
 
-Two of the three plants exist to make that cheat cost something.
+Two of the four plants exist to make that cheat cost something. (A fourth was added later —
+`flat-config`, whose answer depends on which strategy watched it. See decision 009.)
 
 PLANTED-3 is behaviourally *identical in kind* to PLANTED-1: new destination, contacted at import.
 The only thing separating them is the public record. Any approach that flags on behaviour alone

@@ -222,7 +222,7 @@ retouched, because none of them has been touched at all.
 ## How it works
 
 ```
-  your lockfile                    14 of 1,214 packages actually moved
+  your lockfile                    15 of 1,214 packages actually moved
         │                          the rest are not re-run — that would be theatre
         ▼
   ┌─────────────┐   boot once, warm the npm cache, snapshot a healthy machine
@@ -404,7 +404,7 @@ that resembles a clean result.
 
 ## The corpus, including the planted packages
 
-`corpus.js` is a 1,214-package tree in which 14 versions moved. Three of the fourteen are planted,
+`corpus.js` is a 1,214-package tree in which 15 versions moved. Four of the fifteen are planted,
 and each is planted to test a different failure mode:
 
 **PLANTED-1 — `express-fileupload@2.1.1`, credential theft.**
@@ -450,7 +450,8 @@ now physically **cannot contain a channel its own strategy declared it could not
 to be advisory, and the data and the caveat could disagree.
 
 A benchmark whose positives are the only thing it is scored on is a benchmark you can win by being
-paranoid. Two of the three plants exist to punish exactly that.
+paranoid. Two of the four plants exist to punish exactly that, and a third is caught only by a
+strategy that can see code being built.
 
 ---
 
