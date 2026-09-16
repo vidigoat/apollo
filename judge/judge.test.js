@@ -200,5 +200,28 @@ const VERDICT = (o = {}) => ({
     assert.ok(r.verdict, 'the fallback should still produce a usable verdict');
   });
 
+  await it('an accusation names what was actually found', async () => {
+    // This used to be the fixed phrase "credential exfiltration" — true of the only package that
+    // could reach the branch at the time, and a false accusation the moment a second kind of
+    // finding could. Accusing a maintainer of the wrong thing is worse than accusing them vaguely.
+    const t = (raw) => transcript({ pkg: 'p', version: '2', strategy: 'nodert', raw });
+    const base = transcript({ pkg: 'p', version: '1', strategy: 'nodert', raw: {} });
+    const s2 = stub({ default: VERDICT() });
+
+    const creds = await judgeOne(diff(base, t({
+      env: ['AWS_SECRET_ACCESS_KEY'], net: [{ host: 'a.example', port: 443, proto: 'tcp' }],
+    })), null, s2);
+    assert.match(creds.reason, /credential exfiltration/);
+
+    const payload = await judgeOne(diff(base, t({
+      exec: [{ how: 'Function', sample: 'return fetch(x)' }],
+      net: [{ host: 'a.example', port: 443, proto: 'tcp' }],
+    })), null, s2);
+    assert.equal(payload.accused, true);
+    assert.doesNotMatch(payload.reason, /credential/,
+      'nothing read a credential here — saying so would be a false accusation');
+    assert.match(payload.reason, /not in the source/);
+  });
+
   console.log(`\n${passed} passed`);
 })();

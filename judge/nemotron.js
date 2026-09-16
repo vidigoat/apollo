@@ -89,6 +89,7 @@ async function complete({ model, system, user, maxTokens = 400, temperature = 0 
  * before the account is funded, and so a demo without a network still runs.
  */
 function simulate({ model, user }) {
+  const builds = /NOW BUILDS CODE\s+(\S+)/.exec(user);
   const reads = /NOW READS ENV\s+(\S+)/.exec(user);
   const conn = /NOW CONNECTS TO\s+(\S+)/.exec(user);
   const spawns = /NOW SPAWNS\s+(.+)/.exec(user);
@@ -97,7 +98,13 @@ function simulate({ model, user }) {
   let meaning = 'No difference in observable behaviour.';
   let worthWaking = false;
 
-  if (reads && conn) {
+  if (builds && conn) {
+    meaning = `Builds executable code at runtime (${builds[1].replace(/:$/, '')}) and then contacts ${conn[1]} — the payload was not in the source.`;
+    worthWaking = true;
+  } else if (builds) {
+    meaning = `Turns a string into executable code at runtime (${builds[1].replace(/:$/, '')}), which the previous version never did.`;
+    worthWaking = true;
+  } else if (reads && conn) {
     meaning = `Reads ${reads[1]} and then opens a connection to ${conn[1]} — the shape of moving a secret off the machine.`;
     worthWaking = true;
   } else if (spawns) {

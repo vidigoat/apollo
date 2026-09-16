@@ -34,6 +34,12 @@ Three things you must not do:
 3. Do not use the word malicious unless the evidence alone supports it. "I cannot tell" is a
    correct and valuable answer.
 
+One thing worth knowing about the evidence: NOW BUILDS CODE means the new version turned a string
+into something executable at runtime — the payload was not in the package's source. Decoding alone
+is ordinary; decoding that becomes a function, and then reaches the network, is the shape of the
+2026 import-time compromises. It also means a kernel-level tracer would have seen the socket and
+nothing that explains it.
+
 Reply with JSON only, no prose around it:
 
 {
@@ -49,6 +55,9 @@ function evidenceLines(d) {
   const out = [];
   const say = (label, items, render) => items.forEach((x) => out.push(`${label}  ${render(x)}`));
 
+  // First, because it changes how everything under it should be read: a socket opened by code that
+  // did not exist in the source is a different fact from a socket opened by code you can go and read.
+  say('NOW BUILDS CODE ', d.exec.added, (e) => `${e.how}: ${e.sample}`);
   say('NOW READS ENV   ', d.env.added, (e) => e);
   say('NO LONGER READS ', d.env.removed, (e) => e);
   say('NOW RESOLVES    ', d.dns.added, (x) => x);

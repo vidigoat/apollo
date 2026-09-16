@@ -105,7 +105,11 @@ async function judgeOne(d, record, deps = {}) {
     second,
     accused,
     reason: accused
-      ? 'two models, independently, read this as credential exfiltration'
+      // Say what was actually found. This used to be the fixed phrase "credential exfiltration",
+      // which was true of the only package that could reach this branch at the time — and became a
+      // false accusation the moment a second kind of finding could. Accusing a maintainer of the
+      // wrong thing is worse than accusing them vaguely.
+      ? `two models, independently, read this as ${accusationFor(d)}`
       : second
         ? 'the second model did not agree — this needs a human, not an alert'
         : verdict.explained
@@ -114,6 +118,21 @@ async function judgeOne(d, record, deps = {}) {
     spend,
     costUsd: total(spend),
   };
+}
+
+/** What, precisely, two models agreed about. Derived from the evidence, never assumed. */
+function accusationFor(d) {
+  const credential = d.env.added.length > 0;
+  const built = d.exec.added.some((e) => /^(Function|vm\.)/.test(e.how));
+  const outbound = d.net.added.length > 0;
+  const spawned = d.proc.added.length > 0;
+
+  if (credential && outbound) return 'credential exfiltration';
+  if (built && outbound) return 'a payload that was not in the source, reaching the network';
+  if (built) return 'code assembled at runtime that the source does not contain';
+  if (spawned && outbound) return 'a spawned process reaching the network';
+  if (credential) return 'a credential read that the previous version did not make';
+  return 'behaviour that needs a person to look at it';
 }
 
 const total = (spend) => Number(spend.reduce((s, x) => s + (x.costUsd || 0), 0).toFixed(6));
