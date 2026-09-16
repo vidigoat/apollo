@@ -34,3 +34,12 @@ is visible on screen.
 Nothing in the interface may be authored prose standing in for a result. If a panel claims the system
 did something, the system has to have done it in the run being displayed. When that is inconvenient,
 change the run — never the copy.
+
+## After the pivot (003)
+
+Still holds, and now has two enforcers instead of one.
+
+`node-fetch-retry` (PLANTED-3) is a real behavioural change the tool declines to accuse, because
+the maintainer documented it. `money-fmt` (PLANTED-2) is a real defect the tool cannot see at all,
+and the interface has a section admitting it. Neither is narrated: both come out of the same run
+that produces the catch. See 007.

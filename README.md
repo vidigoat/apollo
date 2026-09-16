@@ -28,6 +28,7 @@ experience, because the silence is what gives the other four their weight.
 - [Architecture](#architecture)
 - [Running against real infrastructure](#running-against-real-infrastructure)
 - [Tests](#tests)
+- [Decisions](#decisions)
 - [Submission](#submission)
 
 ---
@@ -64,7 +65,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 100 checks across 8 suites
+npm test          # 112 checks across 9 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
@@ -392,7 +393,7 @@ npm test
 ```
 
 ```
-8 suites · 100 checks
+9 suites · 112 checks
 all green
 ```
 
@@ -414,9 +415,28 @@ What the suites actually protect:
   stated as proof; an outage must not look like "no record found"
 - **`adapters/contree.test.js`** — the two adapters stay interchangeable; missing ≠ empty; a failed
   delete still frees the slot
+- **`corpus.test.js`** — holds the README's own arithmetic: 1,214 packages, 14 moved, 10 quiet,
+  exactly one alarming, and each plant still doing the job it was planted for
 - **`public/ui.test.js`** — drives the real `app.js` against the real corpus with a stub DOM:
   every id exists, every class is styled, the quiet majority renders as quiet, and a simulated
   verdict always says so
+
+---
+
+## Decisions
+
+Why the project is shaped the way it is — the arguments that were had, what each answer cost, and
+what would have to be true to change it. Written for whoever picks this up next, including an agent.
+
+| | | |
+|---|---|---|
+| [001](docs/decisions/001-only-report-what-reproduced.md) | Only report what actually reproduced | predates the pivot, still holds |
+| [002](docs/decisions/002-the-demo-must-refuse-something-real.md) | The demo must refuse something real | predates the pivot, still holds |
+| [003](docs/decisions/003-behavioural-diffing-not-chaos.md) | Behavioural diffing, not chaos rehearsal | reverses the original direction |
+| [004](docs/decisions/004-rules-escalate-models-explain.md) | Rules escalate, models explain | |
+| [005](docs/decisions/005-missing-is-not-empty.md) | A missing observation is not an empty one | the most important invariant here |
+| [006](docs/decisions/006-triage-before-judgement.md) | Triage before judgement | |
+| [007](docs/decisions/007-plants-that-punish-paranoia.md) | The corpus contains packages we should miss | |
 
 ---
 

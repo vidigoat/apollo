@@ -33,3 +33,9 @@ maybe. The report says how many scenarios ran, so silence is legible rather than
 
 Evidence that users want the maybes — that they would rather triage a long list themselves. Nothing so
 far suggests that; the complaint about existing tooling is always noise, never missing breadth.
+
+## After the pivot (003)
+
+Still holds, and is now the whole product rather than one principle inside it. "Only report what
+actually reproduced" became "only report what we installed, imported and watched". The difference
+between a scanner's list of maybes and a transcript of what happened is the entire argument.
