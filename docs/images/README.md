@@ -21,8 +21,10 @@ Capture at **1440×900**, in a window with no browser chrome if possible (Chrome
 
 Two rules for these captures:
 
-1. **Never retouch a number.** If the screenshot says 28 twins and $0.41, the demo has to say 28
-   twins and $0.41. The README already promises the run is reproducible.
+1. **Never retouch a number.** Whatever a screenshot says, the command has to say — the README
+   promises the run is reproducible, and a doctored frame makes that a lie. This very sentence used
+   to quote "28 twins and $0.41" as its example, months after the run started reporting 30 and
+   $0.44, which is exactly the failure it was warning about.
 2. **Keep the quiet rows in frame.** Cropping to only the findings inverts the argument — the
    project's claim is that almost nothing changed, and a screenshot of nothing but findings says
    the opposite.
