@@ -15,14 +15,21 @@
  * reporting "no network activity" from such a run would be a lie by omission.
  */
 
-const STRATEGIES = ['fsdiff', 'proxy', 'ebpf'];
+const STRATEGIES = ['fsdiff', 'proxy', 'nodert', 'ebpf'];
 
 /** What each strategy is actually capable of seeing. Used to caveat every diff it produces. */
 const CAN_SEE = {
   fsdiff: { fs: true, net: false, dns: false, env: false, proc: false },
   proxy: { fs: true, net: true, dns: true, env: false, proc: false },
+  // Node runtime instrumentation reaches every channel, but only through Node's own API surface —
+  // a native addon or a captured reference goes underneath it. It is the only strategy that runs
+  // without special infrastructure, and the only one that has actually run. See observe/probe.js.
+  nodert: { fs: true, net: true, dns: true, env: true, proc: true },
   ebpf: { fs: true, net: true, dns: true, env: true, proc: true },
 };
+
+/** Ranked by how hard each is to evade. The engine asks for the best one an adapter admits to. */
+const STRENGTH = ['ebpf', 'proxy', 'nodert', 'fsdiff'];
 
 const empty = () => ({ net: [], dns: [], fs: [], env: [], proc: [] });
 
@@ -97,4 +104,4 @@ function isQuiet(t) {
   return t.net.length === 0 && t.dns.length === 0 && t.env.length === 0 && t.proc.length === 0 && t.fs.length === 0;
 }
 
-module.exports = { transcript, isQuiet, normalisePath, STRATEGIES, CAN_SEE, empty };
+module.exports = { transcript, isQuiet, normalisePath, STRATEGIES, STRENGTH, CAN_SEE, empty };

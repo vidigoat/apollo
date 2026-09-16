@@ -108,6 +108,11 @@ function simulate({ model, user }) {
     worthWaking = unknown;
   } else if (/NOW TOUCHES FILE/.test(user)) {
     meaning = 'Writes to a path the previous version left alone.';
+  } else if (reads) {
+    // Env-only. Usually a feature flag — NO_COLOR, CI, FORCE_COLOR — and worth naming rather than
+    // reporting as "no difference", which is what this said before picocolors@1.1.1 proved it wrong.
+    const all = [...user.matchAll(/NOW READS ENV\s+(\S+)/g)].map((m) => m[1]);
+    meaning = `Reads ${all.join(', ')}, which the previous version never read.`;
   }
 
   return Promise.resolve({

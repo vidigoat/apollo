@@ -15,7 +15,8 @@
  * npm 12 disabled install scripts by default, the interesting moment moved to `require`.
  */
 
-const { transcript } = require('../transcript/schema');
+const { transcript, STRENGTH } = require('../transcript/schema');
+const { runnerSource } = require('./probe');
 
 /** What we do inside the twin, in order. */
 function commandsFor({ pkg, version, strategy }) {
@@ -37,6 +38,13 @@ function commandsFor({ pkg, version, strategy }) {
         { label: 'install', cmd: install },
         { label: 'import', cmd: importIt },
         { label: 'collect', cmd: 'cat /var/log/egress.log' },
+      ];
+    case 'nodert':
+      // No infrastructure at all: the probe is loaded before the package and reports on stdout.
+      // The adapter writes the runner; here we only say what the steps are.
+      return [
+        { label: 'install', cmd: install },
+        { label: 'import', cmd: 'node __stakeout_runner.js' },
       ];
     case 'fsdiff':
     default:
@@ -88,7 +96,7 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
 /** The best strategy this adapter admits to supporting. */
 function bestStrategy(adapter) {
   const supported = adapter.supports || ['fsdiff'];
-  return ['ebpf', 'proxy', 'fsdiff'].find((s) => supported.includes(s)) || 'fsdiff';
+  return STRENGTH.find((s) => supported.includes(s)) || 'fsdiff';
 }
 
 module.exports = { observePackage, commandsFor, bestStrategy };

@@ -54,6 +54,13 @@ function severityOf(d) {
 
   if (d.fs.added.length || d.fs.removed.length) reasons.push('writes somewhere it did not write before');
   if (d.proc.added.length) reasons.push('spawns a process it did not spawn before');
+  // Reading a non-sensitive variable is usually a feature flag — picocolors@1.1.1 picks up NO_COLOR
+  // and FORCE_COLOR, which is exactly what you would want it to do. It is still a change, and a
+  // change the tool cannot name is worse than no finding: the interface would show "changed" with
+  // an empty explanation and no way to judge it.
+  const envCount = d.env.added.length;
+  if (envCount) reasons.push(`reads ${envCount} environment variable${envCount === 1 ? '' : 's'} it did not read before`);
+  if (d.dns.added.length) reasons.push('resolves a name it did not resolve before');
   if (reasons.length) return { level: 'minor', reasons };
 
   return { level: 'none', reasons: [] };

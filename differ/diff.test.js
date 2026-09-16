@@ -153,4 +153,40 @@ it('a first install has nothing to compare against', () => {
   );
 });
 
+it('a change the rules cannot name is a bug, not a finding', () => {
+  // Found by running against the real registry: picocolors@1.1.1 reads NO_COLOR and FORCE_COLOR,
+  // which 1.0.0 did not. The diff said `changed: true`, severity `none`, reasons `[]` — the page
+  // would have rendered "changed" with nothing after it. Anything that changed must be sayable.
+  const cases = [
+    { env: ['NO_COLOR', 'FORCE_COLOR'] },
+    { dns: ['a.example'] },
+    { fs: [{ op: 'write', path: '/app/x' }] },
+    { proc: [{ argv: ['node', 'x.js'] }] },
+    { net: [{ host: 'a.example', port: 443, proto: 'tcp' }] },
+  ];
+  for (const raw of cases) {
+    const d = diff(
+      transcript({ pkg: 'p', version: '1', strategy: 'nodert', raw: {} }),
+      transcript({ pkg: 'p', version: '2', strategy: 'nodert', raw })
+    );
+    assert.equal(d.changed, true, `${JSON.stringify(raw)} was not seen as a change at all`);
+    assert.ok(d.reasons.length > 0, `${JSON.stringify(raw)} changed something the rules cannot name`);
+    assert.match(summarise(d), /\S$/, 'the one-line summary trails off into nothing');
+  }
+});
+
+it('a feature flag is minor, and a credential is not', () => {
+  const minor = diff(
+    transcript({ pkg: 'p', version: '1', strategy: 'nodert', raw: {} }),
+    transcript({ pkg: 'p', version: '2', strategy: 'nodert', raw: { env: ['NO_COLOR'] } })
+  );
+  assert.equal(minor.severity, 'minor', 'reading NO_COLOR must not wake anybody');
+
+  const bad = diff(
+    transcript({ pkg: 'p', version: '1', strategy: 'nodert', raw: {} }),
+    transcript({ pkg: 'p', version: '2', strategy: 'nodert', raw: { env: ['AWS_SECRET_ACCESS_KEY'] } })
+  );
+  assert.equal(bad.severity, 'alarming');
+});
+
 console.log(`\n${passed} passed`);

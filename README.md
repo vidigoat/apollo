@@ -66,9 +66,39 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 125 checks across 10 suites
+npm test          # 127 checks across 10 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
+
+And then, on real packages from the real registry, on your own machine:
+
+```bash
+STAKEOUT_ALLOW_LOCAL=1 npm run real                      # a short default list
+STAKEOUT_ALLOW_LOCAL=1 npm run real -- chalk 5.3.0 5.4.1
+```
+
+```
+STAKEOUT — real packages, real registry, this machine
+Watching with "nodert". Node's API surface only — a native addon goes underneath it.
+
+  left-pad 1.2.0 → 1.3.0  none
+      1.2.0   nothing observed
+      1.3.0   nothing observed
+
+  picocolors 1.0.0 → 1.1.1  minor
+      picocolors 1.0.0 → 1.1.1: reads 3 environment variables it did not read before
+      1.0.0   nothing observed
+      1.1.1   env CI, env FORCE_COLOR, env NO_COLOR
+      nemotron: Reads CI, FORCE_COLOR, NO_COLOR, which the previous version never read.
+      call: triage saw nothing that needs a human tonight
+
+Machines left open: 0 ✓
+```
+
+That is a true, checkable fact about a package with forty million weekly downloads, produced by
+installing both versions and running them. `STAKEOUT_ALLOW_LOCAL=1` is required because these
+packages execute as *you*, with your network and your files — read `adapters/local.js` first. It is
+for proving the pipeline on packages you already trust, never for triaging one you suspect.
 
 Node 20+. There is no `npm install` step because there is nothing to install — zero dependencies,
 deliberately. A supply-chain tool that arrives with a dependency tree is telling on itself.
@@ -294,8 +324,9 @@ Stated plainly, because this is the section a judge should be able to trust.
 | The judgement pipeline: triage → judge → veto, cost accounting, injection fencing, reply validation | **Real**, tested with stub models |
 | The public-record layer: version matching, advisory ranking, source filtering | **Real**, tested |
 | The web interface, driven by an actual run | **Real**, tested against a stub DOM |
+| `adapters/local.js` + `observe/probe.js` — the `nodert` strategy | **Real and running.** Installs real packages from the real registry and watches them through Node's own API surface. This is how the picocolors finding above was produced. |
 | `adapters/contree.js` — Nebius Sandboxes | **Written and tested against a stub**; has never talked to a live sandbox. Endpoint shapes go through one `api()` helper so there is exactly one place to correct. |
-| The observation strategies (eBPF / proxy / fsdiff) | **Written**; none has watched a real kernel yet |
+| The kernel-level strategies (eBPF / proxy / fsdiff) | **Written**; none has watched a real kernel yet |
 | Nemotron calls | **Falls back to a local deterministic judge** when `NEBIUS_API_KEY` is absent. Every simulated verdict is labelled `simulated: true` in the payload and "simulated, no key set" on the page. |
 | Tavily calls | Same pattern — recorded corpus when `TAVILY_API_KEY` is absent, always labelled |
 | The 1,214-package tree | **A fixture.** Three packages are deliberately planted, and they are labelled as planted below, in `corpus.js`, and on the page itself. |
@@ -328,8 +359,11 @@ page under *What watching behaviour cannot see*. Rounding changed from `HALF_EVE
 228 of 500 order totals drifted by a cent, no syscall differed, the test suite passed.
 
 **A package that notices it is being watched.** Sandbox detection is an arms race this project does
-not claim to have won. Each twin is its own microVM rather than a container, which raises the cost
-of detection, but it does not eliminate it.
+not claim to have won. Under Sandboxes each twin is its own microVM rather than a container, which
+raises the cost of detection without eliminating it. The `nodert` strategy is weaker still: it
+watches Node's API surface, so a native addon, a WebAssembly module, or code that captured a
+reference to `net.Socket` before the probe loaded is invisible to it. That is why `canSee` and the
+strategy name travel with every transcript.
 
 A fifth, less interesting one: a brand-new dependency has no previous version, so there is nothing
 to diff. That case needs a different tool, and `diff()` refuses rather than returning something
@@ -370,8 +404,12 @@ differ/diff.js           the whole claim as one pure function. Refuses to compar
                          made by different strategies — that difference would be in how we
                          watched, not in what the package did.
 observe/index.js         install-then-import command construction; strategy selection
+observe/probe.js         Node runtime instrumentation — patches net, dns, env, proc and fs
+                         before require() runs. The only strategy that needs no infrastructure,
+                         and the only one that has actually run.
 adapters/simulated.js    the offline sandbox; deterministic, no network
 adapters/contree.js      Nebius Token Factory Sandboxes; same five methods
+adapters/local.js        real npm installs in throwaway directories on this machine
 runPair.js               fork 2 from ONE checkpoint, run in waves, release in a finally
 judge/prompt.js          untrusted-evidence fencing; the verdict schema
 judge/nemotron.js        Nano / Ultra / Super via Nebius; local fallback with no key
@@ -383,6 +421,7 @@ public/                  the behavioural diff wall
 scripts/demo.js          the whole argument in a terminal
 scripts/test.js          runs every suite; never lets an early failure hide a later one
 scripts/capture.js       the README's screenshots, from a real run, via headless Chrome
+scripts/real.js          the same pipeline against real packages from the real registry
 ```
 
 Zero runtime dependencies. Zero build step. CommonJS, Node 20+.
@@ -426,7 +465,7 @@ npm test
 ```
 
 ```
-10 suites · 125 checks
+10 suites · 127 checks
 all green
 ```
 
