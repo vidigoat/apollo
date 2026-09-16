@@ -6,6 +6,7 @@ const path = require('path');
 const { SimulatedSandboxes } = require('./adapters/simulated');
 const { runAll } = require('./runPair');
 const { judgeRun } = require('./judge');
+const { lookUp } = require('./evidence/tavily');
 const { CHANGED, TOTAL, PUBLIC_RECORD, INVARIANT_FAILURES } = require('./corpus');
 
 const PORT = 8791;
@@ -26,20 +27,11 @@ const send = (res, code, body, type) => {
 /**
  * What the open web says about a finding.
  *
- * In the real system this is a Tavily search: a changelog, an advisory, a maintainer's post — or
- * nothing at all, which is itself the evidence. Recorded here so the demo is deterministic, behind
- * the same shape the live call will return.
+ * Live, this is a Tavily search. Without a TAVILY_API_KEY it answers from the recorded corpus
+ * instead, and labels every answer `simulated: true` so a stand-in can never be mistaken for a
+ * finding. Same shape either way — see evidence/tavily.js.
  */
-function publicRecordFor(pkg, version) {
-  return (
-    PUBLIC_RECORD[`${pkg}@${version}`] || {
-      changelog: null,
-      advisory: null,
-      mentions: 0,
-      verdict: 'Nothing found. Absence of a record is not proof of anything on its own.',
-    }
-  );
-}
+const publicRecordFor = (pkg, version) => lookUp(pkg, version, { recorded: PUBLIC_RECORD });
 
 http
   .createServer((req, res) => {
@@ -71,8 +63,14 @@ http
             diff: p.diff,
             before: p.before,
             after: p.after,
-            record: p.diff.changed ? publicRecordFor(p.pkg, p.to) : null,
+            record: null, // filled in below; a lookup is a network call
             invariant: INVARIANT_FAILURES[`${p.pkg}@${p.to}`] || null,
+          }));
+
+          // The public record, but only for packages that actually did something different.
+          // Searching for 1,200 versions that behaved identically would be a bill for nothing.
+          await Promise.all(pairs.map(async (p) => {
+            if (p.diff.changed) p.record = await publicRecordFor(p.pkg, p.to);
           }));
 
           // Nemotron reads the diffs — never the packages. Quiet ones never reach a model at all.
