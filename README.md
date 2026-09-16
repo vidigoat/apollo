@@ -261,17 +261,17 @@ STAKEOUT  Your lockfile pins versions. This pins behaviour.
 ──────────────────────────────────────────────────────────────────────────────
 
   Dependency tree      1,214 packages
-  Versions moved       14
-  The other 1,200 are not re-run. Re-running what did not change is theatre.
+  Versions moved       15
+  The other 1,199 are not re-run. Re-running what did not change is theatre.
 
-  Forked               28 twins from one checkpoint (ckpt_healthy_8f2a)
+  Forked               30 twins from one checkpoint (ckpt_healthy_8f2a)
   Watched with         ebpf
   Machines left open   0  ✓
 
 ──────────────────────────────────────────────────────────────────────────────
 WHAT CHANGED
 
-  10 of 14 packages behaved identically at both versions.
+  10 of 15 packages behaved identically at both versions.
   That silence is the finding. It is what gives the rest their weight.
 
   NOTABLE   node-fetch-retry 2.1.4 → 2.2.0
@@ -709,6 +709,11 @@ What the suites actually protect:
   strategy that ran rather than the one we wanted; a dead machine never becomes a quiet package
 - **`differ/diff.test.js`** — severity is arithmetic; cross-strategy comparison throws
 - **`runPair.test.js`** — one checkpoint for both twins; the wave cap; nothing leaks on failure
+- **`readme.test.js`** — that this file is still true. It runs the commands, scrapes the figures out
+  of their real output, and fails if the README stopped containing them; it also fails if the README
+  promises an `npm run` that does not exist, links to a file that is not there, or quietly drops the
+  limitation it would be most tempting to soften. Four numbers here have gone stale in prose while
+  staying correct in code, including — with some irony — the example inside the rule forbidding it
 - **`architecture.test.js`** — that the guarantee above covers the code that *ships*. Only
   `runPair` may fork a pair or release a branch; only the differ may assign a severity. For a while
   the survey, the lockfile runner, the real-registry script and the server's live route had each
