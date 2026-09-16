@@ -88,7 +88,7 @@ it('sees a file being written', () => {
 it('a package that does nothing produces an empty report, not a missing one', () => {
   const r = watch('quiet', `module.exports = 1;`);
   assert.ok(r, 'a quiet package must still report');
-  assert.deepEqual(r, { net: [], dns: [], fs: [], env: [], proc: [] });
+  assert.deepEqual(r, { net: [], dns: [], fs: [], env: [], proc: [], exec: [] });
 });
 
 it('a package that throws on import still reports what it did first', () => {
@@ -111,8 +111,8 @@ it('a forged report is refused rather than believed', () => {
     fs.writeFileSync(out, junk);
     assert.equal(readReport(out), null, `accepted a forged report: ${junk}`);
   }
-  fs.writeFileSync(out, JSON.stringify({ net: [], dns: [], fs: [], env: [], proc: [], extra: 'ignored' }));
-  assert.deepEqual(readReport(out), { net: [], dns: [], fs: [], env: [], proc: [] },
+  fs.writeFileSync(out, JSON.stringify({ net: [], dns: [], fs: [], env: [], proc: [], exec: [], extra: 'ignored' }));
+  assert.deepEqual(readReport(out), { net: [], dns: [], fs: [], env: [], proc: [], exec: [] },
     'a valid report with extra keys should be accepted, with the extras dropped');
 });
 
@@ -136,6 +136,37 @@ it('watching a package does not change what it computes', () => {
   assert.ok(r.env.includes('HOME'));
   assert.equal(fs.readFileSync(path.join(ROOT, 'proof.txt'), 'utf8'), String(process.env.HOME || 'none'),
     'the proxy changed the value the package received');
+});
+
+it('sees a string turn into a function', () => {
+  // The one thing this strategy catches that a kernel tracer cannot. Nothing below is a syscall.
+  const r = watch('built', `
+    const payload = Buffer.from("${'Y29uc29sZS5sb2coMSk7'.repeat(12)}", "base64").toString();
+    const f = new Function("x", "return x + 1");
+    f(1);
+  `);
+  assert.ok(r, 'no report');
+  const hows = r.exec.map((e) => e.how);
+  assert.ok(hows.includes('Function'), `expected a Function entry, got ${JSON.stringify(hows)}`);
+  assert.ok(hows.includes('base64-decode'), 'the decode that fed it was not recorded');
+});
+
+it('sees code run through vm', () => {
+  const r = watch('vm', `require('node:vm').runInNewContext('1 + 1');`);
+  assert.ok(r.exec.some((e) => e.how === 'vm.runInNewContext'), JSON.stringify(r.exec));
+});
+
+it('records an excerpt, never the whole payload', () => {
+  const r = watch('huge', `new Function("x", "/*" + "A".repeat(500000) + "*/ return x");`);
+  const entry = r.exec.find((e) => e.how === 'Function');
+  assert.ok(entry, 'missed it entirely');
+  assert.ok(entry.sample.length <= 160,
+    `kept ${entry.sample.length} characters — a megabyte of obfuscated source is volume, not evidence`);
+});
+
+it('an ordinary package builds no code at all', () => {
+  const r = watch('plain', `module.exports = { add: (a, b) => a + b };`);
+  assert.deepEqual(r.exec, [], 'something ordinary was recorded as building code');
 });
 
 console.log(`\n${passed} passed`);

@@ -19,19 +19,24 @@ const STRATEGIES = ['fsdiff', 'proxy', 'nodert', 'ebpf'];
 
 /** What each strategy is actually capable of seeing. Used to caveat every diff it produces. */
 const CAN_SEE = {
-  fsdiff: { fs: true, net: false, dns: false, env: false, proc: false },
-  proxy: { fs: true, net: true, dns: true, env: false, proc: false },
+  fsdiff: { fs: true, net: false, dns: false, env: false, proc: false, exec: false },
+  proxy: { fs: true, net: true, dns: true, env: false, proc: false, exec: false },
   // Node runtime instrumentation reaches every channel, but only through Node's own API surface —
   // a native addon or a captured reference goes underneath it. It is the only strategy that runs
   // without special infrastructure, and the only one that has actually run. See observe/probe.js.
-  nodert: { fs: true, net: true, dns: true, env: true, proc: true },
-  ebpf: { fs: true, net: true, dns: true, env: true, proc: true },
+  //
+  // `exec` is the one thing it sees that eBPF cannot. Code built at runtime and handed to Function
+  // or vm never becomes a syscall — it is a string turning into behaviour inside one process, and a
+  // kernel tracer watches the process, not the thought. Being weaker almost everywhere and stronger
+  // in exactly one place is why the strategy is worth keeping rather than replacing.
+  nodert: { fs: true, net: true, dns: true, env: true, proc: true, exec: true },
+  ebpf: { fs: true, net: true, dns: true, env: true, proc: true, exec: false },
 };
 
 /** Ranked by how hard each is to evade. The engine asks for the best one an adapter admits to. */
 const STRENGTH = ['ebpf', 'proxy', 'nodert', 'fsdiff'];
 
-const empty = () => ({ net: [], dns: [], fs: [], env: [], proc: [] });
+const empty = () => ({ net: [], dns: [], fs: [], env: [], proc: [], exec: [] });
 
 /* ── normalisation: strip what varies but does not mean anything ──────────── */
 
@@ -94,6 +99,13 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
     ),
     env: [...new Set(r.env.map(String))].sort(),
     proc: uniqueSorted(r.proc.map(normaliseProc), (p) => p.argv.join(' ')),
+    // Code that did not exist until the program was running. `how` is the mechanism (Function, vm,
+    // require of something undeclared); `sample` is a short, normalised excerpt — never the whole
+    // payload, which can be megabytes and is not evidence, only volume.
+    exec: uniqueSorted(
+      r.exec.map((e) => ({ how: String(e.how || 'unknown'), sample: normalisePath(String(e.sample || '').slice(0, 160)) })),
+      (e) => `${e.how} ${e.sample}`
+    ),
     timing: { installMs: timing.installMs ?? null, importMs: timing.importMs ?? null },
     result: { installExit: result.installExit ?? null, importExit: result.importExit ?? null, threw: result.threw ?? null },
   };
@@ -101,7 +113,8 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
 
 /** Did this package do anything observable at all? */
 function isQuiet(t) {
-  return t.net.length === 0 && t.dns.length === 0 && t.env.length === 0 && t.proc.length === 0 && t.fs.length === 0;
+  return t.net.length === 0 && t.dns.length === 0 && t.env.length === 0 && t.proc.length === 0 &&
+    t.fs.length === 0 && t.exec.length === 0;
 }
 
 module.exports = { transcript, isQuiet, normalisePath, STRATEGIES, STRENGTH, CAN_SEE, empty };

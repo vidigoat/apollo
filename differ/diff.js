@@ -18,6 +18,7 @@ const keyFor = {
   fs: (f) => `${f.op} ${f.path}`,
   env: (e) => e,
   proc: (p) => p.argv.join(' '),
+  exec: (e) => `${e.how} ${e.sample}`,
 };
 
 function setDiff(before, after, key) {
@@ -36,16 +37,36 @@ const SENSITIVE_ENV = /(TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|AWS_|GITHUB_|NPM_|S
 const NOTABLE_PROC = /\b(curl|wget|sh|bash|zsh|powershell|nc|python|node\s+-e|eval)\b/i;
 
 /**
+ * Turning a string into a function.
+ *
+ * Decoding on its own is ordinary — half the registry decodes something. What matters is a string
+ * becoming executable, so only the mechanisms that actually run code count as alarming; a base64
+ * decode is recorded and left at minor unless it feeds one of these.
+ */
+const BUILDS_CODE = /^(Function|vm\.)/;
+
+/**
  * Severity, decided by rules rather than by judgement.
  *
  * Kept deliberately coarse. The point is to rank what a human or a model should look at first, not
  * to pronounce on intent — "alarming" means *look at this now*, never "this is malicious".
  */
-function severityOf(d) {
+function severityOf(input) {
+  // Tolerate a partial diff. A caller reasoning about one channel should not have to construct the
+  // other five, and a crash here would be a crash in the only code that decides severity.
+  const none = { added: [], removed: [] };
+  const d = { net: none, dns: none, fs: none, env: none, proc: none, exec: none, ...input };
   const reasons = [];
 
   if (d.env.added.some((e) => SENSITIVE_ENV.test(e))) reasons.push('reads a credential it did not read before');
   if (d.proc.added.some((p) => NOTABLE_PROC.test(p.argv.join(' ')))) reasons.push('spawns a shell or a downloader it did not spawn before');
+  // Building code at runtime that the old version did not build. A library that starts doing this
+  // between a patch release has changed in kind, not degree — and decode-then-execute is the shape
+  // of every import-time compromise of 2026, precisely because the payload is never in the source.
+  const built = d.exec.added.filter((e) => BUILDS_CODE.test(e.how));
+  if (built.length) {
+    reasons.push(`builds and runs code that did not exist in the source (${built.map((e) => e.how).join(', ')})`);
+  }
   if (reasons.length) return { level: 'alarming', reasons };
 
   if (d.net.added.length) reasons.push(`talks to ${d.net.added.length} destination${d.net.added.length === 1 ? '' : 's'} it did not talk to before`);
@@ -60,6 +81,7 @@ function severityOf(d) {
   // an empty explanation and no way to judge it.
   const envCount = d.env.added.length;
   if (envCount) reasons.push(`reads ${envCount} environment variable${envCount === 1 ? '' : 's'} it did not read before`);
+  if (d.exec.added.length) reasons.push('decodes something it did not decode before');
   if (d.dns.added.length) reasons.push('resolves a name it did not resolve before');
   if (reasons.length) return { level: 'minor', reasons };
 
@@ -84,7 +106,7 @@ function diff(before, after) {
   }
 
   const parts = {};
-  ['net', 'dns', 'fs', 'env', 'proc'].forEach((field) => {
+  ['net', 'dns', 'fs', 'env', 'proc', 'exec'].forEach((field) => {
     parts[field] = setDiff(before[field], after[field], keyFor[field]);
   });
 
@@ -117,4 +139,4 @@ function summarise(d) {
   return `${d.pkg} ${d.from} → ${d.to}: ${d.reasons.join('; ')}`;
 }
 
-module.exports = { diff, summarise, severityOf, SENSITIVE_ENV, NOTABLE_PROC };
+module.exports = { diff, summarise, severityOf, SENSITIVE_ENV, NOTABLE_PROC, BUILDS_CODE };

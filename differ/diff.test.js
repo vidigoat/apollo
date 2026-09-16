@@ -189,4 +189,47 @@ it('a feature flag is minor, and a credential is not', () => {
   assert.equal(bad.severity, 'alarming');
 });
 
+it('a package that starts building code at runtime is alarming', () => {
+  // The shape of every import-time compromise of 2026: the payload is never in the source, only a
+  // decoder is. A library that starts doing this between a patch release has changed in kind.
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert',
+      raw: { exec: [{ how: 'Function', sample: 'return require("child_process")' }] } })
+  );
+  assert.equal(d.severity, 'alarming');
+  assert.match(d.reasons.join(' '), /did not exist in the source/);
+});
+
+it('decoding on its own is not an accusation', () => {
+  // Half the registry decodes something. It is what decoding FEEDS that matters.
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert',
+      raw: { exec: [{ how: 'base64-decode', sample: '900 chars' }] } })
+  );
+  assert.equal(d.severity, 'minor', 'a base64 decode alone must not wake anybody');
+  assert.ok(d.changed, 'but it is still a change, and must be sayable');
+  assert.ok(d.reasons.length > 0);
+});
+
+it('a package that always built code is not a finding', () => {
+  // Same rule as everywhere else: this compares you to your previous version, not to "good".
+  const both = { exec: [{ how: 'Function', sample: 'return 1' }] };
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: both }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', raw: both })
+  );
+  assert.equal(d.changed, false);
+});
+
+it('only nodert claims to see code built at runtime', () => {
+  // eBPF watches the process, not the thought. A string becoming a function never reaches the
+  // kernel, so a quiet exec column from any other strategy means nothing at all.
+  const { CAN_SEE } = require('../transcript/schema');
+  assert.equal(CAN_SEE.nodert.exec, true);
+  ['ebpf', 'proxy', 'fsdiff'].forEach((s) =>
+    assert.equal(CAN_SEE[s].exec, false, `${s} must not claim to see runtime code construction`));
+});
+
 console.log(`\n${passed} passed`);

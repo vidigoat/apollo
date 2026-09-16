@@ -21,7 +21,7 @@
 const MARKER = '__STAKEOUT__';
 
 function install() {
-  const seen = { net: [], dns: [], fs: [], env: [], proc: [] };
+  const seen = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
   const push = (k, v) => { if (seen[k].length < 500) seen[k].push(v); };
 
   /* ── environment ─────────────────────────────────────────────────── */
@@ -75,6 +75,57 @@ function install() {
       return real.call(cp, cmd, ...rest);
     };
   }
+
+  /* ── code built at runtime ───────────────────────────────────────────
+   * The one thing this strategy sees that a kernel tracer cannot.
+   *
+   * 2026's attacks do not ship the payload; they ship a decoder. A base64 blob turning into a
+   * function is not a syscall — it is a string becoming behaviour inside one process, and eBPF
+   * watches the process rather than the thought. By the time anything reaches the kernel the
+   * interesting part already happened.
+   *
+   * Recorded as a short excerpt, never the whole payload: a megabyte of obfuscated source is
+   * volume, not evidence, and the differ compares transcripts rather than reads them.
+   */
+  const note = (how, sample) => push('exec', { how, sample: String(sample ?? '').slice(0, 160) });
+
+  const RealFunction = global.Function;
+  function PatchedFunction(...args) {
+    // new Function('a','b','return a+b') — the body is the last argument.
+    note('Function', args[args.length - 1]);
+    return RealFunction.apply(this, args);
+  }
+  PatchedFunction.prototype = RealFunction.prototype;
+  global.Function = PatchedFunction;
+
+  const vm = require('node:vm');
+  for (const fn of ['runInNewContext', 'runInThisContext', 'runInContext', 'compileFunction']) {
+    const real = vm[fn];
+    if (typeof real !== 'function') continue;
+    vm[fn] = function (code, ...rest) {
+      note(`vm.${fn}`, code);
+      return real.call(vm, code, ...rest);
+    };
+  }
+  const RealScript = vm.Script;
+  if (typeof RealScript === 'function') {
+    vm.Script = function (code, ...rest) {
+      note('vm.Script', code);
+      return new RealScript(code, ...rest);
+    };
+    vm.Script.prototype = RealScript.prototype;
+  }
+
+  // Decoding is not itself suspicious — it is what decoding FEEDS that matters, and the entries
+  // above catch that. Recorded anyway, because "decoded something, then built a function" is a
+  // shape, and a shape is what the differ is good at.
+  const RealFrom = Buffer.from;
+  Buffer.from = function (value, enc, ...rest) {
+    if (enc === 'base64' && typeof value === 'string' && value.length > 128) {
+      note('base64-decode', `${value.length} chars`);
+    }
+    return RealFrom.call(Buffer, value, enc, ...rest);
+  };
 
   /* ── filesystem ──────────────────────────────────────────────────── */
   // Writes only. Reads inside node_modules are what `require` does all day and mean nothing.
@@ -148,7 +199,7 @@ function readReport(outPath) {
   // Take only the channels we know, in the shape we expect. A forged report with extra keys, or
   // with a string where an array belongs, is not quietly trusted.
   const out = {};
-  for (const k of ['net', 'dns', 'fs', 'env', 'proc']) {
+  for (const k of ['net', 'dns', 'fs', 'env', 'proc', 'exec']) {
     if (!Array.isArray(parsed[k])) return null;
     out[k] = parsed[k];
   }
