@@ -64,7 +64,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 72 checks across 6 suites
+npm test          # 100 checks across 8 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
@@ -392,7 +392,7 @@ npm test
 ```
 
 ```
-6 suites · 72 checks
+8 suites · 100 checks
 all green
 ```
 
@@ -401,6 +401,11 @@ reports a smaller number of checks than the project has, which reads like succes
 
 What the suites actually protect:
 
+- **`transcript/schema.test.js`** — the normaliser cuts both ways: two runs that differ only in
+  pids, temp directories or cache keys must compare equal, and a different host, port or filename
+  must not
+- **`observe/observe.test.js`** — install *and* import, in that order; the transcript records the
+  strategy that ran rather than the one we wanted; a dead machine never becomes a quiet package
 - **`differ/diff.test.js`** — severity is arithmetic; cross-strategy comparison throws
 - **`runPair.test.js`** — one checkpoint for both twins; the wave cap; nothing leaks on failure
 - **`judge/judge.test.js`** — quiet packages never reach a model; rules can force a look; an

@@ -28,14 +28,20 @@ const empty = () => ({ net: [], dns: [], fs: [], env: [], proc: [] });
 
 /* ── normalisation: strip what varies but does not mean anything ──────────── */
 
-const TEMP_DIR = /^\/(tmp|var\/folders|private\/var\/folders)\/[^/]+/;
+/**
+ * Everything between a temp root and the filename varies per run — and on macOS it varies at
+ * several depths at once (`/var/folders/qz/8xk_p3/T/<random>/…`), so eating a single segment is
+ * not enough. Collapse the directories, keep the basename: writing to a scratch directory means
+ * nothing, and writing `backdoor.sh` there means a great deal.
+ */
+const TEMP_DIR = /^\/(?:private\/)?(?:tmp|var\/folders)\/.*\/(?=[^/]+$)/;
 const NODE_CACHE = /\/(\.npm|\.cache|node_modules\/\.cache)\/.*/;
 const PID_LIKE = /\b\d{3,7}\b/g;
 const HASHY = /\b[0-9a-f]{8,64}\b/gi;
 
 function normalisePath(p) {
   return String(p)
-    .replace(TEMP_DIR, '/tmp/·')
+    .replace(TEMP_DIR, '/tmp/·/')
     .replace(NODE_CACHE, '/·cache/·')
     .replace(HASHY, '·')
     .replace(PID_LIKE, '·');
