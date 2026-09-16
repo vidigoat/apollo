@@ -66,7 +66,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 115 checks across 9 suites
+npm test          # 125 checks across 10 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
@@ -426,7 +426,7 @@ npm test
 ```
 
 ```
-9 suites · 115 checks
+10 suites · 125 checks
 all green
 ```
 
@@ -450,6 +450,9 @@ What the suites actually protect:
   delete still frees the slot
 - **`corpus.test.js`** — holds the README's own arithmetic: 1,214 packages, 14 moved, 10 quiet,
   exactly one alarming, and each plant still doing the job it was planted for
+- **`server.test.js`** — the API contract over real HTTP. The list of fields it requires is
+  *derived from `app.js`*, so adding something to the page and forgetting to send it fails here
+  rather than on stage; also checks nothing outside `public/` can be served
 - **`public/ui.test.js`** — drives the real `app.js` against the real corpus with a stub DOM:
   every id exists, every class is styled, the quiet majority renders as quiet, and a simulated
   verdict always says so
