@@ -1,42 +1,30 @@
 /**
- * Simulated sandbox adapter.
+ * Simulated sandboxes.
  *
- * Satisfies the same interface as the ConTree adapter so the engine cannot tell them apart. Runs
- * against a fixed corpus with no network, which is what makes the demo deterministic.
+ * Satisfies the same interface as the ConTree adapter, so the engine cannot tell them apart. Runs
+ * against the fixed corpus with no network, which is what makes the demo deterministic and what
+ * lets the whole system be built and tested before credentials exist.
  *
- *   boot(image)            -> checkpoint id
- *   fork(checkpoint, n)    -> n branch handles, conceptually running in parallel
- *   run(branch, command)   -> { code, stdout } — a real verdict, not a guess
- *   discard(branch)        -> release it
- *
- * The one rule this file exists to preserve: the probe decides pass or fail. Nothing here asks a
- * model what it thinks happened.
+ * It claims to support every observation strategy because it is a simulation. The real adapter
+ * will claim only what the guest actually permits, and the transcript records which one ran.
  */
+
+const { behaviourFor } = require('../corpus');
 
 const CHECKPOINT = 'ckpt_healthy_8f2a';
 
-/** Branch indexes that reproduce a failure, and which case each one belongs to. */
-const FAILING = {
-  37: 'F-017', 41: 'F-017',
-  58: 'F-093', 96: 'F-093', 104: 'F-093',
-  131: 'F-131', 168: 'F-131',
-  // Exactly one twin, exactly once. This is deliberate: the verifier must have something real to
-  // refuse, or the "refused to file" card in the interface would be a story rather than a result.
-  76: 'F-076',
-};
-
-const OUTPUT = {
-  'F-017': { code: 1, stdout: '228/500 orders drifted   INVARIANT VIOLATED' },
-  'F-093': { code: 1, stdout: 'charges=2   duplicate side effect' },
-  'F-131': { code: 1, stdout: 'checkout healthy at t+380s   RECOVERY LAG 290s' },
-  'F-076': { code: 1, stdout: 'GET /search 500   (not seen again on re-run)' },
-};
-
 class SimulatedSandboxes {
-  constructor({ failing = FAILING } = {}) {
-    this.failing = failing;
+  constructor({ behaviour = behaviourFor } = {}) {
+    this.behaviour = behaviour;
     this.live = new Map();
     this.nextHandle = 0;
+    this.runs = 0;
+    this.peakOpen = 0;
+  }
+
+  /** What this adapter can watch. The real one will answer honestly about the guest kernel. */
+  get supports() {
+    return ['ebpf', 'proxy', 'fsdiff'];
   }
 
   async boot(image) {
@@ -53,26 +41,46 @@ class SimulatedSandboxes {
       this.nextHandle++;
       branches.push(handle);
     }
+    this.peakOpen = Math.max(this.peakOpen, this.live.size);
     return branches;
   }
 
-  async run(branch, command) {
+  /**
+   * Run a command in a branch.
+   *
+   * `ctx` carries which package and version this branch is exercising, which is how the simulation
+   * knows what to report. A real adapter ignores it and reports what the kernel saw.
+   */
+  async run(branch, command, ctx = {}) {
     if (!this.live.has(branch.id)) throw new Error(`Branch ${branch.id} was discarded`);
-    const caseId = this.failing[branch.index];
-    if (caseId && /probe|test/.test(command)) {
-      return { code: OUTPUT[caseId].code, stdout: OUTPUT[caseId].stdout, caseId };
+    this.runs++;
+
+    if (!ctx.pkg || ctx.step !== 'import') {
+      return { code: 0, stdout: '', observed: null };
     }
-    return { code: 0, stdout: 'ok', caseId: null };
+
+    // Only the import step reports behaviour — which is the point of this project.
+    const b = this.behaviour(ctx.pkg, ctx.version);
+    return {
+      code: 0,
+      stdout: '',
+      observed: {
+        net: b.net || [],
+        dns: b.dns || [],
+        fs: b.fs || [],
+        env: b.env || [],
+        proc: b.proc || [],
+      },
+    };
   }
 
   async discard(branch) {
     this.live.delete(branch.id);
   }
 
-  /** How many branches are still held. The engine uses this to respect the wave cap. */
   get open() {
     return this.live.size;
   }
 }
 
-module.exports = { SimulatedSandboxes, CHECKPOINT, FAILING };
+module.exports = { SimulatedSandboxes, CHECKPOINT };

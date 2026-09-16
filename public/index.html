@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cassandra — the pre-mortem engine</title>
+<title>Stakeout — a behavioural lockfile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet" />
@@ -12,147 +12,132 @@
 <body>
 
 <header class="masthead">
-  <div class="can-label">
-    <span class="can-label__reel">REEL 001</span>
-    <h1>Cassandra</h1>
-    <p class="can-label__sub">Rehearse every way it breaks — before your users do.</p>
+  <div>
+    <span class="tag">stakeout</span>
+    <h1>Your lockfile pins versions.<br />This pins behaviour.</h1>
+    <p class="sub">
+      Every dependency gets its own disposable copy of your machine. We install it, import it, and
+      write down what it actually did — then do the same with the version you had before, from the
+      identical starting state, and show you what changed.
+    </p>
   </div>
   <dl class="slate">
-    <div><dt>subject</dt><dd>orders-api 1.9.3</dd></div>
-    <div><dt>twins</dt><dd><span id="slate-total">200</span> forks</dd></div>
-    <div><dt>checkpoint</dt><dd id="slate-ckpt">ckpt_healthy_8f2a</dd></div>
-    <div><dt>filed</dt><dd><span id="slate-filed">—</span> proven</dd></div>
+    <div><dt>dependency tree</dt><dd id="s-total">—</dd></div>
+    <div><dt>versions moved</dt><dd id="s-moved">—</dd></div>
+    <div><dt>twins forked</dt><dd id="s-twins">—</dd></div>
+    <div><dt>cost</dt><dd id="s-cost">—</dd></div>
   </dl>
 </header>
 
 <main>
 
-<!-- ─────────────────────────── the contact sheet ─────────────────────────── -->
-<section class="sheet-section" aria-labelledby="sheet-h">
-  <div class="sheet-head">
-    <h2 id="sheet-h">Contact sheet</h2>
-    <p class="lede">
-      Each frame is a living copy of your service, forked from the same healthy checkpoint and broken a
-      different way. Frames that failed get circled. Nothing is reported unless a frame actually failed.
-    </p>
-    <div class="controls">
-      <button id="run" class="btn-run">Run the pre-mortem</button>
-      <button id="run-clean" class="btn-ghost">Run it on a healthy build</button>
-      <output id="status" class="status">idle — 200 scenarios queued</output>
-    </div>
-  </div>
-
-  <div class="sheet" id="sheet" role="img" aria-label="Contact sheet of 200 forked twins"></div>
-
-  <div class="sheet-legend">
-    <span><i class="sw sw--live"></i>running</span>
-    <span><i class="sw sw--pass"></i>survived</span>
-    <span><i class="sw sw--fail"></i>failed, reproduced</span>
-    <span><i class="sw sw--unproven"></i>failed once, refused</span>
-    <span class="hint">circled frames open the failure they produced</span>
-  </div>
-</section>
-
-<!-- ─────────────────────────── clean result ─────────────────────────── -->
-<section class="clean" id="clean" hidden>
-  <h2>Nothing to report</h2>
+<!-- ─────────────────────── the run ─────────────────────── -->
+<section class="run-section">
+  <h2>The run</h2>
   <p class="lede">
-    Two hundred twins, the same two hundred scenarios, run against a build with the three faults already
-    fixed. Every one survived, so Cassandra has nothing to say — and says so, rather than filling the
-    space with things that might go wrong.
+    Two twins per package, forked from one healthy checkpoint at the same instant — so anything
+    that differs is the package, not the machine.
   </p>
-  <p class="clean__stat"><b>200</b> ran · <b>0</b> reproduced · <b>0</b> filed</p>
-</section>
-
-<!-- ─────────────────────────── filed failures ─────────────────────────── -->
-<section class="filed" id="filed" hidden aria-labelledby="filed-h">
-  <h2 id="filed-h">What will actually break you</h2>
-  <p class="lede">
-    Three failures reproduced. Each was confirmed by a second, independent model family before it was
-    filed, and each fix below stayed green across 500 re-forks.
-  </p>
-  <div id="filed-list" class="filed-list"></div>
-</section>
-
-<!-- ─────────────────────────── abstain ─────────────────────────── -->
-<section class="abstain" id="abstain" hidden>
-  <h2>What it refused to tell you</h2>
-  <div class="abstain-card">
-    <p class="abstain-title" id="ab-title"></p>
-    <p class="abstain-why" id="ab-why"></p>
-    <p class="abstain-verdict" id="ab-verdict"></p>
+  <div class="controls">
+    <button id="run" class="btn">Run the stakeout</button>
+    <output id="status" class="status">idle</output>
   </div>
-  <p class="abstain-note">
-    A tool that reports everything it suspects trains you to ignore it. Cassandra files only what it
-    reproduced, and says plainly when it could not.
+  <div class="strip" id="strip" role="img" aria-label="one mark per forked twin"></div>
+  <p class="cansee" id="cansee" hidden></p>
+</section>
+
+<!-- ─────────────────────── the wall ─────────────────────── -->
+<section class="wall-section" id="wall-section" hidden>
+  <h2>What changed</h2>
+  <p class="lede">
+    Scroll. Almost every package behaves exactly as it did before, and that is the point — the
+    silence is what gives the exceptions their weight.
+  </p>
+  <div class="wall" id="wall"></div>
+</section>
+
+<!-- ─────────────────────── the catch ─────────────────────── -->
+<section class="catch-section" id="catch-section" hidden>
+  <h2>The one that matters</h2>
+  <div id="catch"></div>
+</section>
+
+<!-- ─────────────────────── invisible to behaviour ─────────────────────── -->
+<section class="blind-section" id="blind-section" hidden>
+  <h2>What watching behaviour cannot see</h2>
+  <div id="blind"></div>
+  <p class="lede">
+    This one changed no observable behaviour at all — it touched nothing new and called nobody. The
+    computation changed. It is here because a tool that only watches behaviour would miss it, and
+    saying so is more useful than pretending otherwise.
   </p>
 </section>
 
-<!-- ─────────────────────────── how it works ─────────────────────────── -->
+<!-- ─────────────────────── how ─────────────────────── -->
 <section class="how">
   <h2>How it works</h2>
   <pre class="diagram">
-  your app
-     │
-     ▼
-  ┌──────────────┐   boot once, snapshot the healthy state
-  │  CHECKPOINT  │   ckpt_healthy_8f2a
-  └──────┬───────┘
-         │  ConTree: branch N times from one checkpoint, run in parallel
-     ┌───┴────┬────────┬────────┬─────── … 200 twins, in waves of 50
-     ▼        ▼        ▼        ▼
-  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐     each twin gets ONE adverse scenario,
-  │ dep │  │race │  │ i/o │  │clock│     invented by Nemotron from your code
-  │ bump│  │     │  │ down│  │skew │     + real advisories pulled via Tavily
-  └──┬──┘  └──┬──┘  └──┬──┘  └──┬──┘
-     │        │        │        │        run to a REAL outcome, not a prediction
-     ▼        ▼        ▼        ▼
-   pass     FAIL      FAIL     pass
-              │        │
-              ▼        ▼
-       ┌───────────────────┐   a second Nemotron family must confirm the failure
-       │  INDEPENDENT      │   is real, reproducible, and caused by the scenario
-       │  VERIFIER         │   — otherwise: abstain, do not file
-       └─────────┬─────────┘
-                 ▼
-       ┌───────────────────┐   propose fix → re-fork 500× under the same scenario
-       │  PROVE THE FIX    │   green on all 500, or it is not called fixed
-       └─────────┬─────────┘
-                 ▼
-       ┌───────────────────┐   emit a permanent regression test so this exact
-       │  PIN IT           │   failure can never silently come back
-       └───────────────────┘
+  your lockfile                    40 of 1,214 packages actually moved
+        │                          the rest are not re-run — that would be theatre
+        ▼
+  ┌─────────────┐   boot once, snapshot a healthy machine
+  │ CHECKPOINT  │
+  └──────┬──────┘
+         │   fork twice per package, at the same instant
+    ┌────┴────┐
+    ▼         ▼
+ ┌──────┐  ┌──────┐     install old          install new
+ │ twin │  │ twin │     import old           import new      ← where 2026's attacks fire
+ │ 2.4.1│  │ 2.4.2│     watch                watch
+ └───┬──┘  └──┬───┘
+     │        │
+     ▼        ▼
+  TRANSCRIPT  TRANSCRIPT     net · dns · files · env · processes
+     └────┬───┘
+          ▼
+    BEHAVIOURAL DIFF      pure arithmetic — no model involved, reproducible by anyone
+          │
+          ▼
+    is the change meaningful?        ← Nemotron reads the diff, not the package
+          │
+          ▼
+    does the open web know about it? ← Tavily: a changelog, an advisory, or nothing
+          │
+          ▼
+    a second model family must agree before anything is called malicious
   </pre>
 
   <div class="why">
-    <h3>Why this couldn't exist until now</h3>
+    <h3>Why this could not exist a year ago</h3>
     <p>
-      Rehearsing failure means running hundreds of realistic, disposable copies of a live system. That was
-      always too expensive, so teams tested a handful of guesses and met the rest in production. Token
-      Factory Sandboxes made forking real execution state cost cents, which turns the whole approach over:
-      instead of predicting what might break, Cassandra breaks it, watches, and brings back proof.
+      You cannot know what a package does without running it, and nobody could afford to run twelve
+      hundred of them in isolation. Forking a live machine now costs a fraction of a cent, so the
+      arithmetic changed — and the timing matters: npm disabled install scripts by default in July
+      2026, and within six days an attack detonated at <em>import</em> time instead. Reading the
+      source was already behind. Watching it run is the only thing that sees this.
     </p>
   </div>
 </section>
 
-<!-- ─────────────────────────── build plan ─────────────────────────── -->
+<!-- ─────────────────────── plan ─────────────────────── -->
 <section class="plan">
-  <h2>Build plan</h2>
+  <h2>What is real here</h2>
   <div class="plan-grid">
     <article>
       <h3>Running for real</h3>
       <ul class="tick">
-        <li>Orchestration, wave scheduling, verify-or-abstain gate, proof loop, report</li>
-        <li>Scenario families and their injectors</li>
-        <li>This interface</li>
+        <li>The transcript schema, normalisation, and the behavioural differ — pure and tested</li>
+        <li>Pair running: two twins per package from one checkpoint, waves, every branch released</li>
+        <li>Severity by rules, not by judgement</li>
+        <li>This interface, driven by an actual run</li>
       </ul>
     </article>
     <article>
-      <h3>Waiting on keys</h3>
+      <h3>Simulated today</h3>
       <ul class="dot">
-        <li>ConTree fork calls — swap <code>SimulatedSandboxes</code> for the real client</li>
-        <li>Nemotron 3 Super / Ultra / Nano via Token Factory</li>
-        <li>Tavily advisory search</li>
+        <li>The sandbox itself — <code>adapters/simulated.js</code>, a fixed corpus, no network</li>
+        <li>Observation: the strategies are written, none has watched a real kernel yet</li>
+        <li>Nemotron judgement and Tavily evidence — the shapes are fixed, the calls are not wired</li>
       </ul>
     </article>
     <article>
@@ -165,15 +150,15 @@
     </article>
   </div>
   <p class="honest">
-    Everything above the fold runs against a simulated Sandboxes adapter with a fixed corpus, so the demo is
-    deterministic. The orchestration around it is the real thing — the adapter is one file.
+    The planted packages in this corpus are labelled as planted, in the repository and on this page.
+    A detection you cannot reproduce is a magic trick, and this project is the opposite of one.
   </p>
 </section>
 
 </main>
 
 <footer>
-  <span>Cassandra</span>
+  <span>Stakeout</span>
   <span>localhost:8791</span>
 </footer>
 

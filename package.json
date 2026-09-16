@@ -1,14 +1,22 @@
 {
-  "name": "cassandra",
+  "name": "stakeout",
   "version": "0.1.0",
   "private": true,
-  "description": "Rehearse every way it breaks — before your users do.",
+  "description": "Your lockfile pins versions. This pins behaviour.",
   "license": "MIT",
   "type": "commonjs",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node server.js",
-    "test": "node scenarios/index.test.js && node orchestrator.test.js"
+    "test": "node scripts/test.js"
   },
-  "keywords": ["reliability", "sandboxes", "nemotron", "pre-mortem", "chaos"]
+  "keywords": [
+    "supply-chain",
+    "npm",
+    "sandboxes",
+    "nemotron",
+    "behavioural-diff"
+  ]
 }

@@ -1,245 +1,188 @@
-/* CASSANDRA — the run: one orchestrated page moment */
+/* STAKEOUT — the run, and the wall of silence it produces.
+ *
+ * Nothing here decides anything. Every severity, every delta, every verdict came back from the
+ * server, which got it from a pure function over two transcripts.
+ */
 
 const $ = (s) => document.querySelector(s);
-const sheetEl = $('#sheet');
+const stripEl = $('#strip');
 const statusEl = $('#status');
 const runBtn = $('#run');
-const cleanBtn = $('#run-clean');
 
-let PLAN = null;
-let REPORT = null;
-let RUN = null; // the last real orchestration result
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = (ms) => new Promise((r) => setTimeout(r, reduced ? 0 : ms));
+const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
+
+let TREE = null;
 
 async function boot() {
-  PLAN = await (await fetch('/api/plan')).json();
-  REPORT = await (await fetch('/api/report')).json();
+  TREE = await (await fetch('/api/tree')).json();
+  $('#s-total').textContent = `${TREE.total.toLocaleString()} packages`;
+  $('#s-moved').textContent = `${TREE.moved} moved`;
+  $('#s-twins').textContent = '—';
+  $('#s-cost').textContent = '—';
+  statusEl.textContent = `${TREE.moved} versions moved · ${TREE.unchanged.toLocaleString()} unchanged and not re-run`;
 
-  $('#slate-total').textContent = PLAN.total;
-  $('#slate-ckpt').textContent = PLAN.checkpoint;
-
-  sheetEl.innerHTML = '';
-  for (let i = 0; i < PLAN.total; i++) {
-    const f = document.createElement('div');
-    f.className = 'frame';
-    f.dataset.i = i;
-    sheetEl.appendChild(f);
+  stripEl.innerHTML = '';
+  for (let i = 0; i < TREE.moved * 2; i++) {
+    const mark = document.createElement('i');
+    mark.className = 'mark';
+    stripEl.appendChild(mark);
   }
-  statusEl.textContent = `idle — ${PLAN.total} scenarios queued`;
 }
 
-async function run(clean = false) {
+/* ── the transcript, as two columns ───────────────────────────────── */
+
+function lines(t, d, side) {
+  const out = [];
+  const add = (field, render) => {
+    const items = t[field] || [];
+    const changedKeys = new Set(
+      (side === 'after' ? d[field].added : d[field].removed).map((x) => render(x))
+    );
+    items.forEach((x) => {
+      const text = render(x);
+      out.push(`<li class="${changedKeys.has(text) ? 'is-delta' : ''}">${esc(text)}</li>`);
+    });
+  };
+
+  add('net', (n) => `→ ${n.host}:${n.port}`);
+  add('dns', (x) => `dns ${x}`);
+  add('env', (e) => `env ${e}`);
+  add('proc', (p) => `spawn ${p.argv.join(' ')}`);
+  add('fs', (f) => `${f.op} ${f.path}`);
+
+  if (out.length === 0) return '<li class="is-nothing">nothing observed</li>';
+  return out.join('');
+}
+
+function row(p) {
+  const d = p.diff;
+  const quiet = !d.changed;
+  // Only the two severities that actually get a colour are marked. A class that styles nothing is
+  // indistinguishable from a typo six months from now.
+  const sev = d.severity === 'alarming' || d.severity === 'notable' ? `sev-${d.severity}` : '';
+  return `
+    <article class="pair ${quiet ? 'is-quiet' : ''} ${sev}">
+      <header class="pair__head">
+        <span class="pair__name">${esc(p.pkg)}</span>
+        <span class="pair__ver">${esc(p.from)} → ${esc(p.to)}</span>
+        ${quiet ? '<span class="pair__verdict">no behavioural change</span>'
+                : `<span class="pair__verdict is-changed">${esc(d.reasons[0] || 'changed')}</span>`}
+      </header>
+      ${quiet ? '' : `
+      <div class="pair__cols">
+        <div class="col"><span class="col__v">${esc(p.from)}</span><ul>${lines(p.before, d, 'before')}</ul></div>
+        <div class="col"><span class="col__v">${esc(p.to)}</span><ul>${lines(p.after, d, 'after')}</ul></div>
+      </div>`}
+    </article>`;
+}
+
+/* ── the catch ────────────────────────────────────────────────────── */
+
+function catchPanel(p) {
+  const d = p.diff;
+  return `
+    <article class="catch">
+      <header>
+        <span class="catch__sev">${esc(d.severity)}</span>
+        <span class="catch__name">${esc(p.pkg)} ${esc(p.from)} → ${esc(p.to)}</span>
+      </header>
+      <ul class="catch__reasons">${d.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+      <pre class="catch__transcript">${[
+        ...d.env.added.map((e) => `env      ${e}`),
+        ...d.dns.added.map((x) => `dns      ${x}`),
+        ...d.net.added.map((n) => `connect  ${n.host}:${n.port}`),
+        ...d.proc.added.map((x) => `spawn    ${x.argv.join(' ')}`),
+        ...d.fs.added.map((f) => `${f.op.padEnd(8)} ${f.path}`),
+      ].map(esc).join('\n')}</pre>
+      ${p.record ? `
+      <div class="record">
+        <span class="record__k">what the open web says</span>
+        <p class="record__v ${p.record.changelog ? '' : 'is-absent'}">${esc(p.record.verdict)}</p>
+        ${p.record.changelog ? `<p class="record__note">${esc(p.record.changelog)}</p>` : ''}
+      </div>` : ''}
+    </article>`;
+}
+
+/* ── the run ──────────────────────────────────────────────────────── */
+
+async function run() {
   runBtn.disabled = true;
-  cleanBtn.disabled = true;
-  const frames = [...sheetEl.children];
-  frames.forEach((f) => (f.className = 'frame'));
-  $('#filed').hidden = true;
-  $('#abstain').hidden = true;
-  $('#clean').hidden = true;
+  $('#wall-section').hidden = true;
+  $('#catch-section').hidden = true;
+  $('#blind-section').hidden = true;
+  const marks = [...stripEl.children];
+  marks.forEach((m) => (m.className = 'mark'));
 
-  // Ask the server to actually run it: boot a checkpoint, fork it in waves, let the probes decide.
-  // Nothing below is scripted — the circled frames are whichever branches genuinely failed.
-  statusEl.textContent = 'booting the twin…';
-  RUN = await (await fetch(`/api/run${clean ? '?clean=1' : ''}`)).json();
+  statusEl.textContent = 'booting one healthy machine…';
+  await sleep(500);
 
-  const failSet = new Set(RUN.failedBranchIndexes);
-  const step = reduced ? 0 : 1;
+  const result = await (await fetch('/api/run')).json();
 
-  for (let w = 0; w < PLAN.waves; w++) {
-    const start = w * PLAN.wave;
-    const end = Math.min(start + PLAN.wave, PLAN.total);
-    statusEl.textContent = `wave ${w + 1}/${PLAN.waves} — forking ${end - start} twins from ${PLAN.checkpoint}`;
-
-    for (let i = start; i < end; i++) frames[i].classList.add('is-live');
-    await sleep(reduced ? 0 : 420);
-
-    for (let i = start; i < end; i++) {
-      frames[i].classList.remove('is-live');
-      frames[i].classList.add(failSet.has(i) ? 'is-fail' : 'is-pass');
-      if (step) await sleep(9);
+  // One mark per twin, lighting up as the waves go.
+  for (let i = 0; i < marks.length; i++) {
+    marks[i].classList.add('is-live');
+    if (i % 4 === 0) {
+      statusEl.textContent = `forking twins… ${i + 1} of ${marks.length}`;
+      await sleep(18);
     }
   }
+  await sleep(200);
 
-  if (RUN.filed.length === 0) {
-    statusEl.textContent = `${RUN.total} twins run · 0 reproduced · nothing filed · ${RUN.wallMs}ms`;
-    $('#slate-filed').textContent = '0';
-    $('#clean').hidden = false;
-    $('#clean').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-  } else {
-    statusEl.textContent =
-      `${RUN.total} twins run · ${RUN.failedBranchIndexes.length} branches failed · ` +
-      `${RUN.filed.length} filed after verification · $${REPORT.cost.usd} · ${RUN.wallMs}ms`;
-    $('#slate-filed').textContent = RUN.filed.length;
+  // Then settle: the pairs that changed light differently.
+  result.pairs.forEach((p, i) => {
+    const a = marks[i * 2];
+    const b = marks[i * 2 + 1];
+    [a, b].forEach((m) => {
+      if (!m) return;
+      m.classList.remove('is-live');
+      m.classList.add(p.diff.changed ? `is-${p.diff.severity}` : 'is-quiet');
+      m.title = `${p.pkg} ${p.from} → ${p.to}`;
+    });
+  });
 
-    REPORT.filed = RUN.filed;
-    renderFiled();
-    linkFramesToCases(frames);
-    renderAbstain();
+  $('#s-twins').textContent = `${result.twinsForked} twins`;
+  $('#s-cost').textContent = `$${result.costUsd}`;
+  statusEl.textContent =
+    `${result.twinsForked} twins · ${result.quiet} packages behaved identically · ` +
+    `${result.pairs.filter((p) => p.diff.changed).length} changed · $${result.costUsd}`;
+
+  const cansee = $('#cansee');
+  const missing = Object.entries(result.canSee || {}).filter(([, v]) => !v).map(([k]) => k);
+  cansee.textContent = missing.length
+    ? `Watched with "${result.strategy}", which cannot see: ${missing.join(', ')}. Silence in those columns is not evidence of quiet behaviour.`
+    : `Watched with "${result.strategy}" — syscalls, sockets, files, environment and processes.`;
+  cansee.hidden = false;
+
+  $('#wall').innerHTML = result.pairs.map(row).join('');
+  $('#wall-section').hidden = false;
+
+  const alarming = result.pairs.filter((p) => p.diff.severity === 'alarming');
+  if (alarming.length) {
+    $('#catch').innerHTML = alarming.map(catchPanel).join('');
+    $('#catch-section').hidden = false;
   }
-  cleanBtn.disabled = false;
+
+  const invisible = result.pairs.filter((p) => p.invariant);
+  if (invisible.length) {
+    $('#blind').innerHTML = invisible
+      .map(
+        (p) => `
+      <article class="blind">
+        <span class="blind__name">${esc(p.pkg)} ${esc(p.from)} → ${esc(p.to)}</span>
+        <pre class="blind__probe">$ ${esc(p.invariant.probe)}\n${esc(p.invariant.output)}</pre>
+        <p class="blind__note">${esc(p.invariant.note)}</p>
+        ${p.record ? `<p class="record__note">Changelog: ${esc(p.record.changelog || 'nothing')}</p>` : ''}
+      </article>`
+      )
+      .join('');
+    $('#blind-section').hidden = false;
+  }
+
   runBtn.disabled = false;
   runBtn.textContent = 'Run again';
 }
 
-/* Which circled frame belongs to which filed failure. A frame is evidence, so it should
-   take you to the case it produced. */
-const FRAME_CASE = { 37: 'F-017', 41: 'F-017', 58: 'F-093', 96: 'F-093', 104: 'F-093', 131: 'F-131', 168: 'F-131' };
-
-function linkFramesToCases(frames) {
-  // The twin that failed once and never again. It is circled like the others because it really did
-  // fail — but it is marked differently, because nothing was filed from it.
-  (RUN?.unproven || []).forEach((u) => {
-    const index = RUN.failedBranchIndexes.find((i) => !(i in FRAME_CASE));
-    const frame = frames[index];
-    if (!frame) return;
-    frame.classList.add('is-linked', 'is-unproven');
-    frame.setAttribute('role', 'button');
-    frame.setAttribute('tabindex', '0');
-    frame.setAttribute('title', `${u.id} — failed once, refused, not filed`);
-    const openAbstain = () => {
-      const target = $('#abstain');
-      target.hidden = false;
-      target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-    };
-    frame.addEventListener('click', openAbstain);
-    frame.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAbstain(); }
-    });
-  });
-
-  Object.entries(FRAME_CASE).forEach(([i, id]) => {
-    const frame = frames[Number(i)];
-    if (!frame) return;
-    frame.classList.add('is-linked');
-    frame.setAttribute('role', 'button');
-    frame.setAttribute('tabindex', '0');
-    frame.setAttribute('title', `${id} — open this failure`);
-
-    const open = () => {
-      const target = document.querySelector(`[data-case="${id}"]`);
-      if (!target) return;
-      target.classList.add('is-open');
-      target.querySelector('.case__head').setAttribute('aria-expanded', 'true');
-      target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-      target.classList.remove('is-flash');
-      void target.offsetWidth;
-      target.classList.add('is-flash');
-    };
-
-    frame.addEventListener('click', open);
-    frame.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
-    });
-  });
-}
-
-function colourLog(lines) {
-  return lines
-    .map((l) => {
-      const e = l.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-      if (/VIOLATED|DELTA|✗|charged twice|RECOVERY LAG|still 503/.test(e)) return `<span class="hit">${e}</span>`;
-      if (/✓|healthy at|passing/.test(e)) return `<span class="ok">${e}</span>`;
-      return e;
-    })
-    .join('\n');
-}
-
-function colourDiff(lines) {
-  return lines
-    .map((l) => {
-      const e = l.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-      if (e.startsWith('-')) return `<span class="minus">${e}</span>`;
-      if (e.startsWith('+')) return `<span class="plus">${e}</span>`;
-      return e;
-    })
-    .join('\n');
-}
-
-function renderFiled() {
-  const list = $('#filed-list');
-  list.innerHTML = '';
-
-  REPORT.filed.forEach((f, idx) => {
-    const el = document.createElement('article');
-    el.className = 'case' + (idx === 0 ? ' is-open' : '');
-    el.dataset.case = f.id;
-    el.innerHTML = `
-      <div class="case__head" role="button" tabindex="0" aria-expanded="${idx === 0}">
-        <span class="case__id">${f.id}</span>
-        <span class="case__title">${f.title}</span>
-        <span class="case__rate">${f.branchesFailed}/${f.branchesRun} twins</span>
-      </div>
-      <div class="case__body">
-        <div class="case__row">
-          <p class="case__k">what it did to the twin</p>
-          <p class="case__v">${f.scenario}</p>
-        </div>
-        <div class="case__row">
-          <p class="case__k">why it tried this</p>
-          <p class="case__v">${f.seededBy}<br /><span style="color:var(--silver-dim)">${f.mirrors}</span></p>
-        </div>
-        <div class="case__row">
-          <p class="case__k">what it costs you</p>
-          <p class="case__v">${f.blast}</p>
-        </div>
-        <div class="case__row">
-          <p class="case__k">reproduction</p>
-          <div class="log">${colourLog(f.repro)}</div>
-        </div>
-        <div class="case__row">
-          <p class="case__k">root cause</p>
-          <p class="case__v">${f.rootCause}</p>
-        </div>
-        <div class="case__row">
-          <p class="case__k">fix — ${f.fix.summary}</p>
-          <div class="diff">${colourDiff(f.fix.diff)}</div>
-          <div class="proof">
-            <b>${f.proof.green}/${f.proof.reforks} green</b>
-            <span>re-forked under the same scenario. Not called fixed until every one came back clean.</span>
-          </div>
-          <p class="pin">Pinned so it can't come back quietly: <code>${f.pinnedTest}</code></p>
-        </div>
-      </div>`;
-
-    const head = el.querySelector('.case__head');
-    const toggle = () => {
-      el.classList.toggle('is-open');
-      head.setAttribute('aria-expanded', el.classList.contains('is-open'));
-    };
-    head.addEventListener('click', toggle);
-    head.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-    });
-
-    list.appendChild(el);
-  });
-
-  $('#filed').hidden = false;
-}
-
-function renderAbstain() {
-  // Prefer what the run actually refused. The static copy is only a fallback for a corpus that
-  // happens to produce nothing unproven — the card should never be a story.
-  const real = RUN && RUN.unproven && RUN.unproven[0];
-  const a = REPORT.abstained;
-
-  if (real) {
-    $('#ab-title').textContent = `${real.id} — ${real.title}`;
-    $('#ab-why').textContent =
-      `${real.verification.reason} One twin failed; the same scenario was run again and the failure did not ` +
-      `return. The examiner had a theory. The reviewer would not uphold it on a single observation.`;
-    $('#ab-verdict').textContent = "NOT FILED — recorded as unproven, with the reviewer's objection attached.";
-  } else {
-    $('#ab-title').textContent = `${a.id} — ${a.title}`;
-    $('#ab-why').textContent = a.why;
-    $('#ab-verdict').textContent = a.verdict;
-  }
-
-  $('#abstain').hidden = false;
-}
-
-runBtn.addEventListener('click', () => run(false));
-cleanBtn.addEventListener('click', () => run(true));
+runBtn.addEventListener('click', run);
 boot();
