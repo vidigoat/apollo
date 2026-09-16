@@ -134,6 +134,26 @@ What is deliberately **not** cached: the model's judgement, which depends on a p
 and the public record, which is the one input that legitimately changes over time. A package with no
 advisory today may have one next month, and a cached "nothing found" would quietly become a lie.
 
+### In CI, on every dependency pull request
+
+```bash
+node scripts/lockfile-run.js --against origin/main --json --fail-on alarming
+```
+
+`--json` puts nothing on stdout but the report, so a pipeline never has to strip a banner out of it.
+`--fail-on` decides what breaks a build, and defaults to `alarming` only — a check that fails on
+every minor cache-file change is a check people switch off, and a check nobody runs protects
+nothing.
+
+The report carries `cannotSee` alongside the findings, because a machine reading this needs the
+caveat as much as a person does: otherwise an empty findings list reads as *clean* rather than as
+*not looked at*.
+
+A ready-to-copy workflow is in [`docs/ci/dependency-behaviour.yml`](docs/ci/dependency-behaviour.yml).
+It runs on `pull_request` rather than `pull_request_target` on purpose — that trigger has no
+repository secrets and cannot write to the repo, which is the entire reason it is safe to execute a
+stranger's dependencies under it.
+
 Start with `--dry-run`. It needs no credentials, no network and no permission, and it answers the
 question worth asking first — *how much of this upgrade is even worth looking at* — usually with a
 much smaller number than anyone expects. Run against this repository's own history it reported `29

@@ -1,0 +1,77 @@
+# Stakeout on every dependency change.
+#
+# Copy to .github/workflows/ in the repository you want watched. It runs when a pull request touches
+# package-lock.json — which is what Dependabot and Renovate do all day — and reports what those
+# version bumps actually DO, rather than only which numbers moved.
+#
+# The comparison is against the PR's base branch, so it answers exactly the question a reviewer has
+# in front of them: *what changes if I merge this?*
+#
+# ── Read this before enabling it ───────────────────────────────────────────
+# This EXECUTES the dependencies being reviewed, which on a pull request means executing code an
+# outsider proposed. `pull_request` (not `pull_request_target`) is deliberate: that trigger runs
+# without repository secrets and cannot write to the repo, which is the whole reason it is safe to
+# run a stranger's dependencies under it. Do not "fix" the permissions to make commenting easier.
+#
+# A GitHub runner is a throwaway VM, which is the isolation here. On your own machine it is not, and
+# adapters/local.js says so at length.
+
+name: dependency behaviour
+
+on:
+  pull_request:
+    paths: ['**/package-lock.json']
+
+permissions:
+  contents: read        # nothing else. See the note above.
+
+jobs:
+  stakeout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # the base commit's lockfile has to be readable
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+
+      - name: Fetch Stakeout
+        run: git clone --depth 1 https://github.com/vidigoat/cassandra.git /tmp/stakeout
+
+      # What moved. Costs nothing, needs nothing, and is worth having even if the step below is off.
+      - name: What moved
+        run: |
+          node /tmp/stakeout/scripts/lockfile-run.js \
+            --against "origin/${{ github.base_ref }}" --repo "$GITHUB_WORKSPACE" --dry-run
+
+      # Answers already known are free; the strategy is part of the cache key.
+      - name: Cache what we already know
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/stakeout
+          key: stakeout-behaviour-${{ runner.os }}
+
+      - name: What those changes do
+        env:
+          STAKEOUT_ALLOW_LOCAL: '1'
+          # Optional. Without them the judgement and the public record fall back to labelled
+          # stand-ins, and the behavioural diff — which is the part that matters — is unaffected.
+          NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: |
+          node /tmp/stakeout/scripts/lockfile-run.js \
+            --against "origin/${{ github.base_ref }}" \
+            --repo "$GITHUB_WORKSPACE" \
+            --json --fail-on alarming > behaviour.json
+          node -e '
+            const r = require("./behaviour.json");
+            console.log(`${r.moved} moved · ${r.ran} run · ${r.quiet} behaved identically`);
+            if (r.cannotSee.length) console.log(`watched with "${r.strategy}", blind to: ${r.cannotSee.join(", ")}`);
+            r.findings.forEach(f => console.log(`  ${f.severity.padEnd(9)} ${f.pkg} ${f.from} → ${f.to}`));
+          '
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: dependency-behaviour, path: behaviour.json }
