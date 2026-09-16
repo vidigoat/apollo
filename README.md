@@ -595,6 +595,9 @@ strategy that can see code being built.
 
 ## Architecture
 
+The long version, including the three boundaries that hold it up, is in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ```
 transcript/schema.js     normalised behaviour record; strips temp dirs, pids, hashes so two
                          identical runs compare equal. Declares CAN_SEE per strategy.
