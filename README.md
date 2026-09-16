@@ -702,6 +702,12 @@ What the suites actually protect:
   strategy that ran rather than the one we wanted; a dead machine never becomes a quiet package
 - **`differ/diff.test.js`** — severity is arithmetic; cross-strategy comparison throws
 - **`runPair.test.js`** — one checkpoint for both twins; the wave cap; nothing leaks on failure
+- **`architecture.test.js`** — that the guarantee above covers the code that *ships*. Only
+  `runPair` may fork a pair or release a branch; only the differ may assign a severity. For a while
+  the survey, the lockfile runner, the real-registry script and the server's live route had each
+  grown their own copy of the fork-observe-discard sequence. Nothing was wrong with any of them —
+  and a copy that happens to be correct today is a copy that can stop being correct without a test
+  noticing
 - **`judge/nemotron.test.js`** — the request this client actually sends, which no other suite sees
   because the rest use stubs: temperature 0, JSON response format, and cost arithmetic that can
   never produce a `$NaN` on the page

@@ -20,8 +20,9 @@
  */
 
 const { LocalMachines } = require('../adapters/local');
-const { observePackage, bestStrategy } = require('../observe');
-const { diff, summarise } = require('../differ/diff');
+const { bestStrategy } = require('../observe');
+const { runPair } = require('../runPair');
+const { summarise } = require('../differ/diff');
 const { BehaviourCache } = require('../cache');
 
 /**
@@ -92,13 +93,9 @@ async function main() {
       continue;
     }
 
-    const [a, b] = await machines.fork(checkpoint, 2);
     try {
-      const [oldT, newT] = await Promise.all([
-        observePackage({ adapter: machines, branch: a, pkg, version: from, strategy }),
-        observePackage({ adapter: machines, branch: b, pkg, version: to, strategy }),
-      ]);
-      const d = diff(oldT, newT);
+      // runPair or nothing: the one-checkpoint guarantee is tested there.
+      const { diff: d } = await runPair({ adapter: machines, checkpoint, pkg, from, to, strategy });
       cache.put(job, d);
       tally[d.severity]++;
       console.log(`${TONE[d.severity]}${d.severity}${C.off}`);
@@ -108,9 +105,6 @@ async function main() {
       // counted separately and never as "behaved identically", which would be a lie by omission.
       tally.failed++;
       console.log(`${C.amber}could not run${C.off} ${C.dim}${String(e.message).slice(0, 60)}${C.off}`);
-    } finally {
-      await machines.discard(a);
-      await machines.discard(b);
     }
   }
 

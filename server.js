@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { SimulatedSandboxes } = require('./adapters/simulated');
-const { runAll } = require('./runPair');
+const { runAll, runPair } = require('./runPair');
 const { judgeRun } = require('./judge');
 const { lookUp } = require('./evidence/tavily');
 const { observePackage, bestStrategy } = require('./observe');
@@ -66,15 +66,16 @@ async function realRun() {
 
   try {
     for (const [pkg, from, to] of REAL_JOBS) {
-      const [a, b] = await machines.fork(checkpoint, 2);
       try {
         const job = { pkg, from, to, strategy };
         const known = cache.get(job);
-        const [before, after] = known ? [null, null] : await Promise.all([
-          observePackage({ adapter: machines, branch: a, pkg, version: from, strategy }),
-          observePackage({ adapter: machines, branch: b, pkg, version: to, strategy }),
-        ]);
-        const d = known || diff(before, after);
+        // runPair when there is anything to run: it is where "both twins from one checkpoint" and
+        // "every branch released" are guaranteed, and reimplementing the sequence here would put
+        // the shipping path outside the test that proves them.
+        const ran = known ? null : await runPair({ adapter: machines, checkpoint, pkg, from, to, strategy });
+        const before = ran?.before ?? null;
+        const after = ran?.after ?? null;
+        const d = known || ran.diff;
         if (!known) cache.put(job, d);
         pairs.push({
           pkg, from, to, diff: d,
@@ -88,9 +89,6 @@ async function realRun() {
       } catch (e) {
         // A package that will not install here is a fact about that package, not the end of a run.
         pairs.push({ pkg, from, to, failed: true, reason: String(e.message).slice(0, 160) });
-      } finally {
-        await machines.discard(a);
-        await machines.discard(b);
       }
     }
 

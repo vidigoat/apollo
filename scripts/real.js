@@ -14,7 +14,8 @@
  */
 
 const { LocalMachines } = require('../adapters/local');
-const { observePackage, bestStrategy } = require('../observe');
+const { bestStrategy } = require('../observe');
+const { runPair } = require('../runPair');
 const { diff, summarise } = require('../differ/diff');
 const { judgeOne } = require('../judge');
 const { lookUp } = require('../evidence/tavily');
@@ -50,14 +51,13 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
 
   for (const [pkg, from, to] of jobs) {
     process.stdout.write(`  ${pkg} ${C.dim}${from} → ${to}${C.off}  `);
-    const [a, b] = await machines.fork(checkpoint, 2);
     try {
-      const [before, after] = await Promise.all([
-        observePackage({ adapter: machines, branch: a, pkg, version: from, strategy }),
-        observePackage({ adapter: machines, branch: b, pkg, version: to, strategy }),
-      ]);
-
-      const d = diff(before, after);
+      // Through runPair, not around it: the guarantee that both twins fork from ONE checkpoint and
+      // that every branch is released is tested there, and a path that reimplements the sequence is
+      // a path that guarantee does not cover.
+      const { before, after, diff: d } = await runPair({
+        adapter: machines, checkpoint, pkg, from, to, strategy,
+      });
       console.log(`${TONE[d.severity]}${d.severity}${C.off}`);
       console.log(`      ${C.dim}${summarise(d)}${C.off}`);
 
@@ -81,10 +81,8 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
       }
       console.log();
     } catch (e) {
+      // runPair releases its own branches in a finally, so there is nothing to clean up here.
       console.log(`${C.red}failed${C.off}\n      ${e.message}\n`);
-    } finally {
-      await machines.discard(a);
-      await machines.discard(b);
     }
   }
 

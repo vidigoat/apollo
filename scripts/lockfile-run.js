@@ -119,7 +119,8 @@ const RANK = { none: 0, minor: 1, notable: 2, alarming: 3 };
 
   // Only now do we need the machinery that executes other people's code.
   const { LocalMachines } = require('../adapters/local');
-  const { observePackage, bestStrategy } = require('../observe');
+  const { bestStrategy } = require('../observe');
+  const { runPair } = require('../runPair');
 
   let machines;
   try {
@@ -153,13 +154,11 @@ const RANK = { none: 0, minor: 1, notable: 2, alarming: 3 };
       continue;
     }
 
-    const [a, b] = await machines.fork(checkpoint, 2);
     try {
-      const [oldT, newT] = await Promise.all([
-        observePackage({ adapter: machines, branch: a, pkg: m.pkg, version: m.from, strategy }),
-        observePackage({ adapter: machines, branch: b, pkg: m.pkg, version: m.to, strategy }),
-      ]);
-      const result = diff(oldT, newT);
+      // Through runPair: one checkpoint for both twins, branches always released, both tested.
+      const { diff: result } = await runPair({
+        adapter: machines, checkpoint, pkg: m.pkg, from: m.from, to: m.to, strategy,
+      });
       cache.put(job, result);
       out(`${TONE[result.severity]}${result.severity}${C.off}`);
       if (!result.changed) { quiet++; continue; }
@@ -174,9 +173,6 @@ const RANK = { none: 0, minor: 1, notable: 2, alarming: 3 };
     } catch (e) {
       // One package failing to install is a fact about that package, not the end of the run.
       out(`${C.amber}could not run${C.off}\n      ${C.dim}${e.message}${C.off}`);
-    } finally {
-      await machines.discard(a);
-      await machines.discard(b);
     }
   }
 
