@@ -7,9 +7,12 @@
 it, imports it, writes down what it actually did — then does the same with the version you had
 before, forked from the identical starting state, and shows you the difference.
 
-On the reference tree that is 1,214 packages, 14 of which moved, 28 sandboxes, and three seconds.
-Ten of the fourteen behaved *identically*. The interface is built so that silence is the dominant
-experience, because the silence is what gives the other four their weight.
+On the reference tree that is 1,214 packages, 14 of which actually moved, and 28 twins forked from
+one checkpoint. **Ten of the fourteen behaved identically.** The interface is built so that silence
+is the dominant experience, because the silence is what gives the other four their weight.
+
+It also runs on real packages from the real registry, on your machine, today — that is further
+down, and it is how the one finding in this README was produced.
 
 ![The behavioural diff wall — most packages identical, one is not](docs/images/hero-wall.png)
 
@@ -64,12 +67,20 @@ No keys. No network. No build step. No dependencies.
 ```bash
 git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
-npm run demo      # the whole argument, in a terminal, in ~2 seconds
+npm run demo      # the whole argument, in a terminal, in about two seconds
 npm start         # the same run in a browser at http://localhost:8791
-STAKEOUT_ALLOW_LOCAL=1 npm start   # ...with a second button that runs against the real registry
 npm test          # 154 checks across 12 suites
-npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
-npm run preflight # check the live APIs, once keys exist
+```
+
+There is no `npm install` step because there is nothing to install — zero dependencies,
+deliberately. A supply-chain tool that arrives with a dependency tree is telling on itself. Node 20+.
+
+These three need a little more: Chrome, or a network, or keys.
+
+```bash
+npm run capture                    # regenerate this README's screenshots from a real run
+STAKEOUT_ALLOW_LOCAL=1 npm start   # adds a button that runs against the real npm registry
+npm run preflight                  # check the live APIs, once keys exist
 ```
 
 And then, on real packages from the real registry, on your own machine:
@@ -115,9 +126,6 @@ about to install before it does. Without the flag the button stays hidden and `/
 403 — running real code must never be something you get by default. `STAKEOUT_ALLOW_LOCAL=1` is required because these
 packages execute as *you*, with your network and your files — read `adapters/local.js` first. It is
 for proving the pipeline on packages you already trust, never for triaging one you suspect.
-
-Node 20+. There is no `npm install` step because there is nothing to install — zero dependencies,
-deliberately. A supply-chain tool that arrives with a dependency tree is telling on itself.
 
 ---
 
