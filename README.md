@@ -83,8 +83,14 @@ STAKEOUT — real packages, real registry, this machine
 Watching with "nodert". Node's API surface only — a native addon goes underneath it.
 
   left-pad 1.2.0 → 1.3.0  none
+      left-pad 1.2.0 → 1.3.0: no behavioural change
       1.2.0   nothing observed
       1.3.0   nothing observed
+
+  debug 4.3.4 → 4.4.0  none
+      debug 4.3.4 → 4.4.0: no behavioural change
+      4.3.4   env DEBUG
+      4.4.0   env DEBUG
 
   picocolors 1.0.0 → 1.1.1  minor
       picocolors 1.0.0 → 1.1.1: reads 3 environment variables it did not read before
@@ -95,6 +101,11 @@ Watching with "nodert". Node's API surface only — a native addon goes undernea
 
 Machines left open: 0 ✓
 ```
+
+Three packages, three outcomes, and the middle one is the one that matters. `debug` reads `DEBUG`
+at *both* versions and is reported as unchanged — which is the difference between watching and
+guessing. A tool that only ever printed "nothing observed" would be indistinguishable from a tool
+that was not looking.
 
 That is a true, checkable fact about a package with forty million weekly downloads, produced by
 installing both versions and running them. The same run is available from the page: start the

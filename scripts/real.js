@@ -20,9 +20,9 @@ const { judgeOne } = require('../judge');
 const { lookUp } = require('../evidence/tavily');
 
 const DEFAULT = [
-  ['left-pad', '1.2.0', '1.3.0'],
-  ['ms', '2.1.2', '2.1.3'],
-  ['picocolors', '1.0.0', '1.1.1'],
+  ['left-pad', '1.2.0', '1.3.0'],   // observably silent at both versions
+  ['debug', '4.3.4', '4.4.0'],      // genuinely active — reads DEBUG — and unchanged
+  ['picocolors', '1.0.0', '1.1.1'], // the one that actually changed
 ];
 
 const C = process.stdout.isTTY

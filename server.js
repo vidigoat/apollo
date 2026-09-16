@@ -35,11 +35,16 @@ const send = (res, code, body, type) => {
  */
 const publicRecordFor = (pkg, version) => lookUp(pkg, version, { recorded: PUBLIC_RECORD });
 
-/** Packages used for the live run. Ordinary, popular, and ones we already trust. */
+/**
+ * Packages for the live run. Ordinary, popular, ones we already trust — and chosen so the three
+ * outcomes are all visible: one that does nothing observable, one that genuinely reads an
+ * environment variable at BOTH versions and is correctly reported as unchanged, and one that
+ * actually changed. The middle case is the one that shows we are watching rather than guessing.
+ */
 const REAL_JOBS = [
-  ['left-pad', '1.2.0', '1.3.0'],
-  ['ms', '2.1.2', '2.1.3'],
-  ['picocolors', '1.0.0', '1.1.1'],
+  ['left-pad', '1.2.0', '1.3.0'],   // observably silent at both versions
+  ['debug', '4.3.4', '4.4.0'],      // genuinely active — reads DEBUG — and unchanged
+  ['picocolors', '1.0.0', '1.1.1'], // the one that actually changed
 ];
 
 const realAllowed = () => process.env.STAKEOUT_ALLOW_LOCAL === '1';
