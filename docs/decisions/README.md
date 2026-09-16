@@ -16,6 +16,7 @@ Each record says what was decided, what it cost, and what would have to be true 
 | 006 | [Triage before judgement](006-triage-before-judgement.md) | Accepted |
 | 007 | [The corpus contains packages we should miss](007-plants-that-punish-paranoia.md) | Accepted |
 | 008 | [At least one observer has to actually run](008-one-observer-must-be-real.md) | Accepted |
+| 009 | [Watch a string turning into a function](009-watch-code-becoming-code.md) | Accepted |
 
 Numbering is chronological. 001 and 002 were written before the project pivoted from chaos
 rehearsal to behavioural diffing; both survived it, and each carries a note saying how.

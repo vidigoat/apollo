@@ -599,6 +599,7 @@ what would have to be true to change it. Written for whoever picks this up next,
 | [006](docs/decisions/006-triage-before-judgement.md) | Triage before judgement | |
 | [007](docs/decisions/007-plants-that-punish-paranoia.md) | The corpus contains packages we should miss | |
 | [008](docs/decisions/008-one-observer-must-be-real.md) | At least one observer has to actually run | why `nodert` exists |
+| [009](docs/decisions/009-watch-code-becoming-code.md) | Watch a string turning into a function | the one thing eBPF cannot see |
 
 ---
 
