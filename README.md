@@ -536,7 +536,7 @@ What the suites actually protect:
 - **`server.test.js`** — the API contract over real HTTP. The list of fields it requires is
   *derived from `app.js`*, so adding something to the page and forgetting to send it fails here
   rather than on stage; also checks nothing outside `public/` can be served
-- **`public/ui.test.js`** — drives the real `app.js` against the real corpus with a stub DOM:
+- **`public/ui.test.js`** — drives the real `public/app.js` against the real corpus with a stub DOM:
   every id exists, every class is styled, the quiet majority renders as quiet, and a simulated
   verdict always says so
 
