@@ -215,7 +215,7 @@ retouched, because none of them has been touched at all.
 | | |
 |---|---|
 | ![The wall of silence](docs/images/wall-silence.png) <br/> **The wall.** 1,200 rows of nothing. You scroll past emptiness for a long time, and that scroll is the argument. | ![The catch](docs/images/catch-panel.png) <br/> **The catch.** The transcript lines that differ, what the open web says, and which models agreed. |
-| ![The fork strip](docs/images/fork-strip.png) <br/> **The run.** One hairline per forked twin, settling to grey, amber or red as each pair resolves. | ![The blind spot](docs/images/blind-spot.png) <br/> **The blind spot.** The change that watching behaviour cannot see, shown anyway. |
+| ![The fork strip](docs/images/fork-strip.png) <br/> **The run.** One hairline per forked twin. Change *watched with* and the whole wall re-runs — the caveat underneath says what that strategy could not see. | ![The blind spot](docs/images/blind-spot.png) <br/> **The blind spot.** The change that watching behaviour cannot see, shown anyway. |
 
 ---
 
