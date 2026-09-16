@@ -19,6 +19,7 @@ const vm = require('node:vm');
 const { SimulatedSandboxes } = require('../adapters/simulated');
 const { runAll } = require('../runPair');
 const { CHANGED, TOTAL, PUBLIC_RECORD, INVARIANT_FAILURES } = require('../corpus');
+const { judgeRun } = require('../judge');
 
 const HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 const CSS = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
@@ -84,6 +85,14 @@ function domFromHtml() {
 async function renderedPage() {
   const adapter = new SimulatedSandboxes();
   const r = await runAll({ adapter, changed: CHANGED });
+  const pairs = r.results.map((p) => ({
+    pkg: p.pkg, from: p.from, to: p.to, diff: p.diff, before: p.before, after: p.after,
+    record: p.diff.changed ? PUBLIC_RECORD[`${p.pkg}@${p.to}`] || null : null,
+    invariant: INVARIANT_FAILURES[`${p.pkg}@${p.to}`] || null,
+  }));
+  const judged = await judgeRun(pairs);
+  pairs.forEach((p, i) => { p.judgement = judged.results[i]; });
+
   const payload = {
     tree: { total: TOTAL, moved: CHANGED.length },
     strategy: r.strategy,
@@ -91,11 +100,8 @@ async function renderedPage() {
     twinsForked: r.twinsForked,
     quiet: r.quiet,
     costUsd: Number((r.twinsForked * 0.0146).toFixed(2)),
-    pairs: r.results.map((p) => ({
-      pkg: p.pkg, from: p.from, to: p.to, diff: p.diff, before: p.before, after: p.after,
-      record: p.diff.changed ? PUBLIC_RECORD[`${p.pkg}@${p.to}`] || null : null,
-      invariant: INVARIANT_FAILURES[`${p.pkg}@${p.to}`] || null,
-    })),
+    modelCalls: judged.modelCalls,
+    pairs,
   };
 
   const dom = domFromHtml();
@@ -199,6 +205,29 @@ async function renderedPage() {
     assert.match(dom.get('s-twins').textContent, new RegExp(String(payload.twinsForked)));
     assert.match(dom.get('s-cost').textContent, /^\$\d/);
     assert.match(dom.get('status').textContent, new RegExp(String(payload.quiet)));
+  });
+
+  await it('the page shows what the models made of the catch, and which ones spoke', async () => {
+    const { dom } = await renderedPage();
+    const c = dom.get('catch').innerHTML;
+    assert.match(c, /what the models made of it/);
+    assert.match(c, /Nemotron-3-Nano/, 'the cheap model should be named');
+    assert.match(c, /Nemotron-3-Ultra/, 'and the expensive one it escalated to');
+    assert.match(c, /two models, independently/, 'the veto is the claim — it has to be on the page');
+  });
+
+  await it('a simulated verdict says so on the page, every time', async () => {
+    delete process.env.NEBIUS_API_KEY;
+    const { dom } = await renderedPage();
+    const shown = dom.get('catch').innerHTML.split('simulated, no key set').length - 1;
+    assert.ok(shown >= 1, 'a simulated judgement rendered as if it were a real one');
+  });
+
+  await it('the quiet majority costs no model calls, and the page says how many it made', async () => {
+    const { dom, payload } = await renderedPage();
+    const quiet = payload.pairs.filter((p) => !p.diff.changed);
+    quiet.forEach((p) => assert.equal(p.judgement.spend.length, 0, `${p.pkg} paid for a model it did not need`));
+    assert.match(dom.get('status').textContent, new RegExp(`${payload.modelCalls} model calls`));
   });
 
   await it('package names from the corpus cannot inject markup', async () => {

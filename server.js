@@ -5,6 +5,7 @@ const path = require('path');
 
 const { SimulatedSandboxes } = require('./adapters/simulated');
 const { runAll } = require('./runPair');
+const { judgeRun } = require('./judge');
 const { CHANGED, TOTAL, PUBLIC_RECORD, INVARIANT_FAILURES } = require('./corpus');
 
 const PORT = 8791;
@@ -62,7 +63,7 @@ http
     if (url.pathname === '/api/run') {
       const adapter = new SimulatedSandboxes();
       return runAll({ adapter, changed: CHANGED })
-        .then((r) => {
+        .then(async (r) => {
           const pairs = r.results.map((p) => ({
             pkg: p.pkg,
             from: p.from,
@@ -73,6 +74,10 @@ http
             record: p.diff.changed ? publicRecordFor(p.pkg, p.to) : null,
             invariant: INVARIANT_FAILURES[`${p.pkg}@${p.to}`] || null,
           }));
+
+          // Nemotron reads the diffs — never the packages. Quiet ones never reach a model at all.
+          const judged = await judgeRun(pairs);
+          pairs.forEach((p, i) => { p.judgement = judged.results[i]; });
 
           return send(
             res,
@@ -85,7 +90,12 @@ http
               twinsForked: r.twinsForked,
               quiet: r.quiet,
               wallMs: r.wallMs,
-              costUsd: Number((r.twinsForked * 0.0146).toFixed(2)),
+              sandboxUsd: Number((r.twinsForked * 0.0146).toFixed(2)),
+              modelUsd: judged.costUsd,
+              modelCalls: judged.modelCalls,
+              accused: judged.accused,
+              simulatedJudgement: judged.simulated,
+              costUsd: Number((r.twinsForked * 0.0146 + judged.costUsd).toFixed(2)),
               pairs,
             }),
             'application/json'

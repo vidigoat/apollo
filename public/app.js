@@ -68,7 +68,7 @@ function row(p) {
         <span class="pair__name">${esc(p.pkg)}</span>
         <span class="pair__ver">${esc(p.from)} → ${esc(p.to)}</span>
         ${quiet ? '<span class="pair__verdict">no behavioural change</span>'
-                : `<span class="pair__verdict is-changed">${esc(d.reasons[0] || 'changed')}</span>`}
+                : `<span class="pair__verdict is-changed">${esc(p.judgement?.verdict?.meaning || d.reasons[0] || 'changed')}</span>`}
       </header>
       ${quiet ? '' : `
       <div class="pair__cols">
@@ -77,6 +77,28 @@ function row(p) {
       </div>`}
     </article>`;
 }
+
+/* ── what the models made of it ───────────────────────────────────── */
+
+/**
+ * Nemotron reads the diff, never the package. It is allowed to explain a finding and to talk one
+ * down; it is never allowed to talk one up. So this panel shows the reading and the agreement —
+ * and says plainly when nothing was accused.
+ */
+function judgementPanel(j) {
+  if (!j?.verdict) return '';
+  return `
+    <div class="judge">
+      <span class="record__k">what the models made of it${j.spend.some((s) => s.simulated) ? ' · simulated, no key set' : ''}</span>
+      <p class="judge__read">${esc(j.verdict.meaning)}</p>
+      <ul class="judge__chain">
+        ${j.spend.map((s) => `<li><code>${esc(shortModel(s.model))}</code></li>`).join('')}
+      </ul>
+      <p class="judge__call ${j.accused ? 'is-accused' : ''}">${esc(j.reason)}</p>
+    </div>`;
+}
+
+const shortModel = (m) => String(m).split('/').pop();
 
 /* ── the catch ────────────────────────────────────────────────────── */
 
@@ -102,6 +124,7 @@ function catchPanel(p) {
         <p class="record__v ${p.record.changelog ? '' : 'is-absent'}">${esc(p.record.verdict)}</p>
         ${p.record.changelog ? `<p class="record__note">${esc(p.record.changelog)}</p>` : ''}
       </div>` : ''}
+      ${judgementPanel(p.judgement)}
     </article>`;
 }
 
@@ -146,7 +169,8 @@ async function run() {
   $('#s-cost').textContent = `$${result.costUsd}`;
   statusEl.textContent =
     `${result.twinsForked} twins · ${result.quiet} packages behaved identically · ` +
-    `${result.pairs.filter((p) => p.diff.changed).length} changed · $${result.costUsd}`;
+    `${result.pairs.filter((p) => p.diff.changed).length} changed · ` +
+    `${result.modelCalls} model calls · $${result.costUsd}`;
 
   const cansee = $('#cansee');
   const missing = Object.entries(result.canSee || {}).filter(([, v]) => !v).map(([k]) => k);
