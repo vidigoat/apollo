@@ -25,3 +25,13 @@ rehearsal to behavioural diffing; both survived it, and each carries a note sayi
 
 Never cite a check count in prose. It goes stale within the hour and reads as carelessness to
 exactly the reviewer it was written for. Say "every suite" and let `npm test` print the number.
+
+## One unexplained failure, recorded rather than forgotten
+
+On 2026-09-16 at 21:20 a single `npm test` run reported `182 checks · FAILED: corpus.test.js` — one
+check short — and every run before and after it, nine of them including four under deliberate CPU
+load, came back at 183 and green. It has not reproduced.
+
+Noted here because an unreproducible failure that nobody writes down becomes an unreproducible
+failure that nobody remembers. If corpus.test.js fails again, start from the two tests in it that
+do real async work: the wave runner and the determinism check.
