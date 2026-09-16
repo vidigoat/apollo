@@ -1,16 +1,41 @@
-# Demo video — shot by shot
+# The recording script
 
-Under three minutes. Narration must name Nebius Token Factory and the Nemotron model used.
+Shot list for the ≤3 minute submission video. Numbered so a second take can pick up anywhere.
 
-| time | on screen | said |
-|---|---|---|
-| 0:00 | a real outage headline | `TODO` open on the cost, not the tool |
-| 0:12 | the contact sheet, idle | `TODO` what you are looking at |
-| 0:20 | the run: waves igniting | `TODO` what forking a twin means |
-| 0:45 | three frames circled | `TODO` only what actually failed |
-| 1:00 | open F-093, the repro log | `TODO` read the evidence aloud |
-| 1:40 | the fix, then 500/500 green | `TODO` proven, not proposed |
-| 2:10 | the abstain card | `TODO` what it refused to say |
-| 2:30 | cost line | `TODO` close on why this was impossible before |
+**Setup:** `npm start` → `localhost:8791`. Have a terminal ready in a second window for shots 9–11.
+Nothing here needs a key; if you have `NEBIUS_API_KEY` set, the model chain shows real costs instead
+of the labelled stand-in, which is better but not required.
 
-Rules: no cuts inside the run. Show real logs. Do not speed up the forking — the wait is the point.
+| # | shot | line | why it is in |
+|---|---|---|---|
+| 0 | black, text only: *"Your lockfile pins versions. It pins nothing about what they do."* | silence | the whole thesis, before anything moves |
+| 1 | press **Run the stakeout** | "1,214 packages. Fifteen of them moved." | — |
+| 2 | 30 hairlines fill left to right | "Two twins per package, forked from one checkpoint at the same instant." | ConTree, shown rather than described |
+| 3 | **scroll the wall slowly — say nothing for eight seconds** | *(silence)* | **do not cut this.** the silence IS the argument; a fast cut throws away the finding |
+| 4 | one red row breaks the grey | "Ten of the fifteen behaved identically. Here is one that did not." | weight comes from the contrast |
+| 5 | the catch: `env AWS_SECRET_ACCESS_KEY` → `connect cdn-assets-delivery.workers.dev` | "It reads a credential it never read before, then opens a socket." | — |
+| 6 | the model chain: Nano → Ultra → Super, ending *"two models, independently, read this as credential exfiltration"* | "One model is an opinion. It needs two." | Nemotron load-bearing, not decoration |
+| 7 | scroll to `node-fetch-retry` — also contacts a new host, **not** flagged | "Behaviourally identical to the attack. The maintainer documented it, and Tavily found the changelog." | proves it is not merely paranoid — the hardest thing to demonstrate |
+| 8 | **change "watched with" to `nodert`.** The wall re-runs; `flat-config` turns red | "Same packages. Same bytes. Different answer — because something else was watching." | ⭐ **the best shot in the video** |
+| 8b | change it to `fsdiff`. Everything goes quiet, caption reads *cannot see: net, dns, env, proc, exec* | "And a filesystem-only run sees none of it — and says so, instead of reporting calm." | silence with a reason is not the same as silence |
+| 9 | the blind-spot panel: `5/500 orders drifted by +0.01` | "This one it cannot see at all. Rounding changed, tests pass. We show it anyway." | honesty as a feature |
+| 10 | terminal: `STAKEOUT_ALLOW_LOCAL=1 npm run real` → the picocolors finding | "That is the real npm registry, thirty seconds ago." | not a fixture |
+| 11 | black: *"7 model calls for 1,214 packages."* | — | the economics, last |
+
+## The two lines the video exists to earn
+
+> Rules escalate. Models explain. A model here can talk a finding **down** — it can never talk one up.
+
+> 2026's attacks ship a decoder, not a payload. A string becoming a function never becomes a syscall,
+> so a kernel tracer watches the process and misses the thought.
+
+## Things that will ruin a take
+
+- **Cutting shot 3 short.** The scroll through a thousand identical rows is the product. It feels too
+  long while recording and is exactly right on playback.
+- **Zooming in on the findings.** Cropping to the red rows inverts the argument — the claim is that
+  almost nothing changed.
+- **Saying "detects malware".** It does not. It reports what changed and refuses to accuse without a
+  second model agreeing. The refusal is the differentiator; claiming detection throws it away.
+- Forgetting shot 8b. Shot 8 alone looks like a tool getting a better answer. 8 and 8b together show
+  it being honest about what it could not see, which is the harder and better claim.
