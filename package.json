@@ -16,7 +16,8 @@
     "real": "node scripts/real.js",
     "preflight": "node scripts/preflight.js",
     "lockfile": "node scripts/lockfile-run.js",
-    "survey": "node scripts/survey.js"
+    "survey": "node scripts/survey.js",
+    "validate-prompt": "node scripts/validate-prompt.js"
   },
   "keywords": [
     "supply-chain",
