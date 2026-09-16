@@ -2,7 +2,9 @@
 
 Shot list for the ≤3 minute submission video. Numbered so a second take can pick up anywhere.
 
-**Setup:** `npm start` → `localhost:8791`. Have a terminal ready in a second window for shots 9–11.
+**Setup:** `npm start` → `localhost:8791`. Have a terminal ready in a second window for shots 9–11,
+and **have one of your own repositories open in it** — shot 10 is much stronger against real code you
+wrote than against anything shipped in this repo.
 Nothing here needs a key; if you have `NEBIUS_API_KEY` set, the model chain shows real costs instead
 of the labelled stand-in, which is better but not required.
 
@@ -19,7 +21,9 @@ of the labelled stand-in, which is better but not required.
 | 8 | **change "watched with" to `nodert`.** The wall re-runs; `flat-config` turns red | "Same packages. Same bytes. Different answer — because something else was watching." | ⭐ **the best shot in the video** |
 | 8b | change it to `fsdiff`. Everything goes quiet, caption reads *cannot see: net, dns, env, proc, exec* | "And a filesystem-only run sees none of it — and says so, instead of reporting calm." | silence with a reason is not the same as silence |
 | 9 | the blind-spot panel: `5/500 orders drifted by +0.01` | "This one it cannot see at all. Rounding changed, tests pass. We show it anyway." | honesty as a feature |
-| 10 | terminal: `STAKEOUT_ALLOW_LOCAL=1 npm run real` → the picocolors finding | "That is the real npm registry, thirty seconds ago." | not a fixture |
+| 10 | terminal, **in one of your own repositories**: `npm run lockfile -- --against HEAD~20 --dry-run` | "This is my project. Twenty commits. Here is what actually moved." | ⭐ the shot that makes it a tool instead of a demo — no fixture, no keys, their repo |
+| 10b | drop `--dry-run`: it installs and runs those packages | "And here is what those changes do." | the claim, closed |
+| 10c | run the exact same command again: `Cache: 3 answered without running` | "A version bump did what it did. Nobody should ever pay for that twice." | why it scales past one repo |
 | 11 | black: *"7 model calls for 1,214 packages."* | — | the economics, last |
 
 ## The two lines the video exists to earn
