@@ -66,7 +66,8 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 139 checks across 11 suites
+STAKEOUT_ALLOW_LOCAL=1 npm start   # ...with a second button that runs against the real registry
+npm test          # 143 checks across 11 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
@@ -96,7 +97,10 @@ Machines left open: 0 ✓
 ```
 
 That is a true, checkable fact about a package with forty million weekly downloads, produced by
-installing both versions and running them. `STAKEOUT_ALLOW_LOCAL=1` is required because these
+installing both versions and running them. The same run is available from the page: start the
+server with `STAKEOUT_ALLOW_LOCAL=1` and a second button appears, which names the packages it is
+about to install before it does. Without the flag the button stays hidden and `/api/real` returns
+403 — running real code must never be something you get by default. `STAKEOUT_ALLOW_LOCAL=1` is required because these
 packages execute as *you*, with your network and your files — read `adapters/local.js` first. It is
 for proving the pipeline on packages you already trust, never for triaging one you suspect.
 
@@ -465,7 +469,7 @@ npm test
 ```
 
 ```
-11 suites · 139 checks
+11 suites · 143 checks
 all green
 ```
 

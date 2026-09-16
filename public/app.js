@@ -8,6 +8,7 @@ const $ = (s) => document.querySelector(s);
 const stripEl = $('#strip');
 const statusEl = $('#status');
 const runBtn = $('#run');
+const realBtn = $('#run-real');
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep = (ms) => new Promise((r) => setTimeout(r, reduced ? 0 : ms));
@@ -22,6 +23,20 @@ async function boot() {
   $('#s-twins').textContent = '—';
   $('#s-cost').textContent = '—';
   statusEl.textContent = `${TREE.moved} versions moved · ${TREE.unchanged.toLocaleString()} unchanged and not re-run`;
+
+  // The live run is only offered when the server was started with it enabled.
+  const note = $('#realnote');
+  if (TREE.realAllowed) {
+    realBtn.hidden = false;
+    note.textContent =
+      `Live runs are on. "Run against the real registry" installs ${TREE.realJobs.map((j) => j.pkg).join(', ')} ` +
+      'from npm and runs them here — really, not from a fixture. It takes about a minute.';
+  } else {
+    note.textContent =
+      'This run is a fixture, so it is deterministic and anyone can check it. To watch real ' +
+      'packages instead, start the server with STAKEOUT_ALLOW_LOCAL=1 — read adapters/local.js first.';
+  }
+  note.hidden = false;
 
   stripEl.innerHTML = '';
   for (let i = 0; i < TREE.moved * 2; i++) {
@@ -130,6 +145,63 @@ function catchPanel(p) {
 
 /* ── the run ──────────────────────────────────────────────────────── */
 
+/** Draw a finished run. Identical for the fixture and the live registry — same shapes, same code. */
+function present(result) {
+  $('#s-twins').textContent = `${result.twinsForked} twins`;
+  $('#s-cost').textContent = `$${result.costUsd}`;
+  statusEl.textContent =
+    `${result.twinsForked} twins · ${result.quiet} packages behaved identically · ` +
+    `${result.pairs.filter((p) => p.diff.changed).length} changed · ` +
+    `${result.modelCalls} model calls · $${result.costUsd}` +
+    (result.live ? ` · live, in ${(result.wallMs / 1000).toFixed(1)}s` : '');
+
+  const cansee = $('#cansee');
+  const missing = Object.entries(result.canSee || {}).filter(([, v]) => !v).map(([k]) => k);
+  cansee.textContent = missing.length
+    ? `Watched with "${result.strategy}", which cannot see: ${missing.join(', ')}. Silence in those columns is not evidence of quiet behaviour.`
+    : `Watched with "${result.strategy}" — every channel, through Node's own API surface. A native addon goes underneath it.`;
+  cansee.hidden = false;
+
+  $('#wall').innerHTML = result.pairs.map(row).join('');
+  $('#wall-section').hidden = false;
+
+  const alarming = result.pairs.filter((p) => p.diff.severity === 'alarming');
+  $('#catch').innerHTML = alarming.map(catchPanel).join('');
+  $('#catch-section').hidden = alarming.length === 0;
+
+  const invisible = result.pairs.filter((p) => p.invariant);
+  $('#blind').innerHTML = invisible.map(blindPanel).join('');
+  $('#blind-section').hidden = invisible.length === 0;
+}
+
+/** The live run: really installing, really importing, really slow. */
+async function runReal() {
+  realBtn.disabled = true;
+  runBtn.disabled = true;
+  [...stripEl.children].forEach((m) => (m.className = 'mark is-live'));
+  statusEl.textContent = 'installing from npm and importing, for real — about a minute…';
+
+  try {
+    const payload = await (await fetch('/api/real')).json();
+    if (payload.error) throw new Error(payload.error);
+    stripEl.innerHTML = '';
+    payload.pairs.forEach((p) => {
+      for (let i = 0; i < 2; i++) {
+        const mark = document.createElement('i');
+        mark.className = `mark ${p.diff.changed ? `is-${p.diff.severity}` : 'is-quiet'}`;
+        mark.title = `${p.pkg} ${p.from} → ${p.to}`;
+        stripEl.appendChild(mark);
+      }
+    });
+    present(payload);
+  } catch (e) {
+    statusEl.textContent = `live run failed: ${e.message}`;
+  } finally {
+    realBtn.disabled = false;
+    runBtn.disabled = false;
+  }
+}
+
 async function run() {
   runBtn.disabled = true;
   $('#wall-section').hidden = true;
@@ -165,50 +237,24 @@ async function run() {
     });
   });
 
-  $('#s-twins').textContent = `${result.twinsForked} twins`;
-  $('#s-cost').textContent = `$${result.costUsd}`;
-  statusEl.textContent =
-    `${result.twinsForked} twins · ${result.quiet} packages behaved identically · ` +
-    `${result.pairs.filter((p) => p.diff.changed).length} changed · ` +
-    `${result.modelCalls} model calls · $${result.costUsd}`;
-
-  const cansee = $('#cansee');
-  const missing = Object.entries(result.canSee || {}).filter(([, v]) => !v).map(([k]) => k);
-  cansee.textContent = missing.length
-    ? `Watched with "${result.strategy}", which cannot see: ${missing.join(', ')}. Silence in those columns is not evidence of quiet behaviour.`
-    : `Watched with "${result.strategy}" — syscalls, sockets, files, environment and processes.`;
-  cansee.hidden = false;
-
-  $('#wall').innerHTML = result.pairs.map(row).join('');
-  $('#wall-section').hidden = false;
-
-  const alarming = result.pairs.filter((p) => p.diff.severity === 'alarming');
-  if (alarming.length) {
-    $('#catch').innerHTML = alarming.map(catchPanel).join('');
-    $('#catch-section').hidden = false;
-  }
-
-  const invisible = result.pairs.filter((p) => p.invariant);
-  if (invisible.length) {
-    $('#blind').innerHTML = invisible
-      .map(
-        (p) => `
-      <article class="blind">
-        <span class="blind__name">${esc(p.pkg)} ${esc(p.from)} → ${esc(p.to)}</span>
-        <pre class="blind__probe">$ ${esc(p.invariant.probe)}\n${esc(p.invariant.output)}</pre>
-        <p class="blind__note">${esc(p.invariant.note)}</p>
-        ${p.record ? `<p class="record__note">Changelog: ${esc(p.record.changelog || 'nothing')}</p>` : ''}
-      </article>`
-      )
-      .join('');
-    $('#blind-section').hidden = false;
-  }
+  present(result);
 
   runBtn.disabled = false;
   runBtn.textContent = 'Run again';
 }
 
+function blindPanel(p) {
+  return `
+    <article class="blind">
+      <span class="blind__name">${esc(p.pkg)} ${esc(p.from)} → ${esc(p.to)}</span>
+      <pre class="blind__probe">$ ${esc(p.invariant.probe)}\n${esc(p.invariant.output)}</pre>
+      <p class="blind__note">${esc(p.invariant.note)}</p>
+      ${p.record ? `<p class="record__note">Changelog: ${esc(p.record.changelog || 'nothing')}</p>` : ''}
+    </article>`;
+}
+
 runBtn.addEventListener('click', run);
+realBtn.addEventListener('click', runReal);
 
 /**
  * Capture hook, for generating the README's screenshots from a real run rather than drawing them.

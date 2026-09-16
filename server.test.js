@@ -116,6 +116,21 @@ const json = async (p) => (await get(p)).json();
     }
   });
 
+  await it('the live run is off unless it was deliberately turned on', async () => {
+    // The server under test is started without STAKEOUT_ALLOW_LOCAL. Running real packages must
+    // never be something you get by default — they execute as whoever started this.
+    assert.equal(tree.realAllowed, false);
+    const r = await get('/api/real');
+    assert.equal(r.status, 403);
+    const body = await r.json();
+    assert.match(body.error, /STAKEOUT_ALLOW_LOCAL/);
+    assert.match(body.error, /adapters\/local\.js/, 'the refusal should say where to read first');
+  });
+
+  await it('the fixture run says it is a fixture', () => {
+    assert.equal(run.live, false, 'a fixture that does not declare itself is the thing this repo is against');
+  });
+
   await it('the page and its assets are served', async () => {
     for (const [p, type] of [['/', 'text/html'], ['/app.js', 'text/javascript'], ['/style.css', 'text/css']]) {
       const r = await get(p);

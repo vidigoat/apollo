@@ -67,7 +67,14 @@ function makeEl(id) {
 /** Every id the page declares — asking for one that is not in index.html is a failure, not null. */
 function domFromHtml() {
   const ids = [...HTML.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
-  const els = new Map(ids.map((i) => [i, makeEl(i)]));
+  const els = new Map(ids.map((id) => {
+    const el = makeEl(id);
+    // Carry the markup's own `hidden` across. Without this the stub starts everything visible, and
+    // a test asking "is this hidden until we say so?" answers about the stub, not about the page.
+    const tag = HTML.match(new RegExp(`<[^>]*\\bid="${id}"[^>]*>`));
+    el.hidden = Boolean(tag && /\shidden(\s|>|\/)/.test(tag[0]));
+    return [id, el];
+  }));
   return {
     ids,
     document: {
@@ -85,7 +92,7 @@ function domFromHtml() {
   };
 }
 
-async function renderedPage() {
+async function renderedPage(treeExtra = {}) {
   const adapter = new SimulatedSandboxes();
   const r = await runAll({ adapter, changed: CHANGED });
   const pairs = r.results.map((p) => ({
@@ -109,7 +116,7 @@ async function renderedPage() {
 
   const dom = domFromHtml();
   const routes = {
-    '/api/tree': { total: TOTAL, moved: CHANGED.length, unchanged: TOTAL - CHANGED.length },
+    '/api/tree': { total: TOTAL, moved: CHANGED.length, unchanged: TOTAL - CHANGED.length, ...treeExtra },
     '/api/run': payload,
   };
 
@@ -233,6 +240,21 @@ async function renderedPage() {
     const quiet = payload.pairs.filter((p) => !p.diff.changed);
     quiet.forEach((p) => assert.equal(p.judgement.spend.length, 0, `${p.pkg} paid for a model it did not need`));
     assert.match(dom.get('status').textContent, new RegExp(`${payload.modelCalls} model calls`));
+  });
+
+  await it('the live-run button is hidden until the server says it is allowed', async () => {
+    const { dom } = await renderedPage(); // /api/tree stub does not set realAllowed
+    assert.equal(dom.get('run-real').hidden, true, 'offered a live run the server would refuse');
+    assert.match(dom.get('realnote').textContent, /fixture/);
+    assert.match(dom.get('realnote').textContent, /STAKEOUT_ALLOW_LOCAL/, 'and says how to turn it on');
+  });
+
+  await it('when it is allowed, the page says what will actually happen', async () => {
+    const { dom } = await renderedPage({ realAllowed: true, realJobs: [{ pkg: 'left-pad' }, { pkg: 'ms' }] });
+    assert.equal(dom.get('run-real').hidden, false);
+    const note = dom.get('realnote').textContent;
+    assert.match(note, /left-pad, ms/, 'a live run must name the packages it is about to install');
+    assert.match(note, /from npm/);
   });
 
   await it('package names from the corpus cannot inject markup', async () => {
