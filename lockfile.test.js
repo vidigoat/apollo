@@ -189,4 +189,69 @@ it('most of a real upgrade does not move, and the shape says so', () => {
   assert.ok(d.moved.length < d.total * 0.05, 'if most of a tree moves, something is wrong with the reading');
 });
 
+/* ── the lockfiles it will actually meet ───────────────────────────────── */
+
+it('a scoped package keeps its scope', () => {
+  const g = parseLockfile(JSON.stringify({
+    lockfileVersion: 3,
+    packages: {
+      '': { name: 'app' },
+      'node_modules/@babel/core': { version: '7.24.0' },
+      'node_modules/@types/node': { version: '20.11.0' },
+    },
+  }));
+  assert.equal(g.versions.get('@babel/core'), '7.24.0');
+  assert.equal(g.versions.size, 2, 'a scope is part of the name, not a directory to walk past');
+});
+
+it('an explicit name beats the path it was found at', () => {
+  // npm writes aliases this way: installed at one path, actually a different package.
+  const g = parseLockfile(JSON.stringify({
+    lockfileVersion: 3,
+    packages: {
+      '': { name: 'app' },
+      'node_modules/my-alias': { name: 'real-package', version: '1.2.3' },
+    },
+  }));
+  assert.equal(g.versions.get('real-package'), '1.2.3');
+  assert.equal(g.versions.has('my-alias'), false, 'ran the alias instead of the package');
+});
+
+it('a node with no version is skipped, not recorded as undefined', () => {
+  const g = parseLockfile(JSON.stringify({
+    lockfileVersion: 3,
+    packages: { '': { name: 'app' }, 'node_modules/weird': { link: true }, 'node_modules/fine': { version: '1.0.0' } },
+  }));
+  assert.deepEqual([...g.versions.keys()], ['fine']);
+});
+
+it('a v1 lockfile with no dependencies at all is empty, not unreadable', () => {
+  // Distinct from an unrecognised format: this one we understood, and it genuinely has nothing.
+  const g = parseLockfile(JSON.stringify({ lockfileVersion: 1, dependencies: {} }));
+  assert.equal(g.format, 'v1');
+  assert.equal(g.total, 0);
+});
+
+it('a downgrade is a change like any other', () => {
+  // Rolling a dependency back is exactly when you want to know what changed, and it is easy to
+  // write a comparison that only notices version numbers going up.
+  const a = parseLockfile(JSON.stringify({ lockfileVersion: 3, packages: { '': {}, 'node_modules/p': { version: '2.0.0' } } }));
+  const b = parseLockfile(JSON.stringify({ lockfileVersion: 3, packages: { '': {}, 'node_modules/p': { version: '1.9.0' } } }));
+  assert.deepEqual(whatMoved(a, b).moved, [{ pkg: 'p', from: '2.0.0', to: '1.9.0' }]);
+});
+
+it('a tree of ten thousand packages is read without complaint', () => {
+  const big = JSON.stringify({
+    lockfileVersion: 3,
+    packages: Object.fromEntries([
+      ['', { name: 'app' }],
+      ...Array.from({ length: 10000 }, (_, i) => [`node_modules/p${i}`, { version: '1.0.0' }]),
+    ]),
+  });
+  const started = Date.now();
+  const g = parseLockfile(big);
+  assert.equal(g.total, 10000);
+  assert.ok(Date.now() - started < 3000, 'reading a lockfile should not be the slow part of anything');
+});
+
 console.log(`\n${passed} passed`);
