@@ -72,7 +72,7 @@ attributing a difference to the package rather than to the machine. A test wraps
 fails if the two twins ever come from more than one checkpoint.
 
 **Nemotron at three sizes, for three different jobs.** Nano triages everything that moved, Ultra
-judges only what earned it, and Super must independently agree before anything is accused. Seven
+judges only what earned it, and Super must independently agree before anything is accused. Nine
 model calls for a 1,214-package tree — running the 550B on everything is the obvious design and the
 one that makes a tool like this unaffordable.
 
@@ -140,7 +140,7 @@ Same bytes, three honest answers — and the transcript always says which questi
 Stakeout cannot see it, and the interface has a section saying so. A tool that only advertises its
 hits is not a security tool.
 
-**It is affordable.** Seven model calls for 1,214 packages, and a behavioural cache means a version
+**It is affordable.** Nine model calls for 1,214 packages, and a behavioural cache means a version
 pair is paid for once — `lodash 4.17.20 → 4.17.21` did what it did and will not do something else
 next Tuesday.
 

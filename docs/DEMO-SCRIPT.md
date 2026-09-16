@@ -26,7 +26,7 @@ of the labelled stand-in, which is better but not required.
 | 10 | terminal, **in one of your own repositories**: `npm run lockfile -- --against HEAD~20 --dry-run` | "This is my project. Twenty commits. Here is what actually moved." | ⭐ the shot that makes it a tool instead of a demo — no fixture, no keys, their repo |
 | 10b | drop `--dry-run`: it installs and runs those packages | "And here is what those changes do." | the claim, closed |
 | 10c | run the exact same command again: `Cache: 3 answered without running` | "A version bump did what it did. Nobody should ever pay for that twice." | why it scales past one repo |
-| 11 | black: *"7 model calls for 1,214 packages."* | — | the economics, last |
+| 11 | black: *"9 model calls for 1,214 packages."* | — | the economics, last |
 
 ## The two lines the video exists to earn
 

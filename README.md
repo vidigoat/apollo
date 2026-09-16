@@ -295,8 +295,8 @@ WHAT WATCHING BEHAVIOUR CANNOT SEE
 ──────────────────────────────────────────────────────────────────────────────
 THE BILL
 
-  28 sandboxes          $0.41
-  7 model calls        (not 12 — triage is the design)
+  30 sandboxes          $0.44
+  9 model calls        (not 15 — triage is the design)
   10 quiet packages     0 model calls, 0 searches
 
   Accused: express-fileupload
@@ -477,7 +477,7 @@ procurement. The tree is mostly boring and paying frontier prices to be told so 
 | Changed, judged | 2 | 2 each (Nano + Ultra) |
 | Accused | 1 | 3 (Nano + Ultra + Super) |
 
-**7 model calls for a 1,214-package tree.**
+**9 model calls for a 1,214-package tree.**
 
 ---
 

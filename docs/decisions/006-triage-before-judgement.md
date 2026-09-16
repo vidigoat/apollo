@@ -18,7 +18,7 @@ Running the 550B on all 1,214 packages is the obvious design, and it is the one 
 product. Most of a dependency tree is boring, and paying frontier prices to be told so is waste
 that shows up on someone's invoice as a reason to cancel.
 
-The measured result on the reference corpus: **7 model calls for a 1,214-package tree.** Ten of the
+The measured result on the reference corpus: **9 model calls for a 1,214-package tree.** Ten of the
 packages that moved never reach a model at all, and the 1,200 that did not move are never
 re-run in the first place — re-running what did not change is theatre.
 
