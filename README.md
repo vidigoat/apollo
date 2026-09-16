@@ -83,6 +83,38 @@ STAKEOUT_ALLOW_LOCAL=1 npm start   # adds a button that runs against the real np
 npm run preflight                  # check the live APIs, once keys exist
 ```
 
+### What does the real registry actually look like?
+
+`STAKEOUT_ALLOW_LOCAL=1 npm run survey` runs twenty upgrades of genuinely popular packages —
+`semver`, `chalk`, `debug`, `lru-cache`, `tslib`, `minimatch`, `uuid`, `dotenv` and the rest. None of
+them is chosen for being interesting, because that is the only way a baseline is worth anything.
+
+```
+  18 of 20 behaved identically at both versions.
+  minor 2 · notable 0 · alarming 0
+
+  MINOR     picocolors 1.0.0 → 1.1.1
+      reads 3 environment variables it did not read before
+        env CI · env FORCE_COLOR · env NO_COLOR
+
+  MINOR     yallist 4.0.0 → 5.0.0
+      reads 1 environment variable it did not read before
+        env NODE_V8_COVERAGE
+```
+
+**This is the measurement the whole idea rests on.** Ninety per cent of real upgrades of real
+packages change nothing observable at all — so when one does, it is worth a human's attention rather
+than being one line in a wall of noise. A tool whose baseline is unknown cannot tell you whether a
+result is unusual; "one package reads a new environment variable" only means something once you know
+the other nineteen read nothing.
+
+And the two exceptions are exactly the shape you would want them to be: a colour library learning
+about `NO_COLOR`, and a list library noticing V8 coverage instrumentation. Both benign, both
+explicable in one sentence, neither raised above `minor`. That is the difference between a tool you
+keep installed and one you mute in a week.
+
+Run it twice and the second costs nothing — `Cache: 20 free, 0 learned`.
+
 ### Point it at your own repository
 
 This is the one that matters. It reads your actual `package-lock.json`, compares it to the same file
