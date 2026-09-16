@@ -86,6 +86,16 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
 
   const r = { ...empty(), ...raw };
 
+  // A transcript may not contain a channel its own strategy cannot see.
+  //
+  // This is the whole `canSee` contract made structural rather than advisory. An adapter that
+  // hands back network activity from a filesystem-only run is describing something it did not
+  // watch, and carrying that forward would let the differ raise a finding out of an observation
+  // that never happened. Dropping it here means the caveat and the data can never disagree.
+  Object.keys(r).forEach((field) => {
+    if (CAN_SEE[strategy][field] === false) r[field] = [];
+  });
+
   return {
     pkg,
     version,

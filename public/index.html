@@ -104,7 +104,7 @@
  └───┬──┘  └──┬───┘
      │        │
      ▼        ▼
-  TRANSCRIPT  TRANSCRIPT     net · dns · files · env · processes
+  TRANSCRIPT  TRANSCRIPT     net · dns · files · env · processes · code built at runtime
      └────┬───┘              normalised: temp dirs, pids and hashes removed, so two
           │                  identical runs of the same version compare equal
           ▼
@@ -192,6 +192,11 @@
     <p><b>A change in what the code computes.</b> That is the <code>money-fmt</code> section above.</p>
     <p><b>A package that notices it is being watched.</b> Each twin is its own microVM rather than a
     container, which raises the cost of detection. It does not eliminate it.</p>
+    <p><b>And one thing it now does see.</b> 2026's attacks ship a decoder rather than a payload, and
+    a string becoming a function never becomes a syscall — so a kernel tracer watches the process
+    and misses the thought. The <code>nodert</code> strategy watches Node's own API surface and
+    catches the construction. It is weaker than eBPF nearly everywhere and stronger in exactly that
+    one place, which is why a transcript always says which one watched it.</p>
   </div>
 </section>
 

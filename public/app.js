@@ -61,6 +61,7 @@ function lines(t, d, side) {
     });
   };
 
+  add('exec', (e) => `${e.how} ${e.sample}`);
   add('net', (n) => `→ ${n.host}:${n.port}`);
   add('dns', (x) => `dns ${x}`);
   add('env', (e) => `env ${e}`);
@@ -127,6 +128,7 @@ function catchPanel(p) {
       </header>
       <ul class="catch__reasons">${d.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
       <pre class="catch__transcript">${[
+        ...d.exec.added.map((e) => `${e.how.padEnd(8)} ${e.sample}`),
         ...d.env.added.map((e) => `env      ${e}`),
         ...d.dns.added.map((x) => `dns      ${x}`),
         ...d.net.added.map((n) => `connect  ${n.host}:${n.port}`),

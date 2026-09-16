@@ -63,6 +63,31 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
     console.log(`      ${C.dim}call:${C.off} ${j.accused ? C.red + j.reason + C.off : j.reason}\n`);
   }
 
+  /* ── the same package, watched two ways ───────────────────────────── */
+
+  const { transcript } = require('../transcript/schema');
+  const { diff } = require('../differ/diff');
+  const { behaviourFor } = require('../corpus');
+
+  rule('THE SAME PACKAGE, WATCHED TWO WAYS');
+  console.log(`\n  ${C.dim}flat-config 3.2.0 → 3.2.1 decodes a blob, turns it into a function, and only`);
+  console.log(`  then opens a socket. Whether that is notable or alarming depends entirely on`);
+  console.log(`  what was watching.${C.off}\n`);
+
+  for (const strategy of ['fsdiff', 'ebpf', 'nodert']) {
+    const d = diff(
+      transcript({ pkg: 'flat-config', version: '3.2.0', strategy, raw: behaviourFor('flat-config', '3.2.0') }),
+      transcript({ pkg: 'flat-config', version: '3.2.1', strategy, raw: behaviourFor('flat-config', '3.2.1') })
+    );
+    const blind = Object.entries(d.canSee).filter(([, v]) => !v).map(([k]) => k);
+    console.log(`  ${strategy.padEnd(8)} ${TONE[d.severity]}${d.severity.toUpperCase().padEnd(9)}${C.off} ${d.reasons[0] || 'nothing observed'}`);
+    if (blind.length) console.log(`           ${C.dim}cannot see: ${blind.join(', ')}${C.off}`);
+  }
+
+  console.log(`\n  ${C.dim}Same package, same bytes, three honest answers. A string becoming a function`);
+  console.log(`  never becomes a syscall, so the kernel tracer sees a socket it cannot explain.`);
+  console.log(`  This is why every transcript carries the strategy that produced it.${C.off}`);
+
   /* ── the blind spot ───────────────────────────────────────────────── */
 
   const invisible = Object.entries(INVARIANT_FAILURES);

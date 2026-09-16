@@ -37,14 +37,14 @@ const planted = (id) => CHANGED.find((c) => c.planted === id);
 
   await it('the numbers the README prints are the numbers the corpus has', () => {
     assert.equal(TOTAL, 1214);
-    assert.equal(CHANGED.length, 14);
+    assert.equal(CHANGED.length, 15);
     assert.ok(CHANGED.length < TOTAL / 50, 'most of a real tree does not move between installs');
   });
 
   await it('every planted package is labelled as planted, in the data itself', () => {
     const ids = CHANGED.filter((c) => c.planted).map((c) => c.planted).sort();
-    assert.deepEqual(ids, ['PLANTED-1', 'PLANTED-2', 'PLANTED-3']);
-    assert.equal(ids.length, 3, 'a plant that is not labelled is a magic trick');
+    assert.deepEqual(ids, ['PLANTED-1', 'PLANTED-2', 'PLANTED-3', 'PLANTED-4']);
+    assert.equal(ids.length, 4, 'a plant that is not labelled is a magic trick');
   });
 
   await it('no package appears twice — a duplicate would be counted twice everywhere', () => {
@@ -96,6 +96,52 @@ const planted = (id) => CHANGED.find((c) => c.planted === id);
     assert.ok(record?.changelog, 'the whole point is that the maintainer announced it');
   });
 
+  await it('the same package reads differently depending on who watched it', () => {
+    // The point of PLANTED-4, and the reason every transcript carries its strategy.
+    //
+    // flat-config decodes a blob, turns it into a function, and only then opens a socket. eBPF
+    // sees the socket and nothing that explains it — notable. nodert sees the string becoming
+    // executable — alarming. Same package, same version, same bytes; two honest answers, and the
+    // transcript says which question was asked.
+    const { transcript } = require('./transcript/schema');
+    const { diff } = require('./differ/diff');
+    const p = planted('PLANTED-4');
+    const before = behaviourFor(p.pkg, p.from);
+    const after = behaviourFor(p.pkg, p.to);
+
+    const read = (strategy) => diff(
+      transcript({ pkg: p.pkg, version: p.from, strategy, raw: before }),
+      transcript({ pkg: p.pkg, version: p.to, strategy, raw: after })
+    );
+
+    const byKernel = read('ebpf');
+    const byRuntime = read('nodert');
+
+    assert.equal(byKernel.severity, 'notable', 'eBPF should see the socket and stop there');
+    assert.equal(byKernel.exec.added.length, 0, 'eBPF must not report a channel it cannot see');
+
+    assert.equal(byRuntime.severity, 'alarming', 'nodert should see the code being built');
+    assert.match(byRuntime.reasons.join(' '), /did not exist in the source/);
+
+    // And the filesystem-only strategy sees none of it, and says so rather than reporting calm.
+    const byFs = read('fsdiff');
+    assert.equal(byFs.changed, false);
+    assert.equal(byFs.canSee.net, false, 'a quiet fsdiff run must carry the reason it was quiet');
+  });
+
+  await it('PLANTED-4 is caught by what watched it, and would be missed by eBPF', () => {
+    const p = planted('PLANTED-4');
+    const after = behaviourFor(p.pkg, p.to);
+    assert.ok(after.exec?.length, 'the decoder has to actually build code, or it proves nothing');
+    assert.ok(after.exec.some((e) => e.how === 'Function'), 'a decode with no execution is not this plant');
+    assert.ok(after.net?.length, 'and it has to reach the network, so eBPF sees SOMETHING');
+
+    // The point of the plant: the half that explains the socket never becomes a syscall.
+    const { CAN_SEE } = require('./transcript/schema');
+    assert.equal(CAN_SEE.ebpf.exec, false, 'if eBPF could see this, the plant demonstrates nothing');
+    assert.equal(CAN_SEE.nodert.exec, true);
+  });
+
   await it('the plants are not the only thing in the corpus', () => {
     const ordinary = CHANGED.filter((c) => !c.planted);
     assert.ok(ordinary.length >= 10, 'a corpus of nothing but plants is a rigged test');
@@ -105,16 +151,18 @@ const planted = (id) => CHANGED.find((c) => c.planted === id);
 
   await it('silence dominates a real run — if it does not, the corpus is wrong', async () => {
     const r = await runAll({ adapter: new SimulatedSandboxes(), changed: CHANGED });
-    assert.equal(r.pairsRun, 14);
-    assert.equal(r.twinsForked, 28);
+    assert.equal(r.pairsRun, 15);
+    assert.equal(r.twinsForked, 30);
     assert.ok(r.quiet > r.changed.length, `${r.quiet} quiet vs ${r.changed.length} changed`);
-    assert.equal(r.quiet, 10, 'the README says 10 of 14 behaved identically');
+    assert.equal(r.quiet, 10, 'the README says 10 of 15 behaved identically');
   });
 
   await it('exactly one package is alarming, and it is the one we planted to be', async () => {
     const r = await runAll({ adapter: new SimulatedSandboxes(), changed: CHANGED });
     const alarming = r.results.filter((p) => p.diff.severity === 'alarming');
-    assert.equal(alarming.length, 1, 'a second alarming package means the rules got noisier');
+    // One, under eBPF. The decoder is caught too — but only by a strategy that can see code being
+    // built, and this run was watched with eBPF, which cannot. See the next test.
+    assert.equal(alarming.length, 1, `alarming: ${alarming.map((p) => p.pkg).join(', ')}`);
     assert.equal(alarming[0].pkg, planted('PLANTED-1').pkg);
   });
 

