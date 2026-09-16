@@ -145,6 +145,27 @@ function catchPanel(p) {
 
 /* ── the run ──────────────────────────────────────────────────────── */
 
+/**
+ * What this run could not see.
+ *
+ * Two strategies can reach every channel and still be defeated by completely different things, so
+ * naming the strategy is not enough — the sentence has to say what would get past *this* one.
+ */
+function caveatFor(result) {
+  const missing = Object.entries(result.canSee || {}).filter(([, v]) => !v).map(([k]) => k);
+  if (missing.length) {
+    return `Watched with "${result.strategy}", which cannot see: ${missing.join(', ')}. ` +
+      'Silence in those columns is not evidence of quiet behaviour.';
+  }
+  if (result.strategy === 'nodert') {
+    return 'Watched with "nodert" — every channel, but only through Node\'s own API surface. ' +
+      'A native addon, a WebAssembly module, or code that captured a reference before the probe ' +
+      'loaded goes underneath it.';
+  }
+  return `Watched with "${result.strategy}" — syscalls, sockets, files, environment and processes, ` +
+    'from outside the process being watched.';
+}
+
 /** Draw a finished run. Identical for the fixture and the live registry — same shapes, same code. */
 function present(result) {
   $('#s-twins').textContent = `${result.twinsForked} twins`;
@@ -155,12 +176,8 @@ function present(result) {
     `${result.modelCalls} model calls · $${result.costUsd}` +
     (result.live ? ` · live, in ${(result.wallMs / 1000).toFixed(1)}s` : '');
 
-  const cansee = $('#cansee');
-  const missing = Object.entries(result.canSee || {}).filter(([, v]) => !v).map(([k]) => k);
-  cansee.textContent = missing.length
-    ? `Watched with "${result.strategy}", which cannot see: ${missing.join(', ')}. Silence in those columns is not evidence of quiet behaviour.`
-    : `Watched with "${result.strategy}" — every channel, through Node's own API surface. A native addon goes underneath it.`;
-  cansee.hidden = false;
+  $('#cansee').textContent = caveatFor(result);
+  $('#cansee').hidden = false;
 
   $('#wall').innerHTML = result.pairs.map(row).join('');
   $('#wall-section').hidden = false;

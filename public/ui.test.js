@@ -242,6 +242,15 @@ async function renderedPage(treeExtra = {}) {
     assert.match(dom.get('status').textContent, new RegExp(`${payload.modelCalls} model calls`));
   });
 
+  await it('the caveat names what would get past this particular strategy', async () => {
+    const { dom, payload } = await renderedPage();
+    const said = dom.get('cansee').textContent;
+    assert.match(said, new RegExp(payload.strategy));
+    if (payload.strategy === 'nodert') assert.match(said, /native addon/);
+    else assert.doesNotMatch(said, /native addon/,
+      'a kernel-level run is not defeated by a native addon; saying so would be nonsense');
+  });
+
   await it('the live-run button is hidden until the server says it is allowed', async () => {
     const { dom } = await renderedPage(); // /api/tree stub does not set realAllowed
     assert.equal(dom.get('run-real').hidden, true, 'offered a live run the server would refuse');

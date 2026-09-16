@@ -67,7 +67,7 @@ cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
 STAKEOUT_ALLOW_LOCAL=1 npm start   # ...with a second button that runs against the real registry
-npm test          # 153 checks across 12 suites
+npm test          # 154 checks across 12 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
@@ -469,7 +469,7 @@ npm test
 ```
 
 ```
-12 suites · 153 checks
+12 suites · 154 checks
 all green
 ```
 
