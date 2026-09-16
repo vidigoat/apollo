@@ -162,6 +162,20 @@
     The planted packages in this corpus are labelled as planted, in the repository and on this page.
     A detection you cannot reproduce is a magic trick, and this project is the opposite of one.
   </p>
+
+  <h3 class="limits__head">What this cannot do</h3>
+  <div class="limits">
+    <p><b>A package that was already malicious in the version you had.</b> This compares you to your
+    previous version, not to “good”. Something exfiltrating since before you installed it looks,
+    to a differential tool, perfectly well behaved. It catches the moment a package <i>turns</i> —
+    which is how most supply-chain compromises arrive — not a clean-room audit.</p>
+    <p><b>A payload that waits.</b> A time bomb, or something gated on a CI variable, does not
+    appear in the transcript at all. A package that did nothing because it was waiting looks
+    exactly like one that did nothing because it is honest.</p>
+    <p><b>A change in what the code computes.</b> That is the <code>money-fmt</code> section above.</p>
+    <p><b>A package that notices it is being watched.</b> Each twin is its own microVM rather than a
+    container, which raises the cost of detection. It does not eliminate it.</p>
+  </div>
 </section>
 
 </main>

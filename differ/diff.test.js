@@ -108,4 +108,49 @@ it('severity is decided by rules, not by a model', () => {
   assert.equal(severityOf(parts).level, severityOf(parts).level);
 });
 
+
+/* ── the limits, written down as tests ──────────────────────────────────
+ *
+ * These do not assert that the tool works. They assert that it fails in exactly the ways we claim
+ * it fails, so that a change which quietly narrows or widens a blind spot cannot land unnoticed.
+ * Every one of these is stated in the README under "What this cannot do".
+ */
+
+it('a package that was already malicious in the old version produces nothing', () => {
+  // The most important limitation in the project. This compares you to YOUR PREVIOUS VERSION,
+  // not to "good". A dependency that has been exfiltrating since before you installed it is, to
+  // a differential tool, perfectly well behaved.
+  const evil = { env: ['AWS_SECRET_ACCESS_KEY'], net: [{ host: 'evil.example', port: 443, proto: 'tcp' }] };
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'ebpf', raw: evil }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'ebpf', raw: evil })
+  );
+  assert.equal(d.changed, false);
+  assert.equal(d.severity, 'none');
+  assert.equal(d.bothQuiet, false, 'but it must not be recorded as a quiet package either');
+});
+
+it('a payload that does not fire while we watch is not observed', () => {
+  // A time bomb, or something gated on a CI environment variable, simply does not appear in the
+  // transcript. There is nothing clever to do about this; the honest move is to say so.
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'ebpf', raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'ebpf', raw: {} })
+  );
+  assert.equal(d.severity, 'none');
+  assert.equal(d.bothQuiet, true, 'and it looks exactly like a package that genuinely did nothing');
+});
+
+it('a first install has nothing to compare against', () => {
+  // Not an error — an absence. There is no "before", so there is no diff, and the caller must not
+  // be handed something that looks like a clean result.
+  assert.throws(
+    () => diff(
+      transcript({ pkg: 'a', version: '1', strategy: 'ebpf' }),
+      transcript({ pkg: 'b', version: '1', strategy: 'ebpf' })
+    ),
+    /different packages/
+  );
+});
+
 console.log(`\n${passed} passed`);

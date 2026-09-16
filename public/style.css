@@ -157,3 +157,11 @@ footer { max-width: 1120px; margin: 0 auto; padding: 22px 24px; border-top: 1px 
 .judge__chain code { font-family: inherit; }
 .judge__call { margin: 12px 0 0; font-size: 14px; color: var(--dim); }
 .judge__call.is-accused { color: var(--grease); }
+
+/* ── the limits ───────────────────────────────────────── */
+.limits__head { font-size: 17px; margin: 40px 0 0; color: var(--silver); }
+.limits { margin-top: 14px; max-width: 74ch; }
+.limits p { color: var(--dim); font-size: 15px; margin: 0 0 12px; }
+.limits b { color: var(--silver); font-weight: 500; }
+.limits i { font-style: italic; }
+.limits code { font-family: var(--mono); font-size: 13px; color: var(--silver); }

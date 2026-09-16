@@ -24,6 +24,7 @@ experience, because the silence is what gives the other four their weight.
 - [How it works](#how-it-works)
 - [The five decisions that matter](#the-five-decisions-that-matter)
 - [What is real and what is simulated](#what-is-real-and-what-is-simulated)
+- [What this cannot do](#what-this-cannot-do)
 - [The corpus, including the planted packages](#the-corpus-including-the-planted-packages)
 - [Architecture](#architecture)
 - [Running against real infrastructure](#running-against-real-infrastructure)
@@ -65,7 +66,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in ~2 seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 112 checks across 9 suites
+npm test          # 115 checks across 9 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
 ```
 
@@ -304,6 +305,38 @@ so nothing here is presented as more finished than it is.
 
 ---
 
+## What this cannot do
+
+Four real limitations. They are listed here rather than discovered later, and each one has a test
+in `differ/diff.test.js` asserting the failure still fails the way it is described — so a change
+that quietly widens or narrows a blind spot cannot land unnoticed.
+
+**A package that was already malicious in the version you had.** This is the big one. Stakeout
+compares you to *your previous version*, not to "good". A dependency that has been exfiltrating
+since before you installed it looks, to a differential tool, perfectly well behaved. Differential
+analysis catches the moment a package *turns* — which is how most supply-chain compromises actually
+arrive, since the attacker needs an existing trusted package — but it is not a clean-room audit and
+must not be sold as one.
+
+**A payload that does not fire while we watch.** A time bomb, something gated on a CI environment
+variable, or a check for a specific geography simply does not appear in the transcript, and a
+package that did nothing because it was waiting looks identical to one that did nothing because it
+is honest. There is no clever fix; there is only saying so.
+
+**A change in what the code computes.** `money-fmt` in the corpus is exactly this, and it is on the
+page under *What watching behaviour cannot see*. Rounding changed from `HALF_EVEN` to `HALF_UP`,
+228 of 500 order totals drifted by a cent, no syscall differed, the test suite passed.
+
+**A package that notices it is being watched.** Sandbox detection is an arms race this project does
+not claim to have won. Each twin is its own microVM rather than a container, which raises the cost
+of detection, but it does not eliminate it.
+
+A fifth, less interesting one: a brand-new dependency has no previous version, so there is nothing
+to diff. That case needs a different tool, and `diff()` refuses rather than returning something
+that resembles a clean result.
+
+---
+
 ## The corpus, including the planted packages
 
 `corpus.js` is a 1,214-package tree in which 14 versions moved. Three of the fourteen are planted,
@@ -393,7 +426,7 @@ npm test
 ```
 
 ```
-9 suites · 112 checks
+9 suites · 115 checks
 all green
 ```
 
