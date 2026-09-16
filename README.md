@@ -69,7 +69,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in about two seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 164 checks across 13 suites
+npm test          # 172 checks across 14 suites
 ```
 
 There is no `npm install` step because there is nothing to install — zero dependencies,
@@ -511,7 +511,7 @@ npm test
 ```
 
 ```
-13 suites · 164 checks
+14 suites · 172 checks
 all green
 ```
 
@@ -542,6 +542,9 @@ What the suites actually protect:
 - **`adapters/local.test.js`** — the one that really executes code: it refuses to run unless
   somebody meant it, twins are genuinely separate directories so neither can contaminate the other,
   nothing survives cleanup, and a lost report never reads as a quiet package
+- **`probe/invariant.test.js`** — the admission has to be true too: the two rounding modes agree
+  everywhere except exact halves, every drift is up by exactly one cent, and the count is small
+  rather than tuned for a dramatic number
 - **`corpus.test.js`** — holds the README's own arithmetic: 1,214 packages, 14 moved, 10 quiet,
   exactly one alarming, and each plant still doing the job it was planted for
 - **`server.test.js`** — the API contract over real HTTP. The list of fields it requires is
