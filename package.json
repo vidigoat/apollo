@@ -17,7 +17,8 @@
     "preflight": "node scripts/preflight.js",
     "lockfile": "node scripts/lockfile-run.js",
     "survey": "node scripts/survey.js",
-    "validate-prompt": "node scripts/validate-prompt.js"
+    "validate-prompt": "node scripts/validate-prompt.js",
+    "terminal-shot": "node scripts/terminal-shot.js"
   },
   "keywords": [
     "supply-chain",

@@ -249,7 +249,11 @@ for proving the pipeline on packages you already trust, never for triaging one y
 
 ## What a run looks like
 
-This is real output from `npm run demo`, not an illustration:
+![The whole argument in one screen: silence, one catch, three ways of watching, and the bill](docs/images/terminal.png)
+
+This is real output from `npm run demo`, not an illustration — the image above is that same command,
+screenshotted by `npm run terminal-shot` rather than by a person, so it cannot drift from what the
+command prints:
 
 ```
 ──────────────────────────────────────────────────────────────────────────────
