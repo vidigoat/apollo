@@ -7,9 +7,9 @@
 it, imports it, writes down what it actually did — then does the same with the version you had
 before, forked from the identical starting state, and shows you the difference.
 
-On the reference tree that is 1,214 packages, 14 of which actually moved, and 28 twins forked from
-one checkpoint. **Ten of the fourteen behaved identically.** The interface is built so that silence
-is the dominant experience, because the silence is what gives the other four their weight.
+On the reference tree that is 1,214 packages, 15 of which actually moved, and 30 twins forked from
+one checkpoint. **Ten of the fifteen behaved identically.** The interface is built so that silence
+is the dominant experience, because the silence is what gives the other five their weight.
 
 It also runs on real packages from the real registry, on your machine, today — that is further
 down, and it is how the one finding in this README was produced.
@@ -69,7 +69,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in about two seconds
 npm start         # the same run in a browser at http://localhost:8791
-npm test          # 172 checks across 14 suites
+npm test          # 182 checks across 14 suites
 ```
 
 There is no `npm install` step because there is nothing to install — zero dependencies,
@@ -415,11 +415,39 @@ on the shape of the 2026 import-time attacks. *This is the one Stakeout should c
 Changes rounding from `HALF_EVEN` to `HALF_UP` in a patch release. No new syscalls, no new hosts,
 no new files. *This is the one Stakeout should MISS — and say so.*
 
+**PLANTED-4 — `flat-config@3.2.1`, a decoder rather than a payload.**
+Turns a base64 blob into a function, and only then opens a socket. *This one's answer depends on
+who watched it* — see below.
+
 **PLANTED-3 — `node-fetch-retry@2.2.0`, hard negative.**
 Genuinely contacts a new host, and the maintainer documented it in the release notes.
 *This is the one Stakeout should notice and decline to accuse.*
 
 The other eleven are ordinary: cache writes, dependency bumps, nothing.
+
+### The same package, watched three ways
+
+`flat-config` is the plant that makes the point the whole project rests on. `npm run demo` prints
+this:
+
+```
+  fsdiff   NONE      nothing observed
+           cannot see: net, dns, env, proc, exec
+  ebpf     NOTABLE   talks to 1 destination it did not talk to before
+           cannot see: exec
+  nodert   ALARMING  builds and runs code that did not exist in the source (Function)
+```
+
+Same package, same bytes, three honest answers.
+
+2026's attacks ship a decoder, not a payload — and a string becoming a function never becomes a
+syscall. A kernel tracer watches the process, not the thought, so eBPF sees a socket open and
+nothing that explains it. The `nodert` strategy watches Node's own API surface and catches the
+construction; it is weaker than eBPF nearly everywhere and stronger in exactly that one place.
+
+Which is why a transcript is worthless without the strategy that produced it, and why a transcript
+now physically **cannot contain a channel its own strategy declared it could not see** — that used
+to be advisory, and the data and the caveat could disagree.
 
 A benchmark whose positives are the only thing it is scored on is a benchmark you can win by being
 paranoid. Two of the three plants exist to punish exactly that.
@@ -511,7 +539,7 @@ npm test
 ```
 
 ```
-14 suites · 172 checks
+14 suites · 182 checks
 all green
 ```
 
