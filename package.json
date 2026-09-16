@@ -13,7 +13,8 @@
     "test": "node scripts/test.js",
     "demo": "node scripts/demo.js",
     "capture": "node scripts/capture.js",
-    "real": "node scripts/real.js"
+    "real": "node scripts/real.js",
+    "preflight": "node scripts/preflight.js"
   },
   "keywords": [
     "supply-chain",

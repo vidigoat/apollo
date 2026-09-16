@@ -69,6 +69,7 @@ npm start         # the same run in a browser at http://localhost:8791
 STAKEOUT_ALLOW_LOCAL=1 npm start   # ...with a second button that runs against the real registry
 npm test          # 154 checks across 12 suites
 npm run capture   # regenerate the README's screenshots from a real run (needs Chrome)
+npm run preflight # check the live APIs, once keys exist
 ```
 
 And then, on real packages from the real registry, on your own machine:
@@ -468,8 +469,21 @@ const adapter = new ConTreeSandboxes({ image: 'node:22', supports: ['ebpf'] });
 actually proven for the account. Claiming a strategy you do not have is how "we could not see it"
 silently becomes "nothing happened".
 
-> **Model ids must be confirmed against the live Nebius model list before a scored run.** They are
-> in one place (`judge/nemotron.js`) and overridable by environment variable for exactly that reason.
+Then check the assumptions that only a real key can check:
+
+```bash
+npm run preflight
+```
+
+It lists the account's models and fails loudly if any of our three ids is not among them — naming
+the Nemotron models that *are* available — then makes one real call to each and requires the reply
+to parse as a verdict this pipeline accepts, does a live Tavily lookup on a version with a known
+release, and boots and forks a real sandbox. A few thousandths of a dollar, and it writes nothing.
+
+That exists because the riskiest thing here is not the code, which is tested. It is the handful of
+assumptions about other people's APIs that have never been exercised: whether those model ids
+exist, whether the endpoint takes the body we send, whether the response has the shape we read.
+Each is cheap to get wrong and expensive to discover wrong on submission night.
 
 ---
 
