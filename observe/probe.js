@@ -91,10 +91,23 @@ function install() {
   return { seen, report: () => `${MARKER}${JSON.stringify(seen)}` };
 }
 
-/** The script that runs inside the twin. Written to disk, then executed. */
-function runnerSource(pkg) {
+/**
+ * The script that runs inside the twin. Written to disk, then executed.
+ *
+ * The report goes to a file rather than stdout. Two reasons, and the second is the real one:
+ * packages print, sometimes megabytes of it, and — more importantly — anything written to stdout
+ * can be *forged*. A package that registers a `process.on('exit')` handler runs after we do, and
+ * could print a clean report of its own for us to find.
+ *
+ * A file does not fix that completely; nothing in-process can, because the package and the probe
+ * share a heap. It removes the trivial version. The honest containment story is still a microVM,
+ * which is what adapters/contree.js is for.
+ */
+function runnerSource(pkg, outPath) {
   return `
+const fs = require('node:fs');
 const { install } = require(${JSON.stringify(__filename)});
+const OUT = ${JSON.stringify(outPath)};
 const probe = install();
 let threw = null;
 try {
@@ -104,21 +117,42 @@ try {
 }
 // Give anything the import kicked off a moment to actually reach the network.
 setTimeout(() => {
-  process.stdout.write('\\n' + probe.report() + '\\n');
+  try { fs.writeFileSync(OUT, JSON.stringify({ ...probe.seen, threw })); } catch {}
   process.exit(0);
 }, 300);
 `;
 }
 
-/** Pull the observation back out of whatever the package also printed. */
-function parseReport(stdout) {
-  const line = String(stdout).split('\n').reverse().find((l) => l.startsWith(MARKER));
-  if (!line) return null; // did not run, or died before reporting — NOT the same as "did nothing"
+/**
+ * Read the observation back.
+ *
+ * Returns null when there is no report — the process crashed, timed out, or called `process.exit`
+ * before we wrote. Null means *we did not see*, and must never be turned into an empty transcript,
+ * which would mean *it did nothing*. See docs/decisions/005.
+ */
+function readReport(outPath) {
+  const fs = require('node:fs');
+  let raw;
   try {
-    return JSON.parse(line.slice(MARKER.length));
+    raw = fs.readFileSync(outPath, 'utf8');
   } catch {
     return null;
   }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null; // a package overwrote it with something else
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+  // Take only the channels we know, in the shape we expect. A forged report with extra keys, or
+  // with a string where an array belongs, is not quietly trusted.
+  const out = {};
+  for (const k of ['net', 'dns', 'fs', 'env', 'proc']) {
+    if (!Array.isArray(parsed[k])) return null;
+    out[k] = parsed[k];
+  }
+  return out;
 }
 
-module.exports = { install, runnerSource, parseReport, MARKER };
+module.exports = { install, runnerSource, readReport, MARKER };

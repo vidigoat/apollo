@@ -18,7 +18,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
-const { runnerSource, parseReport } = require('../observe/probe');
+const { runnerSource, readReport } = require('../observe/probe');
 
 const run = promisify(execFile);
 
@@ -83,11 +83,15 @@ class LocalMachines {
 
     if (ctx.step === 'import') {
       const runner = path.join(branch.dir, '__stakeout_runner.js');
-      fs.writeFileSync(runner, runnerSource(ctx.pkg));
+      // Outside the branch directory, so a package rummaging through its own cwd does not find it.
+      const out = path.join(this.root, `report-${path.basename(branch.dir)}.json`);
+      fs.writeFileSync(runner, runnerSource(ctx.pkg, out));
       const r = await this.sh(process.execPath, [runner], branch.dir);
-      // parseReport returns null when the probe never reported — a crash, a timeout, a process
-      // that called process.exit() itself. Null means "we did not see", never "it did nothing".
-      return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed: parseReport(r.stdout) };
+      // readReport returns null when the probe never reported — a crash, a timeout, a process that
+      // called process.exit() itself. Null means "we did not see", never "it did nothing".
+      const observed = readReport(out);
+      fs.rmSync(out, { force: true });
+      return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed };
     }
 
     return { code: 0, stdout: '', observed: null };
