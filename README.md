@@ -113,6 +113,27 @@ STAKEOUT_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/my-project
   Accused: nothing          Machines left open: 0 ✓
 ```
 
+Run it twice and the second one costs nothing:
+
+```
+  Cache: 0 answered without running, 3 learned     ← first run
+  Cache: 3 answered without running, 0 learned     ← second run
+```
+
+**This is what makes the idea scale past one repository.** A behavioural diff is expensive to
+produce and permanent once produced — `lodash 4.17.20 → 4.17.21` did what it did, and it will not do
+something else next Tuesday. So the second time anyone asks, on another branch or in another
+project, the answer is free. Most teams upgrade the same popular packages as everyone else.
+
+The cache key is the whole design. `pkg@from→to` is not enough: a run watched with `fsdiff` and a
+run watched with `nodert` are *different questions*, and serving one for the other would resurrect
+exactly the bug this project keeps finding — reporting something we could not see as something that
+did not happen. The strategy is in the key, and so is the transcript schema version.
+
+What is deliberately **not** cached: the model's judgement, which depends on a prompt that changes,
+and the public record, which is the one input that legitimately changes over time. A package with no
+advisory today may have one next month, and a cached "nothing found" would quietly become a lie.
+
 Start with `--dry-run`. It needs no credentials, no network and no permission, and it answers the
 question worth asking first — *how much of this upgrade is even worth looking at* — usually with a
 much smaller number than anyone expects. Run against this repository's own history it reported `29

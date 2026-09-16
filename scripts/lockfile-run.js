@@ -23,6 +23,7 @@ const { whatMoved, lockfileAtRevision, lockfileOnDisk } = require('../lockfile')
 const { diff, summarise } = require('../differ/diff');
 const { judgeOne } = require('../judge');
 const { lookUp } = require('../evidence/tavily');
+const { BehaviourCache } = require('../cache');
 
 const C = process.stdout.isTTY
   ? { dim: '\x1b[2m', red: '\x1b[31m', amber: '\x1b[33m', green: '\x1b[32m', bold: '\x1b[1m', off: '\x1b[0m' }
@@ -30,7 +31,7 @@ const C = process.stdout.isTTY
 const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
 
 function parseArgs(argv) {
-  const a = { against: null, repo: process.cwd(), file: 'package-lock.json', dryRun: false, limit: 25 };
+  const a = { against: null, repo: process.cwd(), file: 'package-lock.json', dryRun: false, limit: 25, cache: true };
   for (let i = 0; i < argv.length; i++) {
     const v = argv[i + 1];
     switch (argv[i]) {
@@ -39,6 +40,7 @@ function parseArgs(argv) {
       case '--file': a.file = v; i++; break;
       case '--limit': a.limit = Number(v) || 25; i++; break;
       case '--dry-run': a.dryRun = true; break;
+      case '--no-cache': a.cache = false; break;
     }
   }
   return a;
@@ -112,6 +114,7 @@ function parseArgs(argv) {
   }
 
   const strategy = bestStrategy(machines);
+  const cache = new BehaviourCache({ enabled: args.cache });
   console.log(`\n  ${C.dim}Watching with "${strategy}". Two twins per package, from one prepared directory.${C.off}\n`);
 
   const checkpoint = await machines.boot();
@@ -120,6 +123,20 @@ function parseArgs(argv) {
 
   for (const m of jobs) {
     process.stdout.write(`  ${m.pkg.padEnd(38)} ${C.dim}${m.from} → ${m.to}${C.off}  `);
+
+    // What a version pair did, it did. Asked again — next week, on another branch, in another
+    // repository — the answer is free. The strategy is part of the key, so a cached answer is
+    // never served to a question it could not have answered.
+    const job = { pkg: m.pkg, from: m.from, to: m.to, strategy };
+    const remembered = cache.get(job);
+    if (remembered) {
+      console.log(`${TONE[remembered.severity]}${remembered.severity}${C.off} ${C.dim}· from cache${C.off}`);
+      if (!remembered.changed) { quiet++; continue; }
+      console.log(`      ${C.dim}${summarise(remembered)}${C.off}`);
+      findings.push({ ...m, severity: remembered.severity, accused: false, cached: true });
+      continue;
+    }
+
     const [a, b] = await machines.fork(checkpoint, 2);
     try {
       const [oldT, newT] = await Promise.all([
@@ -127,6 +144,7 @@ function parseArgs(argv) {
         observePackage({ adapter: machines, branch: b, pkg: m.pkg, version: m.to, strategy }),
       ]);
       const result = diff(oldT, newT);
+      cache.put(job, result);
       console.log(`${TONE[result.severity]}${result.severity}${C.off}`);
       if (!result.changed) { quiet++; continue; }
 
@@ -150,6 +168,10 @@ function parseArgs(argv) {
   console.log(`  ${quiet} of ${jobs.length} behaved identically at both versions.`);
   const accused = findings.filter((f) => f.accused);
   console.log(`  ${C.bold}Accused: ${accused.length ? C.red + accused.map((f) => f.pkg).join(', ') + C.off : 'nothing'}${C.off}`);
+  const st = cache.stats();
+  if (args.cache) {
+    console.log(`  ${C.dim}Cache: ${st.hits} answered without running, ${st.writes} learned. ${st.dir}${C.off}`);
+  }
   console.log(`  ${C.dim}Machines left open: ${machines.open}${machines.open === 0 ? ` ${C.green}✓${C.off}` : ` ${C.red}← leak${C.off}`}`);
   console.log(`  ${C.dim}Watched with "${strategy}" — Node's API surface only. A native addon goes underneath it.${C.off}\n`);
 
