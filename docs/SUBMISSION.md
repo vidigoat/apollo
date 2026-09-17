@@ -62,11 +62,18 @@ Ninety-two per cent of real upgrades change nothing observable. So when one does
 person rather than a line in a wall of noise. All three exceptions are benign, explicable in a
 sentence, and none raised above `minor`.
 
-One is worth a second look. `isexe@3.1.1` reads **`_ISEXE_TEST_PLATFORM_`** — a test-only hook, in
-the published package, on a dependency of `which`, which sits under a very large share of the
-ecosystem. Not a vulnerability, and nobody is accusing anyone of anything. Just a true thing about
-software you are running that no lockfile, changelog or scanner was ever going to tell you — found
-by accident, in a survey of packages picked for being boring.
+One is worth a second look, and worth being careful about. `isexe@3.1.1` — a dependency of `which`,
+which sits under a very large share of the ecosystem — reads `_ISEXE_TEST_PLATFORM_` in its shipped
+build. It is a test seam, entirely benign, rated `minor`, and it woke nobody.
+
+What makes it worth printing is that the diff is right about a real change. Version 2.0.0 did the
+same job through `global.TESTING_WINDOWS`, which nothing watching the environment would see. So an
+environment variable now selects which implementation of a very widely installed package runs — a
+true thing about software you are already running, that no lockfile records, no changelog
+highlights, and no scanner reports.
+
+Verified by hand against both published packages before writing it down. We are about to say
+something in public about somebody's library; the least we can do is read it first.
 
 ---
 

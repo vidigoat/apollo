@@ -115,12 +115,28 @@ And the three exceptions are exactly the shape you would want. A colour library 
 sentence, none raised above `minor` — which is the difference between a tool you keep installed and
 one you mute in a week.
 
-The third is worth a second look, though. `isexe@3.1.1` reads **`_ISEXE_TEST_PLATFORM_`** — a
-test-only hook, in the published package, on a dependency of `which`, which sits under a very large
-share of the ecosystem. It is not a vulnerability and nobody is accusing anyone of anything. It is
-simply a thing that is true of software you are running and that no lockfile, changelog or scanner
-was ever going to tell you. That is the entire pitch, found by accident, in a survey of packages
-picked for being boring.
+The third is worth a second look, and worth being careful about.
+
+`isexe@3.1.1` reads **`_ISEXE_TEST_PLATFORM_`**. `isexe` is a dependency of `which`, which sits under
+a very large share of the ecosystem. Checking the published package confirms it:
+
+```js
+// node_modules/isexe/dist/cjs/index.js — in the shipped build, not a dev file
+const platform = process.env._ISEXE_TEST_PLATFORM_ || process.platform
+const impl = platform === 'win32' ? win32 : posix
+```
+
+**This is a test seam and it is entirely benign.** It lets the package exercise its Windows
+implementation on Linux. Nobody is being accused of anything, the tool rated it `minor`, and it woke
+nobody — which is the correct answer and the reason that rating exists.
+
+What makes it worth printing is that the diff is *right about a real change*. Version 2.0.0 did the
+same job through `global.TESTING_WINDOWS` — a global, which nothing watching the environment would
+see. Version 3.1.1 moved it to an environment variable. So the behaviour genuinely changed, in a way
+no lockfile records, no changelog highlights, and no scanner reports: an environment variable now
+selects which implementation of a widely-installed package runs.
+
+That is the entire pitch, found by accident, in a survey of packages chosen for being boring.
 
 Run it twice and the second costs nothing — `Cache: 40 free, 0 learned`.
 
