@@ -41,10 +41,34 @@ for (const file of files) {
   if (m) checks += Number(m[1]);
 }
 
+const tally = `${files.length} suites · ${checks} checks`;
+
 console.log('\n' + '─'.repeat(60));
-console.log(`${files.length} suites · ${checks} checks`);
+console.log(tally);
 if (failed.length) {
   console.log(`FAILED: ${failed.join(', ')}`);
   process.exit(1);
 }
 console.log('all green');
+
+/*
+ * The README quotes this line. Twice now it has gone stale there — once by one check, once by six
+ * whole suites — which is two more times than a rule written in prose was ever going to survive.
+ *
+ * It is checked here rather than in `check-readme` because here the number is already in hand. The
+ * alternative was for that script to run the entire suite a second time in order to learn something
+ * the suite had just printed, which made it slow enough that somebody would stop running it, and a
+ * check nobody runs protects nothing.
+ *
+ * Only after 'all green': a failing run reports fewer checks than the project has, and failing over
+ * a stale README on top of a real failure buries the thing that actually matters.
+ */
+const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+if (!readme.includes(tally)) {
+  const quoted = /^\d+ suites · \d+ checks$/m.exec(readme);
+  console.log(
+    `\nREADME is stale: it says "${quoted ? quoted[0] : 'nothing'}" and this run was "${tally}".\n` +
+    `  Fix the line in README.md under "## Tests". Nothing else is wrong.`
+  );
+  process.exit(1);
+}

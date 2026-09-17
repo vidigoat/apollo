@@ -742,13 +742,16 @@ npm test
 ```
 
 ```
-14 suites · 183 checks
+20 suites · 240 checks
 all green
 ```
 
-That number is printed by the runner, not typed here — it was `182` in this paragraph an hour after
-it stopped being true, which is the argument for not quoting counts in prose at all. Everywhere else
-in this README says "every suite".
+That number is printed by the runner, not typed here — and it has now gone stale in this paragraph
+**twice**: `182` an hour after it stopped being true, then `14 suites · 183 checks` for long enough
+that six suites and fifty-seven checks had been added underneath it. Writing the rule down did not
+work. So the count joined `npm run check-readme`, which runs the suite and fails the build if this
+line disagrees with it — the only mechanism that has ever kept a number in this file honest.
+Everywhere else in this README says "every suite".
 
 The runner deliberately does not chain suites with `&&`. That stops at the first failure and
 reports a smaller number of checks than the project has, which reads like success.
@@ -764,6 +767,15 @@ What the suites actually protect:
 - **`observe/observe.test.js`** — install *and* import, in that order; the transcript records the
   strategy that ran rather than the one we wanted; a dead machine never becomes a quiet package
 - **`differ/diff.test.js`** — severity is arithmetic; cross-strategy comparison throws
+- **`differ/reachability.test.js`** — that every severity rule can actually fire. `severityOf` is a
+  ladder of early returns, and that shape has a failure mode which reads as the opposite of a bug: a
+  rule sitting below a return that always precedes it looks like coverage and never runs. One did.
+  `minor` carried *"resolves a name it did not resolve before"*, and arriving at `minor` means the
+  `notable` block found nothing — which it only does when no name was resolved. The sentence was
+  invisible because the identical sentence is produced one rung up, so it appeared in real output
+  and every eye slid past it. The suite now walks all 216 channel combinations and asserts the whole
+  set of (severity, sentence) pairs the code can produce: a rule that stops firing fails, and so
+  does a new sentence nobody declared
 - **`runPair.test.js`** — one checkpoint for both twins; the wave cap; nothing leaks on failure
 - **`readme.test.js`** — that this file is still true. It runs the commands, scrapes the figures out
   of their real output, and fails if the README stopped containing them; it also fails if the README

@@ -82,7 +82,18 @@ function severityOf(input) {
   const envCount = d.env.added.length;
   if (envCount) reasons.push(`reads ${envCount} environment variable${envCount === 1 ? '' : 's'} it did not read before`);
   if (d.exec.added.length) reasons.push('decodes something it did not decode before');
-  if (d.dns.added.length) reasons.push('resolves a name it did not resolve before');
+  /*
+   * There was a DNS line here too — `if (d.dns.added.length) reasons.push('resolves a name…')`.
+   * It could never fire. Reaching `minor` at all means the `notable` block returned nothing, and
+   * that block returns whenever `net.added` is non-empty OR `dns.added` is non-empty, so by the
+   * time control arrives here `dns.added` is necessarily empty. The line read as a safety net and
+   * was a no-op, and an exhaustive walk of every channel combination never once produced a DNS
+   * reason at `minor` severity.
+   *
+   * Removed rather than left in place, because a rule nobody can trigger still looks like a rule
+   * to the next person deciding whether this file handles a case. reachability.test.js now walks
+   * that space on every run, so the next dead rule fails the build instead of reading as coverage.
+   */
   if (reasons.length) return { level: 'minor', reasons };
 
   return { level: 'none', reasons: [] };

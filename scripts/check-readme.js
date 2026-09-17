@@ -60,6 +60,9 @@ const CLAIMS = [
   { what: 'packages that behaved identically', value: from(demo, /(\d+) of \d+ packages behaved identically/, 'quiet count') },
   { what: 'model calls', value: from(demo, /(\d+) model calls\s+\(not/, 'model calls') },
   { what: 'invariant drift', value: from(run([path.join(__dirname, '..', 'probe', 'invariant-totals.js')]), /^(\d+\/\d+) orders/m, 'drift') },
+  // NOTE: the suite count is checked by the runner itself (scripts/test.js), not here. Re-running
+  // the whole suite from this script to learn a number the suite already printed made this check
+  // slow enough that somebody would stop running it, and a check nobody runs protects nothing.
 ];
 
 console.log('\n  README figures, against the commands that produce them\n');
