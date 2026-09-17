@@ -813,7 +813,13 @@ what would have to be true to change it. Written for whoever picks this up next,
 
 ## Submission
 
-**Nebius × NVIDIA Global AI Hackathon** — deadline 30 October 2026, 22:30 IST.
+**Nebius × NVIDIA Global AI Hackathon** — **Coding and Agentic Engineering** track, deadline
+30 October 2026, 22:30 IST.
+
+That track asks for *"agents that write, run, and test code in Token Factory Sandboxes"*, which is
+this project exactly: it installs and runs code it has never seen, in disposable machines, and
+reports what happened.
+
 The recording script is [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md); the submission text is
 [`docs/SUBMISSION.md`](docs/SUBMISSION.md).
 
