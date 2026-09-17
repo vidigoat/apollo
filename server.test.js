@@ -153,6 +153,22 @@ const json = async (p) => (await get(p)).json();
     assert.equal((await get('/api/nope')).status, 404);
   });
 
+  await it('the server is a plain handler, so a host can serve the same code', () => {
+    // Nebius requires a working demo URL. The hosted deployment imports this exact function rather
+    // than a second copy — a demo URL showing something the repository does not do is worse than no
+    // demo URL at all.
+    const mod = require('./server');
+    assert.equal(typeof mod, 'function', 'server.js no longer exports a request handler');
+    assert.equal(typeof mod.handler, 'function');
+    assert.equal(mod.length, 2, 'a request handler takes (req, res)');
+  });
+
+  await it('importing the server does not start one', () => {
+    // If requiring it bound a port, every test file and every host would fight over 8791.
+    const src = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
+    assert.match(src, /require\.main === module/, 'server.js listens unconditionally on import');
+  });
+
   stop();
   console.log(`\n${passed} passed`);
 })();

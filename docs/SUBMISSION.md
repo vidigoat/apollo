@@ -14,7 +14,7 @@ Checklist against the stated requirements:
 | uses at least one NVIDIA open source model | Nemotron 3 Nano / Ultra / Super — `judge/` |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |
-| **a working demo URL** — hosted app or test build | ⚠️ **not yet hosted** |
+| **a working demo URL** — hosted app or test build | ready to deploy — `vercel.json` + `api/index.js`, zero dependencies |
 | 3-min public YouTube video, audio covering Nebius + Nemotron use | `docs/DEMO-SCRIPT.md` |
 | feedback on Token Factory / AI Cloud / NVIDIA tools | `docs/FEEDBACK-NOTES.md` |
 | what changed during the submission window | this project was built in it |

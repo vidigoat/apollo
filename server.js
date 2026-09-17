@@ -13,6 +13,8 @@ const { CHANGED, TOTAL, PUBLIC_RECORD, INVARIANT_FAILURES } = require('./corpus'
 const { STRATEGIES } = require('./transcript/schema');
 
 const PORT = Number(process.env.PORT) || 8791;
+// Resolved from this file, so it is correct whether started with `npm start` from the repo root or
+// imported by a host that runs from somewhere else entirely.
 const PUBLIC = path.join(__dirname, 'public');
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -120,9 +122,19 @@ async function realRun() {
   }
 }
 
-http
-  .createServer((req, res) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
+/**
+ * One request handler, exported.
+ *
+ * Nebius asks for a working demo URL, and the fixture run needs nothing a host would refuse: no
+ * child processes, no writes, no network. So the same function serves `npm start` locally and a
+ * serverless deployment, rather than there being a second, subtly different copy for hosting —
+ * which is how a demo URL ends up showing something the repository does not do.
+ *
+ * The live-registry route stays off in both unless STAKEOUT_ALLOW_LOCAL is set, and says so. A
+ * hosted deployment must not run strangers' packages on someone else's machine.
+ */
+function handler(req, res) {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
     if (url.pathname === '/api/tree') {
       return send(
@@ -218,5 +230,12 @@ http
       if (err) return send(res, 404, 'not found', 'text/plain');
       send(res, 200, buf, TYPES[path.extname(file)] || 'application/octet-stream');
     });
-  })
-  .listen(PORT, () => console.log(`stakeout  http://localhost:${PORT}`));
+}
+
+module.exports = handler;
+module.exports.handler = handler;
+
+// Only listen when run directly. Imported — by a host, or by server.test.js — it is just a function.
+if (require.main === module) {
+  http.createServer(handler).listen(PORT, () => console.log(`stakeout  http://localhost:${PORT}`));
+}

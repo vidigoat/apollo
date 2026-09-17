@@ -196,6 +196,16 @@ What is deliberately **not** cached: the model's judgement, which depends on a p
 and the public record, which is the one input that legitimately changes over time. A package with no
 advisory today may have one next month, and a cached "nothing found" would quietly become a lie.
 
+### Hosting it
+
+`server.js` exports a plain `(req, res)` handler and only binds a port when run directly, so the
+same function serves `npm start` and a serverless deployment. `api/index.js` and `vercel.json` are
+the whole deployment; there are no dependencies to install and no build step.
+
+A hosted copy deliberately **cannot** run real packages: `/api/real` stays behind
+`STAKEOUT_ALLOW_LOCAL` and returns 403 with the reason. Executing strangers' npm packages on shared
+infrastructure would be this project doing the exact thing it warns about.
+
 ### In CI, on every dependency pull request
 
 ```bash
