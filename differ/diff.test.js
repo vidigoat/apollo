@@ -130,6 +130,42 @@ it('a package that was already malicious in the old version produces nothing', (
   assert.equal(d.bothQuiet, false, 'but it must not be recorded as a quiet package either');
 });
 
+it('a blind strategy seeing nothing never reads as a quiet package', () => {
+  /*
+   * The inverse of this project's own thesis. `transcript()` deletes the channels a strategy cannot
+   * see, so a package exfiltrating a credential under `fsdiff` — files only — produces six empty
+   * arrays at both versions and comes out `bothQuiet: true`, which is the word this tool uses for a
+   * package that behaved itself.
+   *
+   * `bothQuiet` still says what it says (the observation was empty, at both versions, and it was).
+   * What travels with it now is whether that supports a claim.
+   */
+  const exfiltrating = {
+    net: [{ host: 'evil.example', port: 443, proto: 'tls' }],
+    dns: ['evil.example'],
+    env: ['AWS_SECRET_ACCESS_KEY'],
+    fs: [], proc: [], exec: [],
+  };
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'fsdiff', raw: exfiltrating }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'fsdiff', raw: exfiltrating })
+  );
+
+  assert.equal(d.bothQuiet, true, 'the fixture no longer exercises the trap');
+  assert.equal(d.quietTrustworthy, false,
+    'a run blind to five of six channels was offered as evidence the package did nothing');
+  assert.ok(d.blindTo.includes('net'), 'the diff does not carry what its silence cannot speak for');
+});
+
+it('a full-visibility run seeing nothing is evidence, and says so', () => {
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', raw: {} })
+  );
+  assert.equal(d.quietTrustworthy, true, 'the one case that supports "it did nothing" was refused');
+  assert.deepEqual(d.blindTo, []);
+});
+
 it('a payload that does not fire while we watch is not observed', () => {
   // A time bomb, or something gated on a CI environment variable, simply does not appear in the
   // transcript. There is nothing clever to do about this; the honest move is to say so.

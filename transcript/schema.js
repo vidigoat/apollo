@@ -121,10 +121,39 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
   };
 }
 
-/** Did this package do anything observable at all? */
-function isQuiet(t) {
+/**
+ * Did we observe anything at all?
+ *
+ * Note what this does NOT say. It used to be called `isQuiet` and documented as "did this package
+ * do anything observable" — a sentence that slides between two facts. `transcript()` deletes every
+ * channel the strategy declared it cannot see, so a package that opens a socket to a host and reads
+ * an AWS key, watched with `fsdiff` (which sees files and nothing else), arrives here with six
+ * empty arrays and used to come back **quiet**.
+ *
+ * That is this project's own thesis turned against it. A tool whose whole argument is "we watched
+ * and almost nothing happened" cannot let "we did not watch" and "nothing happened" share a word.
+ *
+ * So the function is named for what it measures — the observation was empty — and `quietness()`
+ * below is the one that can be used to make a claim about the package, because it carries what the
+ * strategy was blind to. Anything reporting a package as quiet must use that one.
+ */
+function observedNothing(t) {
   return t.net.length === 0 && t.dns.length === 0 && t.env.length === 0 && t.proc.length === 0 &&
     t.fs.length === 0 && t.exec.length === 0;
 }
 
-module.exports = { transcript, isQuiet, normalisePath, STRATEGIES, STRENGTH, CAN_SEE, empty };
+/**
+ * Quiet, and what that claim is worth.
+ *
+ * @returns {{quiet: boolean, blindTo: string[], trustworthy: boolean}}
+ *   quiet        nothing appeared in any channel we could see
+ *   blindTo      channels this strategy cannot see at all — silence there means nothing
+ *   trustworthy  quiet AND nothing was invisible. The only state that supports "it did nothing".
+ */
+function quietness(t) {
+  const blindTo = Object.entries(CAN_SEE[t.strategy] || {}).filter(([, v]) => !v).map(([k]) => k);
+  const quiet = observedNothing(t);
+  return { quiet, blindTo, trustworthy: quiet && blindTo.length === 0 };
+}
+
+module.exports = { transcript, observedNothing, quietness, normalisePath, STRATEGIES, STRENGTH, CAN_SEE, empty };

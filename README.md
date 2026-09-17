@@ -455,6 +455,26 @@ Watched with "fsdiff", which cannot see: net, dns, env, proc.
 Silence in those columns is not evidence of quiet behaviour.
 ```
 
+**That caveat was on the page and not in the data.** `isQuiet` asked "did this package do anything
+observable at all" and answered it by looking at six arrays — and `transcript()` *deletes* every
+channel the strategy cannot see. So a package opening a TLS socket to a host it has never contacted
+and reading an AWS key, watched with `fsdiff`, arrived as six empty arrays and came back **quiet**.
+Which is this project's thesis inverted: a tool whose entire argument is *we watched, and almost
+nothing happened* had let "we did not watch" and "nothing happened" share a word.
+
+The function is now named for what it measures — `observedNothing` — and a claim about the package
+has to come from `quietness()`, which returns the caveat in the same object:
+
+```js
+quietness(fsdiffRun)   // { quiet: true, blindTo: ['net','dns','env','proc','exec'], trustworthy: false }
+quietness(nodertRun)   // { quiet: true, blindTo: [],                                trustworthy: true  }
+```
+
+`trustworthy` is the only one of the three that supports the sentence *"it did nothing"*, and every
+diff now carries `quietTrustworthy` and `blindTo` alongside `bothQuiet`, so nothing can pick up the
+claim without the caveat travelling with it. A test derives each strategy's blind list from
+`CAN_SEE` rather than restating it, so a new strategy cannot arrive without one.
+
 ### 4. Absence of a public record raises priority and proves nothing
 
 Most small packages ship without release notes. "Nothing on the open web mentions this version" is
@@ -742,7 +762,7 @@ npm test
 ```
 
 ```
-21 suites · 248 checks
+21 suites · 253 checks
 all green
 ```
 

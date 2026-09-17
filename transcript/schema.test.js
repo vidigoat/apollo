@@ -17,7 +17,7 @@
  */
 
 const assert = require('node:assert');
-const { transcript, isQuiet, normalisePath, STRATEGIES, CAN_SEE } = require('./schema');
+const { transcript, observedNothing, quietness, normalisePath, STRATEGIES, CAN_SEE } = require('./schema');
 
 let passed = 0;
 const it = (name, fn) => {
@@ -134,11 +134,51 @@ it('missing fields become empty ones, not undefined', () => {
   assert.equal(x.result.threw, null, 'unknown must stay null, never false');
 });
 
-it('quiet means genuinely nothing, in every channel', () => {
-  assert.equal(isQuiet(t({})), true);
-  ['net', 'dns', 'env'].forEach((f) => assert.equal(isQuiet(t({ [f]: ['x'] })), false, `${f} was ignored`));
-  assert.equal(isQuiet(t({ fs: [{ op: 'write', path: '/a' }] })), false);
-  assert.equal(isQuiet(t({ proc: [{ argv: ['sh'] }] })), false);
+it('an empty observation means nothing appeared, in every channel', () => {
+  assert.equal(observedNothing(t({})), true);
+  ['net', 'dns', 'env'].forEach((f) => assert.equal(observedNothing(t({ [f]: ['x'] })), false, `${f} was ignored`));
+  assert.equal(observedNothing(t({ fs: [{ op: 'write', path: '/a' }] })), false);
+  assert.equal(observedNothing(t({ proc: [{ argv: ['sh'] }] })), false);
+});
+
+it('"we did not watch" is never reported as "nothing happened"', () => {
+  /*
+   * The worst failure this project could have, because it is its own thesis inverted.
+   *
+   * `transcript()` deletes every channel the strategy declared it cannot see. So a package that
+   * opens a TLS socket to a host it has never contacted and reads an AWS key, watched with
+   * `fsdiff` — which sees files and nothing else — arrives as six empty arrays. The old `isQuiet`
+   * returned true, and "quiet" is the word this tool uses for a package that behaved itself.
+   */
+  const exfiltrating = {
+    net: [{ host: 'evil.example', port: 443, proto: 'tls' }],
+    dns: ['evil.example'],
+    env: ['AWS_SECRET_ACCESS_KEY'],
+    fs: [], proc: [], exec: [],
+  };
+  const blind = transcript({ pkg: 'p', version: '1.0.0', strategy: 'fsdiff', raw: exfiltrating });
+
+  assert.equal(observedNothing(blind), true, 'the fixture no longer exercises the trap');
+  const q = quietness(blind);
+  assert.equal(q.quiet, true, 'the observation was genuinely empty — that much is true');
+  assert.equal(q.trustworthy, false, 'and it was reported as evidence the package did nothing');
+  assert.deepEqual(q.blindTo.sort(), ['dns', 'env', 'exec', 'net', 'proc']);
+});
+
+it('a strategy that can see everything, seeing nothing, is worth believing', () => {
+  const q = quietness(transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }));
+  assert.equal(q.trustworthy, true, 'a full-visibility strategy observing nothing must support the claim');
+  assert.deepEqual(q.blindTo, []);
+});
+
+it('every strategy reports exactly the channels its table says it cannot see', () => {
+  // Derived from CAN_SEE rather than restated, so a new strategy cannot arrive without a blind list.
+  for (const strategy of Object.keys(CAN_SEE)) {
+    const q = quietness(transcript({ pkg: 'p', version: '1.0.0', strategy, raw: {} }));
+    const expected = Object.entries(CAN_SEE[strategy]).filter(([, v]) => !v).map(([k]) => k).sort();
+    assert.deepEqual(q.blindTo.sort(), expected, `${strategy} misreports what it cannot see`);
+    assert.equal(q.trustworthy, expected.length === 0, `${strategy}'s silence is being weighted wrongly`);
+  }
 });
 
 it('a transcript is stable — building it twice from the same input gives the same bytes', () => {

@@ -10,7 +10,7 @@
  * these differences *mean* something — and it is never allowed to invent one.
  */
 
-const { isQuiet } = require('../transcript/schema');
+const { quietness } = require('../transcript/schema');
 
 const keyFor = {
   net: (n) => `${n.host}:${n.port ?? ''}/${n.proto}`,
@@ -121,6 +121,8 @@ function diff(before, after) {
     parts[field] = setDiff(before[field], after[field], keyFor[field]);
   });
 
+  const qb = quietness(before);
+  const qa = quietness(after);
   const severity = severityOf(parts);
   const changed = Object.values(parts).some((p) => p.added.length || p.removed.length);
 
@@ -140,7 +142,18 @@ function diff(before, after) {
     timing: { importDeltaMs: importDelta },
     severity: severity.level,
     reasons: severity.reasons,
-    bothQuiet: isQuiet(before) && isQuiet(after),
+    /*
+     * "Both versions did nothing" — and how much that is worth.
+     *
+     * `bothQuiet` alone is a trap: `transcript()` deletes the channels a strategy cannot see, so a
+     * package exfiltrating a credential under `fsdiff` produces six empty arrays and reads as quiet.
+     * `quietTrustworthy` is the only one of these that supports the sentence "it did nothing", and
+     * `blindTo` names what silence cannot speak for. They travel together so that no consumer can
+     * pick up the claim without the caveat attached to the same object.
+     */
+    bothQuiet: qb.quiet && qa.quiet,
+    quietTrustworthy: qb.trustworthy && qa.trustworthy,
+    blindTo: qb.blindTo,
   };
 }
 
