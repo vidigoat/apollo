@@ -78,6 +78,19 @@ const CLAIMS = [
   // Likewise: the README quotes "0 model calls" deliberately, for the cached run that costs nothing.
   { what: 'model calls', value: from(demo, /(\d+) model calls\s+\(not/, 'model calls') },
   { what: 'invariant drift', value: from(run([path.join(__dirname, '..', 'probe', 'invariant-totals.js')]), /^(\d+\/\d+) orders/m, 'drift') },
+  /*
+   * The survey's corpus size, read from the list rather than from a run.
+   *
+   * The result — "79 of 82 behaved identically" — is reproduced by `npm run survey`, which installs
+   * a hundred and sixty-four real packages and is far too slow to belong in a check anybody runs
+   * before a commit. But the SIZE is free, it is the half most likely to drift (adding pairs is easy
+   * and remembering the README is not), and a README quoting a corpus of forty while the list holds
+   * eighty-two is the exact shape of stale number this file exists to catch.
+   */
+  // No `where`: "N of M behaved identically" appears three times in this README for three different
+  // runs — the survey, the demo, and a small worked example — so a contextual capture would match
+  // whichever came first. The corpus size is embedded in the value instead, which is unambiguous.
+  { what: 'survey corpus', value: `of ${require('./survey').PAIRS.length} behaved identically` },
   // NOTE: the suite count is checked by the runner itself (scripts/test.js), not here. Re-running
   // the whole suite from this script to learn a number the suite already printed made this check
   // slow enough that somebody would stop running it, and a check nobody runs protects nothing.

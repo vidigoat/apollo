@@ -76,7 +76,7 @@ popular packages — `semver`, `chalk`, `debug`, `lru-cache`, `tslib`, `minimatc
 worth anything:
 
 ```
-37 of 40 behaved identically at both versions.
+79 of 82 behaved identically at both versions.
 minor 3 · notable 0 · alarming 0
 ```
 

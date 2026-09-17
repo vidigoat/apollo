@@ -85,13 +85,14 @@ npm run preflight                  # check the live APIs, once keys exist
 
 ### What does the real registry actually look like?
 
-`STAKEOUT_ALLOW_LOCAL=1 npm run survey` runs forty upgrades of genuinely popular packages —
+`STAKEOUT_ALLOW_LOCAL=1 npm run survey` runs **eighty-two** upgrades of genuinely popular packages —
 `semver`, `chalk`, `debug`, `lru-cache`, `tslib`, `minimatch`, `uuid`, `dotenv`, `fastq`,
 `brace-expansion` and the rest. None of them is chosen for being interesting, because that is the
-only way a baseline is worth anything.
+only way a baseline is worth anything. Every version pair is checked against the registry by
+`npm run pairs`, and the second half of the list was *derived* from it rather than recalled.
 
 ```
-  37 of 40 behaved identically at both versions.
+  79 of 82 behaved identically at both versions.
   minor 3 · notable 0 · alarming 0
 
   MINOR     picocolors 1.0.0 → 1.1.1
@@ -104,11 +105,25 @@ only way a baseline is worth anything.
       env NODE_V8_COVERAGE · env _ISEXE_TEST_PLATFORM_
 ```
 
-**This is the measurement the whole idea rests on.** Ninety-two per cent of real upgrades of real
+**This is the measurement the whole idea rests on.** Ninety-six per cent of real upgrades of real
 packages change nothing observable at all — so when one does, it is worth a human's attention rather
 than being one line in a wall of noise. A tool whose baseline is unknown cannot tell you whether a
 result is unusual; "one package reads a new environment variable" only means something once you know
-the other nineteen read nothing.
+the other eighty-one read nothing.
+
+**The corpus doubled and the exception list did not move.** It was 37 of 40; forty-two more real
+upgrades were added — transitive dependencies this time, the packages nobody chooses, which is most
+of what a lockfile actually contains — and the answer came back 79 of 82 with *the same three*
+packages. That is a better result than a bigger number would have been: a baseline that holds when
+you double the sample is a baseline, and one that drifts is an artefact of which packages somebody
+picked.
+
+Adding them also found a defect in the original forty. `is-number` was listed as `7.0.0 → 7.0.0` — a
+version compared against itself, which cannot differ, and which had been quietly contributing a free
+"no change" to the headline for as long as the figure has been quoted. That is why the pairs are now
+derived from the registry by `npm run pairs` and checked on demand, rather than typed: a wrong
+version number produces a package that silently fails to install and leaves the baseline without
+saying anything.
 
 And the three exceptions are exactly the shape you would want. A colour library learning about
 `NO_COLOR`. Two packages noticing V8 coverage instrumentation. All benign, all explicable in a

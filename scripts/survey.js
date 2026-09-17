@@ -66,12 +66,68 @@ const PAIRS = [
   ['balanced-match', '1.0.0', '1.0.2'],
   ['brace-expansion', '2.0.0', '2.0.1'],
   ['emoji-regex', '9.2.0', '9.2.2'],
-  ['is-number', '7.0.0', '7.0.0'],
+  ['is-number', '6.0.0', '7.0.0'],
   ['queue-microtask', '1.2.2', '1.2.3'],
   ['reusify', '1.0.2', '1.0.4'],
   ['run-parallel', '1.1.10', '1.2.0'],
   ['to-regex-range', '5.0.0', '5.0.1'],
   ['fastq', '1.13.0', '1.17.1'],
+
+  /*
+   * Second batch, added later and derived rather than recalled.
+   *
+   * Every pair below came out of `node scripts/pairs.js --suggest <names>`, which reads the registry
+   * and takes the two most recent adjacent-in-publication-time releases that go forward in semver and
+   * do not cross more than one major. None of these version numbers was typed from memory, which is
+   * the point: the first batch was, and one of them — `is-number 7.0.0 → 7.0.0` — was a version
+   * compared against itself, contributing a guaranteed "no change" to the baseline for months.
+   *
+   * These are transitive dependencies rather than things people install on purpose. That is
+   * deliberate. A lockfile is mostly packages nobody chose, and a baseline drawn only from packages
+   * people chose would describe a registry nobody actually installs.
+   */
+  ['cookie', '2.0.0', '2.0.1'],
+  ['qs', '6.15.3', '6.16.0'],
+  ['bytes', '3.1.1', '3.1.2'],
+  ['statuses', '2.0.1', '2.0.2'],
+  ['toidentifier', '1.0.0', '1.0.1'],
+  ['content-type', '3.0.0', '3.1.0'],
+  ['on-finished', '2.4.0', '2.4.1'],
+  ['ee-first', '1.1.0', '1.1.1'],
+  ['destroy', '1.1.1', '1.2.0'],
+  ['escape-html', '1.0.2', '1.0.3'],
+  ['parseurl', '1.3.2', '1.3.3'],
+  ['encodeurl', '1.0.2', '2.0.0'],
+  ['setprototypeof', '1.1.1', '1.2.0'],
+  ['vary', '1.1.1', '1.1.2'],
+  ['supports-color', '10.2.2', '11.0.0'],
+  ['color-convert', '3.1.2', '3.1.3'],
+  ['ansi-styles', '6.2.3', '7.0.0'],
+  ['string-width', '8.2.1', '8.2.2'],
+  ['wrap-ansi', '10.0.0', '10.0.1'],
+  ['cliui', '9.0.0', '9.0.1'],
+  ['get-caller-file', '2.0.4', '2.0.5'],
+  ['require-directory', '2.1.0', '2.1.1'],
+  ['camelcase', '8.0.0', '9.0.0'],
+  ['p-limit', '7.3.1', '7.3.2'],
+  ['make-dir', '5.0.0', '5.1.0'],
+  ['graceful-fs', '4.2.10', '4.2.11'],
+  ['glob-parent', '6.0.1', '6.0.2'],
+  ['anymatch', '3.1.2', '3.1.3'],
+  ['binary-extensions', '3.1.0', '3.2.0'],
+  ['picomatch', '4.0.6', '4.0.7'],
+  ['braces', '3.0.2', '3.0.3'],
+  ['fill-range', '7.0.1', '7.1.1'],
+  ['undici-types', '8.10.1', '8.10.2'],
+  ['combined-stream', '1.0.7', '1.0.8'],
+  ['asynckit', '0.4.0', '0.5.0'],
+  ['proxy-from-env', '2.0.0', '2.1.0'],
+  ['mime', '4.0.7', '4.1.0'],
+  ['argparse', '3.0.1', '3.0.2'],
+  ['esprima', '4.0.0', '4.0.1'],
+  ['js-yaml', '5.4.0', '5.4.1'],
+  ['resolve-from', '4.0.0', '5.0.0'],
+  ['callsites', '4.1.0', '4.2.0'],
 ];
 
 const C = process.stdout.isTTY
