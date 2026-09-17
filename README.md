@@ -742,7 +742,7 @@ npm test
 ```
 
 ```
-20 suites · 240 checks
+21 suites · 247 checks
 all green
 ```
 
@@ -767,6 +767,11 @@ What the suites actually protect:
 - **`observe/observe.test.js`** — install *and* import, in that order; the transcript records the
   strategy that ran rather than the one we wanted; a dead machine never becomes a quiet package
 - **`differ/diff.test.js`** — severity is arithmetic; cross-strategy comparison throws
+- **`judge/reachability.test.js`** — the same question of the three-tier cascade: over all 512
+  combinations of what the rules decided and what each of the three models replied, can the judge
+  actually reach every one of the eight conclusions it can print? It can. It also asserts the
+  accusation — the strongest sentence this prints — is reachable through exactly one door, and that
+  a model replying with something unparseable never counts as agreement
 - **`differ/reachability.test.js`** — that every severity rule can actually fire. `severityOf` is a
   ladder of early returns, and that shape has a failure mode which reads as the opposite of a bug: a
   rule sitting below a return that always precedes it looks like coverage and never runs. One did.
