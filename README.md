@@ -762,7 +762,7 @@ npm test
 ```
 
 ```
-21 suites · 253 checks
+22 suites · 264 checks
 all green
 ```
 
@@ -792,6 +792,15 @@ What the suites actually protect:
   actually reach every one of the eight conclusions it can print? It can. It also asserts the
   accusation — the strongest sentence this prints — is reachable through exactly one door, and that
   a model replying with something unparseable never counts as agreement
+- **`absence.test.js`** — the one mistake this project cannot afford: presenting an absence of
+  observation as an observation of absence. Its whole argument is a negative claim, and a negative
+  claim is worth nothing if the watching was not real. The shape reappeared at four layers
+  independently — the schema, the wall's sentence, and twice in a sibling project — because at every
+  layer the two facts have the same representation, an empty list, and only the surrounding sentence
+  tells them apart. The suite asserts the property at each surface that can state it: the data, the
+  one-line summary, the wall verdict and the model's prompt. It also asserts the *strong* claim is
+  still made when a full-visibility strategy earns it, so the property cannot be satisfied by
+  refusing to ever conclude anything
 - **`differ/reachability.test.js`** — that every severity rule can actually fire. `severityOf` is a
   ladder of early returns, and that shape has a failure mode which reads as the opposite of a bug: a
   rule sitting below a return that always precedes it looks like coverage and never runs. One did.
