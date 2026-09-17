@@ -25,7 +25,8 @@ of the labelled stand-in, which is better but not required.
 | 9 | the blind-spot panel: `5/500 orders drifted by +0.01` | "This one it cannot see at all. Rounding changed, tests pass. We show it anyway." | honesty as a feature |
 | 10 | terminal, **in one of your own repositories**: `npm run lockfile -- --against HEAD~20 --dry-run` | "This is my project. Twenty commits. Here is what actually moved." | ⭐ the shot that makes it a tool instead of a demo — no fixture, no keys, their repo |
 | 10b | drop `--dry-run`: it installs and runs those packages | "And here is what those changes do." | the claim, closed |
-| 10c | run the exact same command again: `Cache: 3 answered without running` | "A version bump did what it did. Nobody should ever pay for that twice." | why it scales past one repo |
+| 10c | run the exact same command again: `Cache: … answered without running` | "A version bump did what it did. Nobody should ever pay for that twice." | why it scales past one repo |
+| 10d | `npm run survey` → `37 of 40 behaved identically`, then point at `isexe` | "Forty real upgrades of packages nobody picked for being interesting. Thirty-seven changed nothing. And this one ships a test hook — `_ISEXE_TEST_PLATFORM_` — in the published package." | ⭐ the baseline, and a real finding on real software, found by accident |
 | 11 | black: *"9 model calls for 1,214 packages."* | — | the economics, last |
 
 ## The two lines the video exists to earn

@@ -48,19 +48,25 @@ It reads your real `package-lock.json`, compares it to the same file at an earli
 the packages that actually moved. Nothing else is re-run — in a real upgrade fifteen packages move
 out of twelve hundred, and re-running the rest is theatre.
 
-**The measurement the whole idea rests on.** `npm run survey` runs twenty upgrades of genuinely
-popular packages — `semver`, `chalk`, `debug`, `lru-cache`, `tslib`, `minimatch`, `uuid`, `dotenv` —
-none chosen for being interesting, because that is the only way a baseline is worth anything:
+**The measurement the whole idea rests on.** `npm run survey` runs forty upgrades of genuinely
+popular packages — `semver`, `chalk`, `debug`, `lru-cache`, `tslib`, `minimatch`, `fastq`,
+`brace-expansion` — none chosen for being interesting, because that is the only way a baseline is
+worth anything:
 
 ```
-18 of 20 behaved identically at both versions.
-minor 2 · notable 0 · alarming 0
+37 of 40 behaved identically at both versions.
+minor 3 · notable 0 · alarming 0
 ```
 
-Ninety per cent of real upgrades change nothing observable. So when one does, it deserves a person
-rather than a line in a wall of noise. The two exceptions are exactly the shape you would want: a
-colour library learning about `NO_COLOR`, and a list library noticing V8 coverage instrumentation.
-Both benign, both explicable in a sentence, neither raised above `minor`.
+Ninety-two per cent of real upgrades change nothing observable. So when one does, it deserves a
+person rather than a line in a wall of noise. All three exceptions are benign, explicable in a
+sentence, and none raised above `minor`.
+
+One is worth a second look. `isexe@3.1.1` reads **`_ISEXE_TEST_PLATFORM_`** — a test-only hook, in
+the published package, on a dependency of `which`, which sits under a very large share of the
+ecosystem. Not a vulnerability, and nobody is accusing anyone of anything. Just a true thing about
+software you are running that no lockfile, changelog or scanner was ever going to tell you — found
+by accident, in a survey of packages picked for being boring.
 
 ---
 

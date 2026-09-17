@@ -50,6 +50,28 @@ const PAIRS = [
   ['tslib', '2.6.0', '2.8.1'],
   ['ejs', '3.1.9', '3.1.10'],
   ['minimatch', '9.0.0', '9.0.5'],
+  // A second twenty, added to make the baseline harder to dismiss. Same rule: chosen for being
+  // depended upon, never for being interesting.
+  ['clsx', '1.2.1', '2.1.1'],
+  ['yocto-queue', '1.0.0', '1.1.1'],
+  ['eventemitter3', '4.0.7', '5.0.1'],
+  ['object-assign', '4.1.0', '4.1.1'],
+  ['safe-buffer', '5.1.2', '5.2.1'],
+  ['side-channel', '1.0.4', '1.0.6'],
+  ['has-flag', '3.0.0', '4.0.0'],
+  ['color-name', '1.1.3', '1.1.4'],
+  ['wrappy', '1.0.1', '1.0.2'],
+  ['inherits', '2.0.3', '2.0.4'],
+  ['isexe', '2.0.0', '3.1.1'],
+  ['balanced-match', '1.0.0', '1.0.2'],
+  ['brace-expansion', '2.0.0', '2.0.1'],
+  ['emoji-regex', '9.2.0', '9.2.2'],
+  ['is-number', '7.0.0', '7.0.0'],
+  ['queue-microtask', '1.2.2', '1.2.3'],
+  ['reusify', '1.0.2', '1.0.4'],
+  ['run-parallel', '1.1.10', '1.2.0'],
+  ['to-regex-range', '5.0.0', '5.0.1'],
+  ['fastq', '1.13.0', '1.17.1'],
 ];
 
 const C = process.stdout.isTTY
