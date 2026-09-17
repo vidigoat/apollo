@@ -53,11 +53,29 @@ const from = (text, re, label) => {
   return m[1];
 };
 
+/*
+ * `where` makes a claim contextual.
+ *
+ * Every check here was "does the README contain this string anywhere", which for a small number is
+ * close to vacuous: "30" appears in this README inside a duration, a percentage, a port. The sibling
+ * repository's identical checker passed for weeks while its README said "all 14 tools" and there
+ * were 17 — the claim was checked, the value was right, and `includes('17')` found a 17 somewhere
+ * else entirely.
+ *
+ * A claim with a `where` pattern must match IN CONTEXT, at every occurrence rather than the first,
+ * because one corrected sentence beside three stale ones reads as fixed and is not. A README that
+ * has stopped mentioning the figure fails too, which is the point: these are the load-bearing
+ * numbers, and quietly dropping one is its own kind of drift.
+ */
 const CLAIMS = [
+  // No `where` here: "N packages" is a phrase this README uses for several different counts — the
+  // tree, the ones that moved, the ones in a survey — so matching it in context would be matching
+  // the wrong things. A contextual pattern is only an improvement where the phrase means one thing.
   { what: 'tree size', value: corpus.TOTAL.toLocaleString() },
   { what: 'packages that moved', value: String(corpus.CHANGED.length) },
-  { what: 'twins forked', value: from(demo, /Forked\s+(\d+) twins/, 'twins') },
+  { what: 'twins forked', value: from(demo, /Forked\s+(\d+) twins/, 'twins'), where: /(\d+) twins\b/g },
   { what: 'packages that behaved identically', value: from(demo, /(\d+) of \d+ packages behaved identically/, 'quiet count') },
+  // Likewise: the README quotes "0 model calls" deliberately, for the cached run that costs nothing.
   { what: 'model calls', value: from(demo, /(\d+) model calls\s+\(not/, 'model calls') },
   { what: 'invariant drift', value: from(run([path.join(__dirname, '..', 'probe', 'invariant-totals.js')]), /^(\d+\/\d+) orders/m, 'drift') },
   // NOTE: the suite count is checked by the runner itself (scripts/test.js), not here. Re-running
@@ -71,8 +89,21 @@ let stale = 0;
 for (const c of CLAIMS) {
   // A figure the README never mentions is fine. A figure it mentions WRONG is not, so look for the
   // value and, if it is absent, say so rather than passing silently.
-  const present = README.includes(c.value);
-  console.log(`  ${present ? C.green + 'ok  ' : C.red + 'MISSING'}${C.off} ${c.what.padEnd(36)} ${C.dim}${c.value}${C.off}`);
+  let present;
+  let detail = '';
+
+  if (c.where) {
+    const found = [...README.matchAll(c.where)].map((m) => m[1]);
+    const wrong = found.filter((v) => v !== c.value);
+    present = found.length > 0 && wrong.length === 0;
+    detail = found.length === 0
+      ? ' — the README no longer mentions it'
+      : wrong.length ? ` — README says ${[...new Set(wrong)].join(', ')}` : '';
+  } else {
+    present = README.includes(c.value);
+  }
+
+  console.log(`  ${present ? C.green + 'ok  ' : C.red + 'STALE  '}${C.off} ${c.what.padEnd(36)} ${C.dim}${c.value}${detail}${C.off}`);
   if (!present) stale++;
 }
 
