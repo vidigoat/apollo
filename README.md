@@ -666,7 +666,28 @@ Zero runtime dependencies. Zero build step. CommonJS, Node 20+.
 Every external call degrades to a labelled local stand-in, so the project runs identically with no
 keys at all. Supplying keys switches the corresponding layer to live:
 
+### Spending
+
+Every paid call goes through a hard ceiling in `judge/budget.js`, defaulting to **$0.25** — well
+under a $1 trial, on purpose.
+
+```
+Budget stop: nvidia/NVIDIA-Nemotron-3-Ultra-550B could cost up to $0.000370,
+and $0.2499 of the $0.25 ceiling is already spent.
+  Nothing was called. Raise it deliberately with STAKEOUT_BUDGET_USD=<amount>.
+```
+
+The ledger is **on disk**, because an in-memory counter fails in exactly the situation it exists
+for: a crashed run, a second terminal, a loop restarted after an edit — each is a fresh process that
+would happily spend the budget again. It is checked *before* the request, since a limit that only
+notices afterwards is a receipt. And it **fails closed**: a ledger it cannot read or write means
+stop, never "assume nothing was spent".
+
+That is the opposite of every other failure path here — a broken cache degrades to a slower run —
+and it is deliberate, because this one guards money rather than time.
+
 ```bash
+export STAKEOUT_BUDGET_USD=0.25    # the ceiling. raise it consciously, once
 export NEBIUS_API_KEY=...          # Nemotron judgement (otherwise: local deterministic fallback)
 export TAVILY_API_KEY=...          # the public record (otherwise: the recorded corpus)
 export NEBIUS_SANDBOX_URL=...      # Sandboxes base URL, if it differs

@@ -13,6 +13,20 @@
 
 const assert = require('node:assert');
 const { complete, MODELS, RATES, costOf, hasKey } = require('./nemotron');
+const { Budget } = require('./budget');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+
+/**
+ * A ledger of its own, per test.
+ *
+ * The first run of this file spent $0.50 of imaginary money into the REAL ledger and then, quite
+ * correctly, refused to go on. The guard was right and the test was wrong: a suite that writes to
+ * the same file as a live run can exhaust a real budget with stub money.
+ */
+const isolated = () =>
+  new Budget({ ceiling: 10, file: path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-')), 'spend.json') });
 
 let passed = 0;
 const it = async (name, fn) => {
@@ -85,7 +99,7 @@ const reply = (content, usage) => ({
         seen = { url, headers: opts.headers, body: JSON.parse(opts.body) };
         return reply('{}', { prompt_tokens: 10, completion_tokens: 5 });
       });
-      await complete({ model: MODELS.judge, system: 'S', user: 'U', maxTokens: 123 });
+      await complete({ model: MODELS.judge, system: 'S', user: 'U', maxTokens: 123, budget: isolated() });
 
       assert.match(seen.url, /chat\/completions$/);
       assert.match(seen.headers.authorization, /^Bearer test-key$/);
@@ -104,7 +118,7 @@ const reply = (content, usage) => ({
   await it('reads the reply out of the shape the API returns', async () => {
     await withKey(async (setFetch) => {
       setFetch(async () => reply('{"meaning":"x"}', { prompt_tokens: 2e5, completion_tokens: 1e5 }));
-      const r = await complete({ model: MODELS.judge, system: 's', user: 'u' });
+      const r = await complete({ model: MODELS.judge, system: 's', user: 'u', budget: isolated() });
       assert.equal(r.text, '{"meaning":"x"}');
       assert.equal(r.simulated, false, 'a live call must never be labelled simulated');
       assert.ok(r.costUsd > 0, 'a live call that costs nothing means the usage block was not read');
@@ -114,7 +128,7 @@ const reply = (content, usage) => ({
   await it('a reply with no choices is empty text, not a crash', async () => {
     await withKey(async (setFetch) => {
       setFetch(async () => ({ ok: true, json: async () => ({}), text: async () => '' }));
-      const r = await complete({ model: MODELS.judge, system: 's', user: 'u' });
+      const r = await complete({ model: MODELS.judge, system: 's', user: 'u', budget: isolated() });
       assert.equal(r.text, '', 'an unexpected reply shape must degrade to "no verdict", not throw');
     });
   });
@@ -123,7 +137,7 @@ const reply = (content, usage) => ({
     await withKey(async (setFetch) => {
       setFetch(async () => ({ ok: false, status: 429, text: async () => 'rate limited, slow down' }));
       await assert.rejects(
-        () => complete({ model: MODELS.judge, system: 's', user: 'u' }),
+        () => complete({ model: MODELS.judge, system: 's', user: 'u', budget: isolated() }),
         /nemotron 429.*rate limited/,
         'an outage must be loud — a silent one would look like "no finding"'
       );

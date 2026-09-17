@@ -15,6 +15,8 @@
  * that looks like a real one is the most dishonest thing this repo could contain.
  */
 
+const { Budget } = require('./budget');
+
 const ENDPOINT = process.env.NEBIUS_BASE_URL || 'https://api.studio.nebius.com/v1/chat/completions';
 
 /**
@@ -46,8 +48,18 @@ function costOf(model, usage) {
  * One chat completion.
  * @returns {Promise<{text:string, model:string, costUsd:number, simulated:boolean}>}
  */
-async function complete({ model, system, user, maxTokens = 400, temperature = 0 }) {
+async function complete({ model, system, user, maxTokens = 400, temperature = 0, budget }) {
   if (!hasKey()) return simulate({ model, user });
+
+  // Every paid call passes through here, so the ceiling lives here. Checked BEFORE the request:
+  // a budget that only notices afterwards is a receipt, not a limit.
+  const guard = budget || new Budget();
+  guard.check({
+    rate: RATES[model] || { in: 1, out: 3 },   // an unpriced model is assumed expensive
+    maxTokens,
+    promptChars: (system || '').length + (user || '').length,
+    label: model,
+  });
 
   const res = await fetch(ENDPOINT, {
     method: 'POST',
@@ -73,12 +85,13 @@ async function complete({ model, system, user, maxTokens = 400, temperature = 0 
   }
 
   const json = await res.json();
-  return {
-    text: json.choices?.[0]?.message?.content ?? '',
-    model,
-    costUsd: costOf(model, json.usage),
-    simulated: false,
-  };
+  const costUsd = costOf(model, json.usage);
+
+  // Recorded before the caller is told anything. A spend that happened and was not written down is
+  // the one state this must never leave behind.
+  guard.record(costUsd, { model });
+
+  return { text: json.choices?.[0]?.message?.content ?? '', model, costUsd, simulated: false };
 }
 
 /**
@@ -136,4 +149,4 @@ function simulate({ model, user }) {
   });
 }
 
-module.exports = { complete, MODELS, RATES, costOf, hasKey };
+module.exports = { complete, MODELS, RATES, costOf, hasKey, Budget };
