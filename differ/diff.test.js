@@ -29,11 +29,23 @@ const make = (version, raw = {}, strategy = 'ebpf') =>
 
 console.log('behavioural diff');
 
-it('says nothing changed when nothing changed', () => {
+it('says nothing changed when nothing changed — and only claims what it watched', () => {
   const d = diff(make('2.4.1'), make('2.4.2'));
   assert.equal(d.changed, false);
   assert.equal(d.severity, 'none');
-  assert.match(summarise(d), /no behavioural change/);
+
+  // `make` builds ebpf transcripts, and ebpf cannot see code built at runtime. "No behavioural
+  // change" would be a claim about the package; this run can only support a claim about what it
+  // saw. It is the sentence printed next to two thirds of the corpus, so the distinction is not
+  // pedantry — it is most of what the wall says.
+  assert.match(summarise(d), /no change in what ebpf can see/);
+
+  // The strong sentence still exists, for the strategy that earns it.
+  const full = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', raw: {} })
+  );
+  assert.match(summarise(full), /no behavioural change$/);
 });
 
 it('is stable across identical runs, despite temp paths and pids', () => {

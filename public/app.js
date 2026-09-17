@@ -83,6 +83,18 @@ function lines(t, d, side) {
   return out.join('');
 }
 
+/**
+ * What the wall says next to a package that did not change.
+ *
+ * "No behavioural change" is a claim about the package. Under a strategy that cannot see every
+ * channel it is a claim the run does not support, and this is the sentence the product repeats
+ * most — it sits beside two thirds of the corpus. The qualified form names the strategy, so the
+ * reader knows what the silence covers without having to find the caveat further down the page.
+ */
+function quietVerdict(d) {
+  return d.blindTo && d.blindTo.length ? `no change in what ${d.strategy} can see` : 'no behavioural change';
+}
+
 function row(p) {
   const d = p.diff;
   const quiet = !d.changed;
@@ -94,7 +106,7 @@ function row(p) {
       <header class="pair__head">
         <span class="pair__name">${esc(p.pkg)}</span>
         <span class="pair__ver">${esc(p.from)} → ${esc(p.to)}</span>
-        ${quiet ? '<span class="pair__verdict">no behavioural change</span>'
+        ${quiet ? `<span class="pair__verdict">${esc(quietVerdict(d))}</span>`
                 : `<span class="pair__verdict is-changed">${esc(p.judgement?.verdict?.meaning || d.reasons[0] || 'changed')}</span>`}
       </header>
       ${quiet ? '' : p.before && p.after ? `

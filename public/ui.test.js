@@ -172,15 +172,19 @@ async function renderedPage(treeExtra = {}) {
     const { dom, payload } = await renderedPage();
     const html = dom.get('wall').innerHTML;
     const quiet = payload.pairs.filter((p) => !p.diff.changed).length;
-    const said = html.split('no behavioural change').length - 1;
-    assert.equal(said, quiet, 'every quiet package should say so, once');
+    // The wording depends on the strategy: a run blind to a channel may only claim what it saw.
+    const verdict = payload.canSee && Object.values(payload.canSee).some((v) => !v)
+      ? `no change in what ${payload.strategy} can see`
+      : 'no behavioural change';
+    const said = html.split(verdict).length - 1;
+    assert.equal(said, quiet, `every quiet package should say "${verdict}", once`);
     assert.ok(quiet > payload.pairs.length / 2, 'if most packages changed, the corpus is wrong');
   });
 
   await it('a quiet package shows no columns — there is nothing to compare', async () => {
     const { dom } = await renderedPage();
     const rows = dom.get('wall').innerHTML.split('<article').slice(1);
-    rows.filter((r) => r.includes('no behavioural change')).forEach((r) => {
+    rows.filter((r) => /no (behavioural change|change in what)/.test(r)).forEach((r) => {
       assert.ok(!r.includes('pair__cols'), 'a quiet package drew a diff it does not have');
     });
   });

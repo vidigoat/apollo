@@ -157,10 +157,23 @@ function diff(before, after) {
   };
 }
 
-/** One line, for the wall of packages where almost nothing happened. */
+/**
+ * One line, for the wall of packages where almost nothing happened.
+ *
+ * This is the most-repeated sentence in the product — it sits next to two thirds of the corpus —
+ * and "no behavioural change" is a stronger claim than the run can support unless the strategy
+ * could see everything. Under `ebpf`, which cannot see code built at runtime, the honest form is
+ * "no change in what ebpf can see", and the difference between those two sentences is the whole
+ * reason `canSee` exists.
+ *
+ * The strong sentence is still printed, for the strategy that earns it. It just has to earn it.
+ */
 function summarise(d) {
-  if (!d.changed) return `${d.pkg} ${d.from} → ${d.to}: no behavioural change`;
-  return `${d.pkg} ${d.from} → ${d.to}: ${d.reasons.join('; ')}`;
+  if (d.changed) return `${d.pkg} ${d.from} → ${d.to}: ${d.reasons.join('; ')}`;
+  const qualified = d.blindTo && d.blindTo.length
+    ? `no change in what ${d.strategy} can see`
+    : 'no behavioural change';
+  return `${d.pkg} ${d.from} → ${d.to}: ${qualified}`;
 }
 
 module.exports = { diff, summarise, severityOf, SENSITIVE_ENV, NOTABLE_PROC, BUILDS_CODE };
