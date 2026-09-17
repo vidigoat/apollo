@@ -274,5 +274,28 @@ async function renderedPage(treeExtra = {}) {
     assert.equal(stray, null, `unexpected tags rendered: ${stray}`);
   });
 
+  await it('nothing a package controls reaches the page unescaped', () => {
+    /*
+     * The wall prints strings that came out of somebody else's npm package: its name, the hosts it
+     * connected to, the paths it wrote, and — in the transcript block — a SAMPLE OF CODE the package
+     * built at runtime. That last one is a string an attacker chose, rendered into a page.
+     *
+     * Both paths escape today: the channel renderers are wrapped in `esc(text)` by the caller, and
+     * the transcript ends `.map(esc)`. This is a static assertion rather than a rendered one because
+     * the escaping lives at those two call sites and nowhere else — checking them is checking the
+     * property. The sibling repository had seven screens interpolating server text raw with `esc`
+     * defined three lines away, so it is an easy thing to lose.
+     */
+    assert.ok(/out\.push\(`<li class="\$\{[^`]*\}">\$\{esc\(text\)\}<\/li>`\)/.test(APP),
+      'the channel renderers are no longer escaped by their caller');
+    assert.ok(/\]\.map\(esc\)\.join/.test(APP),
+      'the transcript block is no longer escaped — it prints code a package built at runtime');
+
+    // And nothing else may interpolate a package-controlled field directly into markup.
+    const markup = [...APP.matchAll(/<(?:span|pre|li|p|b|code)[^>]*>\$\{([^}]+)\}/g)].map((m) => m[1].trim());
+    const risky = markup.filter((e) => /\b(pkg|host|path|sample|argv|from|to)\b/.test(e) && !e.startsWith('esc('));
+    assert.deepEqual(risky, [], `interpolated without esc(): ${risky.join(' · ')}`);
+  });
+
   console.log(`\n${passed} passed`);
 })();
