@@ -146,8 +146,19 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
 .pair.sev-alarming .pair__name { color: #f4f7fb; }
 .pair.sev-notable { border-left-color: var(--amber); background: #151109; }
 
-.pair__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
-@media (max-width: 720px) { .pair__cols { grid-template-columns: 1fr; } }
+/*
+ * `minmax(0, 1fr)`, not `1fr`.
+ *
+ * A bare `1fr` is `minmax(auto, 1fr)`, and `auto` floors the track at its MIN-CONTENT width. These
+ * columns hold transcript lines set `white-space: nowrap` — hostnames, absolute paths, whole shell
+ * commands — so the track refused to shrink below the longest one and pushed the document to 644px
+ * inside a 420px viewport. The `text-overflow: ellipsis` below could never engage, because the box
+ * was always wide enough for the text.
+ *
+ * Measured, not guessed: scrollWidth 644 against clientWidth 420, with `.col` reported at 602px.
+ */
+.pair__cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-top: 12px; }
+@media (max-width: 720px) { .pair__cols { grid-template-columns: minmax(0, 1fr); } }
 .col { background: #0a0d13; border: 1px solid var(--rule); padding: 10px 12px; }
 .col__v { font-family: var(--mono); font-size: 11px; color: var(--dim); display: block; margin-bottom: 6px; }
 .col ul { list-style: none; margin: 0; padding: 0; }
@@ -249,3 +260,28 @@ footer { max-width: 1120px; margin: 0 auto; padding: 22px 24px; border-top: 1px 
   font-size: 13.5px; line-height: 1.68; color: #9aa5b5; margin: 0; max-width: 78ch;
   /* Not mono. This is prose the model wrote, not a transcript it produced. */
 }
+
+/* ── phone ────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 560px) {
+  .masthead { padding: 30px 18px 22px; gap: 20px; }
+  main { padding: 0 18px 60px; }
+  section { padding-block: 40px; }
+  .slate { grid-template-columns: minmax(0, 1fr); }
+
+  /* The wall stays readable; the strip stays a strip rather than becoming a wall of its own. */
+  .pair { padding: 11px 12px; }
+  .pair__head { gap: 8px; }
+  .pair__name, .pair__ver { min-width: 0; }
+  .mark { height: 22px; }
+
+  .catch { padding: 16px 14px; }
+  .plan-grid { gap: 22px; }
+  footer { flex-direction: column; gap: 6px; padding: 18px; }
+}
+
+/*
+ * Nothing may push this page sideways. Transcript content is hostnames and paths a browser will
+ * not break on its own, so a long one scrolls inside its own block rather than widening the page.
+ */
+.catch__transcript, .blind__probe, .diagram { max-width: 100%; }
