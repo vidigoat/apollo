@@ -14,7 +14,7 @@ Checklist against the stated requirements:
 | uses at least one NVIDIA open source model | **LIVE, three of them.** `NVIDIA-Nemotron-3-Nano-30B-A3B` triages, `Nemotron-3-Ultra-550b-a55b` judges, `nemotron-3-super-120b-a12b` vetoes. Preflight shows a parsed verdict and a real cost for each. |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |
-| **a working demo URL** — hosted app or test build | ready to deploy — `vercel.json` + `api/index.js`, zero dependencies |
+| **a working demo URL** — hosted app or test build | ready — `npx vercel --prod`, two commands, no env var needed. See [DEPLOY.md](../DEPLOY.md). Verdicts ship committed, so a visitor costs nothing. |
 | 3-min public YouTube video, audio covering Nebius + Nemotron use | `docs/DEMO-SCRIPT.md` |
 | feedback on Token Factory / AI Cloud / NVIDIA tools | `docs/FEEDBACK-NOTES.md` |
 | what changed during the submission window | this project was built in it |
