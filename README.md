@@ -838,8 +838,12 @@ all green
 That number is printed by the runner, not typed here — and it has now gone stale in this paragraph
 **twice**: `182` an hour after it stopped being true, then `14 suites · 183 checks` for long enough
 that six suites and fifty-seven checks had been added underneath it. Writing the rule down did not
-work. So the count joined `npm run check-readme`, which runs the suite and fails the build if this
-line disagrees with it — the only mechanism that has ever kept a number in this file honest.
+work. So the count is now asserted by the test runner itself: `scripts/test.js` compares this line
+against the tally it has just printed and fails, naming both numbers. It lives there rather than in
+`check-readme` because there the count is already in hand — having that script re-run the whole
+suite to learn something the suite had just printed made it slow enough to stop being run, and a
+check nobody runs protects nothing. A mechanism has kept this number honest ever since; two written
+rules did not.
 Everywhere else in this README says "every suite".
 
 The runner deliberately does not chain suites with `&&`. That stops at the first failure and
