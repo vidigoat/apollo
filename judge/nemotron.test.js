@@ -2,9 +2,17 @@
  * The Nemotron client.
  *
  * judge.test.js exercises the pipeline with stub models, which means the one thing it never checks
- * is the request this file actually sends. That request has never been answered by a real server,
- * so everything about it is an assumption — and the cost arithmetic underneath it decides a number
- * printed on the page.
+ * is the request this file actually sends.
+ *
+ * That request HAS now been answered by a real server — 2026-09-20 — and the answer corrected three
+ * things these stubs could never have caught: all three model ids were invented and 404'd, and
+ * Nemotron 3 turned out to be a reasoning model whose working-out is billed before its answer, so a
+ * max_tokens sized for the answer returns empty content with `finish_reason: "stop"`.
+ *
+ * Which is the argument for `npm run preflight` existing alongside this file rather than instead of
+ * it. Stubs check the shape of the request; only a real server checks whether the request is about
+ * anything. This file still earns its place — the cost arithmetic below decides a number printed on
+ * the page, and that arithmetic should not need a network to verify.
  *
  * `npm run preflight` checks the half that needs a key. This checks the half that does not.
  *

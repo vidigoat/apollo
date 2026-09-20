@@ -92,6 +92,8 @@ Three implementations, and the differences between them are the honest part:
   `observe/probe.js`. The only adapter that has actually run. Requires `STAKEOUT_ALLOW_LOCAL=1`,
   because it executes packages as *you*.
 - **`contree.js`** — Nebius Sandboxes. Written and tested against a stub; has never talked to a live
+  sandbox, confirmed 2026-09-20 — a live key reaches Token Factory fine and the Sandboxes endpoint
+  returns `404 Not Found`, because access is not granted. The rest of this line still holds:
   sandbox. Every call goes through one `api()` helper so there is exactly one place to correct.
 
 `supports` defaults to the weakest option in every adapter. Claiming a strategy you do not have
