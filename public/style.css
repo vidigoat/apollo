@@ -1,22 +1,47 @@
-/* STAKEOUT — a stakeout is mostly nothing happening.
-   Colour appears only where behaviour changed. If this page looks colourful, it has failed. */
+/*
+ * STAKEOUT — a stakeout is mostly nothing happening.
+ *
+ * This page answers a NEGATIVE question: almost nothing changed. The emptiness is the finding, so
+ * the wall of quiet rows is the subject of the design rather than the background to it, and colour
+ * is rationed — a row earns it by severity and nothing else on the page is allowed any. If this
+ * page looks colourful, it has failed.
+ *
+ * ── Two voices, one role each ───────────────────────────────────────────────
+ *
+ *   JetBrains Mono   every package name, hostname, path and transcript line — everything a reader
+ *                    could go and check against their own machine. A hostname set in a proportional
+ *                    face reads as a claim about software; set in mono it reads as something
+ *                    verifiable. The evidence IS the headline here, so the evidence gets the type.
+ *   Inter Tight      prose, labels, the masthead. It converses; it never presents evidence.
+ *
+ * Replaced IBM Plex Sans Condensed, which was the reflex choice for "technical product" rather than
+ * a decision about this one, and whose condensed display weight fought the mono it sat beside.
+ *
+ * ── The signature, used once ────────────────────────────────────────────────
+ *
+ * The fork strip: one hairline per twin, filling amber as thirty machines fork from one checkpoint,
+ * going quiet as each pair returns identical. Then the wall settles and one row keeps its colour.
+ * That is the whole argument in one motion, and it is the only motion in the product.
+ */
 
 :root {
-  --ink: #0b0e14;
-  --panel: #131820;
-  --edge: #1d242f;
-  --rule: #222a36;
-  --silver: #c8ced9;
-  --dim: #7b8596;
-  --quiet: #38424f;
+  /* Cold graphite, not black: a lab, not a terminal theme. */
+  --ink: #0b0d10;
+  --panel: #12151a;
+  --edge: #1a1f27;
+  --rule: #1e232b;
+  --silver: #e6eaf0;
+  --dim: #8a94a6;
+  /* The colour of nothing happening. Most of this page is this, and that is the point. */
+  --quiet: #39424f;
 
-  --grease: #e4483b;   /* alarming */
-  --amber: #d9a441;    /* notable  */
+  --grease: #e0574a;   /* alarming — assigned by arithmetic in differ/diff.js, never by a model */
+  --amber: #c9922e;    /* notable, and work in progress; the only warm thing on screen */
   --verd: #57a773;     /* nothing changed */
 
-  --display: "IBM Plex Sans Condensed", "Helvetica Neue", Arial, sans-serif;
-  --body: "IBM Plex Sans", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --display: "Inter Tight", system-ui, sans-serif;
+  --body: "Inter Tight", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -31,7 +56,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-spacing: -0.022em; }
 main { max-width: 1120px; margin: 0 auto; padding: 0 24px 96px; }
 section { padding-block: 64px; border-top: 1px solid var(--rule); }
 .lede { max-width: 64ch; color: var(--dim); margin: 12px 0 0; }
@@ -45,7 +70,7 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
   font-family: var(--mono); font-size: 11px; color: var(--grease);
   border: 1px solid var(--grease); border-radius: 999px; padding: 2px 10px;
 }
-.masthead h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.02; margin: 16px 0 0; color: #f1f4f9; }
+.masthead h1 { font-size: clamp(36px, 5.6vw, 64px); line-height: 1.02; letter-spacing: -0.03em; margin: 16px 0 0; color: #f4f7fb; }
 .sub { max-width: 60ch; color: var(--dim); margin: 14px 0 0; }
 
 .slate { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--rule); border: 1px solid var(--rule); }
@@ -57,8 +82,9 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
 .run-section h2 { font-size: 28px; }
 .controls { display: flex; align-items: center; gap: 18px; margin-top: 24px; flex-wrap: wrap; }
 .btn {
-  font-family: var(--display); font-size: 17px; font-weight: 600;
-  color: var(--ink); background: var(--silver); border: 0; padding: 12px 24px; cursor: pointer;
+  font-family: var(--display); font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+  color: var(--ink); background: var(--silver); border: 0; border-radius: 3px;
+  padding: 12px 24px; cursor: pointer; transition: background 160ms ease;
 }
 .btn:hover { background: #fff; }
 .btn:focus-visible { outline: 2px solid var(--grease); outline-offset: 3px; }
@@ -67,23 +93,40 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
 
 /* one hairline per twin: a progress bar made of a thousand real things */
 .strip {
-  margin-top: 26px; padding: 14px; background: var(--panel); border: 1px solid var(--edge);
-  display: flex; gap: 2px; flex-wrap: wrap;
+  margin-top: 26px; padding: 16px; background: var(--panel); border: 1px solid var(--edge);
+  border-radius: 4px; display: flex; gap: 3px; align-items: stretch;
 }
-.mark { display: block; width: 3px; height: 26px; background: #1a212b; transition: background 160ms ease; }
+/*
+ * A progress bar made of a thousand real things, so each thing gets to look like one.
+ *
+ * The marks FLEX rather than sitting at a fixed width. At 4px each they bunched into a stub on the
+ * left of a full-width panel, which read as a loading spinner that had stalled. Spanning the strip
+ * is the whole point: every machine in the run is on screen at once, and the row filling left to
+ * right is the only animation in the product.
+ */
+.mark {
+  display: block; flex: 1 1 0; min-width: 3px; max-width: 18px;
+  height: 30px; border-radius: 1px; background: #191f27;
+  transition: background 200ms cubic-bezier(.22,.61,.36,1), flex-grow 200ms cubic-bezier(.22,.61,.36,1);
+}
 .mark.is-live { background: var(--amber); }
 .mark.is-quiet { background: var(--quiet); }
 .mark.is-minor { background: var(--quiet); }
 .mark.is-notable { background: var(--amber); }
-.mark.is-alarming { background: var(--grease); width: 5px; }
+.mark.is-alarming { background: var(--grease); flex-grow: 1.8; }
 
 .cansee { font-family: var(--mono); font-size: 12px; color: var(--dim); margin-top: 14px; max-width: 80ch; }
 
 /* ── the wall ─────────────────────────────────────────── */
 .wall-section h2, .catch-section h2, .blind-section h2, .how h2, .plan h2 { font-size: 28px; }
-.wall { margin-top: 28px; border-top: 1px solid var(--rule); }
+.wall { margin-top: 28px; display: flex; flex-direction: column; gap: 1px; }
 
-.pair { border-bottom: 1px solid var(--rule); padding: 14px 2px; }
+/*
+ * A quiet row is a panel that is very nearly the page. Eight of these in a column, saying the same
+ * thing eight times, is the argument — the monotony is not a failure of the design, it is the
+ * measurement. Cropping this section to only the findings would invert the claim.
+ */
+.pair { background: var(--panel); padding: 13px 16px; border-left: 2px solid transparent; }
 .pair__head { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
 .pair__name { font-family: var(--mono); font-size: 13px; color: var(--silver); min-width: 200px; }
 .pair__ver { font-family: var(--mono); font-size: 12px; color: var(--dim); min-width: 150px; }
@@ -91,11 +134,14 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
 .pair__verdict.is-changed { color: var(--silver); }
 
 /* the quiet majority: present, legible, and deliberately unremarkable */
+.pair.is-quiet { background: #0f1216; }
 .pair.is-quiet .pair__name { color: var(--quiet); }
 .pair.is-quiet .pair__ver { color: #2c3541; }
 
-.pair.sev-alarming { border-left: 3px solid var(--grease); padding-left: 12px; }
-.pair.sev-notable { border-left: 3px solid var(--amber); padding-left: 12px; }
+/* A finding shifts the row warm as well as marking it. Colour is earned, so it is spent properly. */
+.pair.sev-alarming { border-left-color: var(--grease); background: #17110f; }
+.pair.sev-alarming .pair__name { color: #f4f7fb; }
+.pair.sev-notable { border-left-color: var(--amber); background: #151109; }
 
 .pair__cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
 @media (max-width: 720px) { .pair__cols { grid-template-columns: 1fr; } }
@@ -114,8 +160,9 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
 .catch__reasons { margin: 14px 0 0; padding-left: 18px; color: var(--silver); }
 .catch__reasons li { margin-bottom: 4px; }
 .catch__transcript {
-  font-family: var(--mono); font-size: 12.5px; line-height: 1.75; color: var(--grease);
-  background: #0a0d13; border: 1px solid var(--rule); padding: 14px 16px; margin: 16px 0 0;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: #f0b3ab;
+  background: #140f0e; border: 0; border-left: 2px solid var(--grease);
+  padding: 14px 18px; margin: 16px 0 0;
   overflow-x: auto; white-space: pre;
 }
 
