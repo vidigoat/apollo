@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-20T16:18:02.669Z",
+  "judgement": {
+    "pkg": "tiny-glob",
+    "severity": "minor",
+    "judged": true,
+    "tier": "triage",
+    "verdict": {
+      "meaning": "It writes a file to a cache directory at /app/·cache/·.",
+      "explained": false,
+      "worthWaking": false,
+      "confidence": "medium",
+      "note": ""
+    },
+    "accused": false,
+    "reason": "triage saw nothing that needs a human tonight",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000118,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note.\n\nWe must interpret evidence: \"NOW TOUCHES FILE  write /app/·cache/·\". It's a string indicating that the package now writes to a file at /app/·cache/·. The path includes weird characters (·). It's writing somewhere it didn't before (minor). This is suspicious because it's writing to a cache directory? It's a cache directory? The path is /app/·cache/· maybe a hidden cache directory. The rule says writing to a cache directory is not worth waking. But we must consider: writing to a cache directory is not wo"
+      }
+    ],
+    "costUsd": 0.000118
+  }
+}

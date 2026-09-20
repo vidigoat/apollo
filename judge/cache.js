@@ -45,6 +45,23 @@ const PROMPT_VERSION = 3;
 
 const SCHEMA = 1;
 
+/*
+ * Where cached verdicts live.
+ *
+ * Two locations, and the order matters for the hosted demo Nebius requires.
+ *
+ *   1. `judge/verdicts/` IN THE REPOSITORY — read-only, committed, and the only one that survives
+ *      a serverless cold start. A home-directory cache is useless on Vercel: the filesystem is
+ *      ephemeral and read-only, so every visitor would arrive to a cold cache and trigger nine live
+ *      Nemotron calls. A demo URL that bills per refresh is a demo URL you take down.
+ *   2. the user's cache directory — writable, for local runs.
+ *
+ * Reads try the committed set first, then the local one. Writes only ever go to the local one; the
+ * committed set is updated deliberately with `npm run warm-cache`, so what a hosted visitor sees is
+ * something a person chose to ship rather than whatever the last run happened to produce.
+ */
+const SHIPPED_DIR = path.join(__dirname, 'verdicts');
+
 const DEFAULT_DIR =
   process.env.STAKEOUT_JUDGE_CACHE ||
   path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'), 'stakeout', 'judgements');
@@ -90,13 +107,27 @@ class JudgementCache {
     return path.join(this.dir, id.slice(0, 2), `${id}.json`);
   }
 
+  /** The committed copy of an entry, if one was shipped. */
+  shippedPath(id) {
+    return path.join(SHIPPED_DIR, id.slice(0, 2), `${id}.json`);
+  }
+
   /** @returns {object|null} a cached judgement, or null. Never throws: a broken cache costs money, not a run. */
   get(job) {
     if (!this.enabled) return null;
+    const id = keyFor(job);
     let entry;
-    try {
-      entry = JSON.parse(fs.readFileSync(this.path(keyFor(job)), 'utf8'));
-    } catch {
+    // Shipped first: on a cold serverless start it is the only one that exists, and locally it is
+    // the answer somebody deliberately chose to publish.
+    for (const file of [this.shippedPath(id), this.path(id)]) {
+      try {
+        entry = JSON.parse(fs.readFileSync(file, 'utf8'));
+        break;
+      } catch {
+        /* try the next one */
+      }
+    }
+    if (!entry) {
       this.misses++;
       return null;
     }
@@ -139,4 +170,4 @@ class JudgementCache {
   }
 }
 
-module.exports = { JudgementCache, keyFor, PROMPT_VERSION, SCHEMA, DEFAULT_DIR };
+module.exports = { JudgementCache, keyFor, PROMPT_VERSION, SCHEMA, DEFAULT_DIR, SHIPPED_DIR };

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-20T16:16:20.231Z",
+  "judgement": {
+    "pkg": "flat-config",
+    "severity": "notable",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version adds an outbound HTTPS connection to telemetry-edge.pages.dev, a previously undocumented telemetry endpoint.",
+      "explained": false,
+      "worthWaking": true,
+      "confidence": "medium",
+      "note": "No public record explains this new telemetry destination; payload contents unobserved."
+    },
+    "second": null,
+    "accused": false,
+    "reason": "flagged for a human; not accused",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000111,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields meaning, explained, worthWaking, confidence, note. Must not add prose. Must interpret evidence: \"NOW RESOLVES telemetry-edge.pages.dev\" and \"NOW CONNECTS TO telemetry-edge.pages.dev:443 (tcp)\". It's a new connection to a telemetry endpoint. The package is flat-config version bump. This is suspicious: new connection to telemetry endpoint. The public record says nothing. So explained = false. worthWaking? According to rules: waking means get up tonight, not worth knowing for ordinary maintenance. This is connecting to a new host, possibly telemetry. That c"
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.001955,
+        "simulated": false,
+        "reasoning": ""
+      }
+    ],
+    "costUsd": 0.002066
+  }
+}

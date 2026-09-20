@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-20T16:16:02.919Z",
+  "judgement": {
+    "pkg": "node-fetch-retry",
+    "severity": "notable",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version adds a telemetry endpoint (api.node-fetch-retry.dev) that collects retry statistics over HTTPS, matching the changelog's stated feature.",
+      "explained": true,
+      "worthWaking": false,
+      "confidence": "high",
+      "note": "Changelog documents optional telemetry with NO_TELEMETRY=1 opt-out; domain matches package name and connection is standard HTTPS."
+    },
+    "second": null,
+    "accused": false,
+    "reason": "the public record accounts for this behaviour",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000119,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note.\n\nWe must not add prose. Must interpret evidence: It resolves and connects to api.node-fetch-retry.dev:443. That's new destination. It's telemetry endpoint. The changelog mentions optional telemetry for retry statistics, opt-out via NO_TELEMETRY=1. So this is likely sending telemetry data. It's not malicious per se, but it's contacting a new host. Public record explains it? The changelog mentions telemetry, but does it account for contacting that host? Possibly yes: telemetry endpoint. So explained = tru"
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.002564,
+        "simulated": false,
+        "reasoning": ""
+      }
+    ],
+    "costUsd": 0.002683
+  }
+}

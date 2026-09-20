@@ -574,6 +574,15 @@ The first attempt only cached the judge tier, and so missed every `minor` packag
 expensive half, because triage runs on **everything** that moved and the big models run on almost
 nothing. The calls that never got cached were the numerous ones.
 
+**A home-directory cache does not survive serverless.** The demo URL Nebius requires runs somewhere
+with an ephemeral, read-only filesystem, so every visitor would arrive to a cold cache and trigger
+nine live calls — a demo URL that bills per refresh is one you end up taking down. So verdicts are
+also read from `judge/verdicts/`, which is **committed**: 16 kB of JSON, published deliberately with
+`npm run warm-cache` rather than automatically, because what a stranger sees should be verdicts
+somebody looked at and chose to ship. Verified with the local cache pointed at an empty directory —
+**5 of 5 served, 0 model calls.** They are also reviewable: a reader can open the diff and see
+exactly what the models said.
+
 ## What is real and what is simulated
 
 Stated plainly, because this is the section a judge should be able to trust.
