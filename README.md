@@ -555,6 +555,13 @@ procurement. The tree is mostly boring and paying frontier prices to be told so 
 
 ---
 
+### Deploying it
+
+Two commands, no build step, no environment variable required — see **[DEPLOY.md](DEPLOY.md)**. The
+shipped verdicts mean a hosted visitor costs nothing, and `vercel.json` carries
+`includeFiles: judge/verdicts/**` because Vercel traces imports and would not otherwise upload files
+that are only read at runtime by path.
+
 ### The demo URL had a cost leak
 
 Every load of `/api/run` re-judged all fifteen packages from scratch. On a laptop that is invisible;
