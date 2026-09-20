@@ -20,6 +20,7 @@
  */
 
 const { LocalMachines } = require('../adapters/local');
+require('../env').loadEnv();
 const { bestStrategy } = require('../observe');
 const { runPair } = require('../runPair');
 const { summarise } = require('../differ/diff');

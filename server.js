@@ -1,5 +1,6 @@
 /* STAKEOUT — zero-dependency dev server. node server.js -> http://localhost:8791 */
 const http = require('http');
+require('./env').loadEnv();
 const { sandboxCost } = require('./pricing');
 const fs = require('fs');
 const path = require('path');

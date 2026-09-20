@@ -19,6 +19,7 @@
  */
 
 const path = require('node:path');
+require('../env').loadEnv();
 const { whatMoved, lockfileAtRevision, lockfileOnDisk } = require('../lockfile');
 const { diff, summarise } = require('../differ/diff');
 const { judgeOne } = require('../judge');

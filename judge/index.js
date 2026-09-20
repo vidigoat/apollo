@@ -66,7 +66,7 @@ async function judgeOne(d, record, deps = {}) {
   const { system, user } = buildPrompt(d, record);
 
   // 1. Triage — cheap, runs on everything that moved.
-  const triage = parseVerdict((track(await call({ model: MODELS.triage, system, user, maxTokens: 220 }))).text);
+  const triage = parseVerdict((track(await call({ model: MODELS.triage, system, user, maxTokens: 700 }))).text);
 
   const worthIt = ALWAYS_JUDGE.has(d.severity) || triage?.worthWaking === true;
   if (!worthIt) {
@@ -79,7 +79,7 @@ async function judgeOne(d, record, deps = {}) {
   }
 
   // 2. Judgement — the expensive model, on the handful that earned it.
-  const verdict = parseVerdict((track(await call({ model: MODELS.judge, system, user, maxTokens: 400 }))).text);
+  const verdict = parseVerdict((track(await call({ model: MODELS.judge, system, user, maxTokens: 1100 }))).text);
   if (!verdict) {
     return {
       pkg: d.pkg, severity: d.severity, judged: true, tier: 'judge', verdict: null, accused: false,
@@ -92,7 +92,7 @@ async function judgeOne(d, record, deps = {}) {
   let accused = false;
   let second = null;
   if (d.severity === 'alarming' && verdict.worthWaking && !verdict.explained) {
-    second = parseVerdict((track(await call({ model: MODELS.second, system, user, maxTokens: 300 }))).text);
+    second = parseVerdict((track(await call({ model: MODELS.second, system, user, maxTokens: 900 }))).text);
     accused = second?.worthWaking === true && second?.explained === false;
   }
 

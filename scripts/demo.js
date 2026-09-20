@@ -9,6 +9,7 @@
  */
 
 const { SimulatedSandboxes } = require('../adapters/simulated');
+require('../env').loadEnv();
 const { sandboxCost } = require('../pricing');
 const { runAll } = require('../runPair');
 const { judgeOne } = require('../judge');
@@ -49,11 +50,16 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
   const changed = run.results.filter((p) => p.diff.changed);
   let modelCalls = 0;
   let accused = [];
+  // Tallied from the spend records rather than assumed, so the footer can say what actually ran.
+  let modelSpendUsd = 0;
+  let anyLiveModel = false;
 
   for (const p of changed) {
     const record = await lookUp(p.pkg, p.to, { recorded: PUBLIC_RECORD });
     const j = await judgeOne(p.diff, record);
     modelCalls += j.spend.length;
+    modelSpendUsd += j.costUsd || 0;
+    if (j.spend.some((c) => c.simulated === false)) anyLiveModel = true;
     if (j.accused) accused.push(p.pkg);
 
     const tone = TONE[p.diff.severity];
@@ -113,7 +119,19 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
   console.log(`  ${C.dim}An accusation needs two independent models to agree. One model is an opinion.${C.off}`);
 
   rule();
-  console.log(`${C.dim}Simulated sandboxes, recorded web results, offline model fallback — all labelled`);
+  /*
+   * What was real in THIS run, decided by the run rather than typed.
+   *
+   * This line read "Simulated sandboxes, recorded web results, offline model fallback" as a fixed
+   * string. The first time the demo ran against a live Nebius key it made nine real Nemotron calls,
+   * billed them, printed their verdicts — and then told the reader underneath that the models had
+   * been simulated. A footer that describes the run has to be derived from the run; a constant
+   * describing a variable is only true until the day it matters.
+   */
+  const modelNote = anyLiveModel
+    ? `LIVE NVIDIA Nemotron 3 on Nebius Token Factory — ${modelCalls} calls, $${modelSpendUsd.toFixed(4)}`
+    : 'offline model fallback (no NEBIUS_API_KEY set)';
+  console.log(`${C.dim}Simulated sandboxes, recorded web results, ${modelNote} — all labelled`);
   console.log(`as such above and in the repository. \`npm start\` for the same run in a browser.${C.off}`);
   rule();
 })();

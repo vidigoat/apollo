@@ -14,6 +14,7 @@
  */
 
 const { MODELS, RATES } = require('../judge/nemotron');
+require('../env').loadEnv();
 const { buildPrompt } = require('../judge/prompt');
 const { parseVerdict } = require('../judge');
 const { lookUp } = require('../evidence/tavily');
@@ -72,7 +73,14 @@ async function nebius() {
     try {
       const { system, user } = buildPrompt(SAMPLE, null);
       const { complete } = require('../judge/nemotron');
-      const r = await complete({ model: id, system, user, maxTokens: 300 });
+      /*
+       * 1100, not 300. These are reasoning models: the working-out arrives in `message.reasoning`,
+       * is charged as completion tokens, and is spent BEFORE the answer. At 300 the thinking used
+       * the budget and the JSON came back truncated mid-object — which this check then reported as
+       * "replied, but not with a verdict this pipeline accepts", an accurate symptom pointing at
+       * entirely the wrong cause. The models were fine; the allowance was not.
+       */
+      const r = await complete({ model: id, system, user, maxTokens: 1100 });
       const verdict = parseVerdict(r.text);
       if (!verdict) {
         no(`${role}: ${id}`, `replied, but not with a verdict this pipeline accepts: ${String(r.text).slice(0, 140)}`);

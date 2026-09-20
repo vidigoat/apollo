@@ -24,6 +24,7 @@
  */
 
 const fs = require('node:fs');
+require('../env').loadEnv();
 const os = require('node:os');
 const path = require('node:path');
 const { execFile } = require('node:child_process');

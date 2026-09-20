@@ -23,13 +23,32 @@ const ENDPOINT = process.env.NEBIUS_BASE_URL || 'https://api.studio.nebius.com/v
  * Model ids as published by Nebius. CONFIRM against the live model list before the submission run
  * — these are cheap to get wrong and expensive to discover wrong on stage.
  */
+/*
+ * The three model ids, as the registry actually spells them.
+ *
+ * All three of these were wrong until 2026-09-20, and wrong in the way that is hardest to notice:
+ * they were plausible. `nvidia/NVIDIA-Nemotron-3-Ultra-550B` reads like a real identifier, matches
+ * how the model is named in prose, and does not exist. The project had never called the API, so
+ * nothing contradicted them — every run fell back to the offline judge, labelled itself
+ * `simulated`, and looked like a deliberate no-key mode rather than three broken strings.
+ *
+ * The first real request returned `404 The model ... does not exist`, which is the API being good
+ * at its job. `npm run preflight` now checks all three against GET /v1/models, so a typo or a
+ * renamed model fails loudly instead of degrading into a simulation that looks intentional.
+ */
 const MODELS = {
-  triage: process.env.NEMOTRON_NANO || 'nvidia/NVIDIA-Nemotron-3-Nano-30B',
-  judge: process.env.NEMOTRON_ULTRA || 'nvidia/NVIDIA-Nemotron-3-Ultra-550B',
-  second: process.env.SECOND_OPINION || 'nvidia/NVIDIA-Nemotron-3-Super-120B',
+  triage: process.env.NEMOTRON_NANO || 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B',
+  judge: process.env.NEMOTRON_ULTRA || 'nvidia/Nemotron-3-Ultra-550b-a55b',
+  second: process.env.SECOND_OPINION || 'nvidia/nemotron-3-super-120b-a12b',
 };
 
 /** Published blended rates, $ per million tokens. Used for the cost line, not for billing. */
+/*
+ * Published per-million rates. UNVERIFIED against a Nebius price list — they are the right order of
+ * magnitude and the ranking between them is right, which is what the triage design depends on, but
+ * no invoice has confirmed the absolute numbers. Treated the same way as the sandbox estimate in
+ * pricing.js: usable for a ceiling, not quotable as a measured cost.
+ */
 const RATES = {
   [MODELS.triage]: { in: 0.08, out: 0.08 },
   [MODELS.judge]: { in: 1.0, out: 3.0 },
@@ -91,7 +110,28 @@ async function complete({ model, system, user, maxTokens = 400, temperature = 0,
   // the one state this must never leave behind.
   guard.record(costUsd, { model });
 
-  return { text: json.choices?.[0]?.message?.content ?? '', model, costUsd, simulated: false };
+  /*
+   * Nemotron 3 is a REASONING model, and that changes the shape of this response.
+   *
+   * The working-out arrives in `message.reasoning`, separately from `message.content`, and it is
+   * charged as completion tokens either way. So a `max_tokens` sized for the answer alone gets
+   * spent on the thinking and `content` comes back EMPTY with `finish_reason: "stop"` — a
+   * successful call, a real bill, and nothing to parse. The first live call here did exactly that
+   * at max_tokens 60 and looked like a model that had declined to answer.
+   *
+   * The reasoning is kept rather than dropped. This project's whole posture is that the rules
+   * decide and the model only explains, so the explanation showing its working is the more
+   * honest artefact — and it is the thing a reader can actually argue with.
+   */
+  const message = json.choices?.[0]?.message ?? {};
+  return {
+    text: message.content ?? '',
+    reasoning: typeof message.reasoning === 'string' ? message.reasoning : '',
+    finishReason: json.choices?.[0]?.finish_reason ?? null,
+    model,
+    costUsd,
+    simulated: false,
+  };
 }
 
 /**
