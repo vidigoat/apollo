@@ -46,7 +46,7 @@ it('every figure it quotes is one a command still produces', () => {
   } catch (e) {
     assert.fail(`the README has drifted from the commands:\n${e.stdout || e.message}`);
   }
-  assert.match(out, /Every figure the README quotes/);
+  assert.match(out, /Every figure these documents quote/);
 });
 
 it('it does not promise a command that does not exist', () => {

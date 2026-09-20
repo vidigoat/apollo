@@ -19,7 +19,23 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const README = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+/*
+ * Both documents, not just the README.
+ *
+ * docs/SUBMISSION.md is the one that gets SUBMITTED, and it quotes the same figures. The sibling
+ * project was caught today with two stale numbers in exactly that file — corrected in its README
+ * hours earlier and missed in the submission, because nothing was reading it. A stale number in a
+ * README is embarrassing; the same number in the document a judge reads, beside a command that
+ * disagrees with it, is what this project spends whole test files trying to prevent.
+ */
+const DOCS = ['README.md', path.join('docs', 'SUBMISSION.md')];
+const README = DOCS.map((f) => {
+  try {
+    return fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+  } catch {
+    return ''; // a document that does not exist cannot be stale
+  }
+}).join('\n\n');
 const strip = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
 
 /**
@@ -121,7 +137,7 @@ for (const c of CLAIMS) {
 }
 
 console.log(stale
-  ? `\n  ${C.red}${stale} figure(s) the commands produce do not appear in the README.${C.off}\n  Either the README is stale, or it stopped quoting something worth quoting.\n`
-  : `\n  ${C.green}Every figure the README quotes is one a command still produces.${C.off}\n`);
+  ? `\n  ${C.red}${stale} figure(s) the commands produce do not appear in README.md or docs/SUBMISSION.md.${C.off}\n  Either the README is stale, or it stopped quoting something worth quoting.\n`
+  : `\n  ${C.green}Every figure these documents quote is one a command still produces.${C.off}\n`);
 
 if (stale) process.exitCode = 1;
