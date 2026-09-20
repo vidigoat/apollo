@@ -30,7 +30,7 @@ of the labelled stand-in, which is better but not required.
 | 10b | drop `--dry-run`: it installs and runs those packages | "And here is what those changes do." | the claim, closed |
 | 10c | run the exact same command again: `Cache: … answered without running` | "A version bump did what it did. Nobody should ever pay for that twice." | why it scales past one repo |
 | 10d | `npm run survey` → `79 of 82 behaved identically`, then point at `isexe` | "Eighty-two real upgrades of packages nobody picked for being interesting. Seventy-nine changed nothing. We doubled this list and the three exceptions stayed the same three. And this one ships a test hook — `_ISEXE_TEST_PLATFORM_` — in the published package." | ⭐ the baseline, and a real finding on real software, found by accident. The "we doubled it and nothing moved" line is the one that makes it a baseline rather than a sample |
-| 11 | black: *"9 model calls for 1,214 packages."* | — | the economics, last |
+| 11 | black: *"9 model calls for 1,214 packages. Zero on the second look."* | — | the economics, last. The first half is the triage design; the second is the judgement cache, and together they are the reason a hosted demo is safe to publish |
 
 ## The two lines the video exists to earn
 
