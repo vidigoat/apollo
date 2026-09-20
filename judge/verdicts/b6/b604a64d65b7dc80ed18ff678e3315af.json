@@ -1,18 +1,18 @@
 {
   "schema": 1,
   "promptVersion": 3,
-  "judgedAt": "2026-09-20T16:16:02.919Z",
+  "judgedAt": "2026-09-20T16:43:27.195Z",
   "judgement": {
     "pkg": "node-fetch-retry",
     "severity": "notable",
     "judged": true,
     "tier": "judge",
     "verdict": {
-      "meaning": "The new version adds a telemetry endpoint (api.node-fetch-retry.dev) that collects retry statistics over HTTPS, matching the changelog's stated feature.",
+      "meaning": "The new version adds optional telemetry that sends retry statistics to api.node-fetch-retry.dev.",
       "explained": true,
       "worthWaking": false,
       "confidence": "high",
-      "note": "Changelog documents optional telemetry with NO_TELEMETRY=1 opt-out; domain matches package name and connection is standard HTTPS."
+      "note": "Telemetry is opt-out via NO_TELEMETRY=1 per the changelog."
     },
     "second": null,
     "accused": false,
@@ -20,17 +20,17 @@
     "spend": [
       {
         "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-        "costUsd": 0.000119,
+        "costUsd": 0.000108,
         "simulated": false,
-        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note.\n\nWe must not add prose. Must interpret evidence: It resolves and connects to api.node-fetch-retry.dev:443. That's new destination. It's telemetry endpoint. The changelog mentions optional telemetry for retry statistics, opt-out via NO_TELEMETRY=1. So this is likely sending telemetry data. It's not malicious per se, but it's contacting a new host. Public record explains it? The changelog mentions telemetry, but does it account for contacting that host? Possibly yes: telemetry endpoint. So explained = tru"
+        "reasoning": "We need to output JSON only with fields meaning, explained, worthWaking, confidence, note. Must not add prose. Must interpret evidence: It resolves and connects to api.node-fetch-retry.dev:443. That's new destination. It's telemetry? The changelog says adds optional telemetry for retry statistics, opt-out via NO_TELEMETRY=1. So this change appears to be sending telemetry data to a new endpoint. It's likely reporting retry stats. So meaning: It is sending telemetry/retry statistics to a remote server. Explained? Public record: changelog mentions optional telemetry, opt-out via env var. So yes, public record accounts for it. worthWaking?…"
       },
       {
         "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
-        "costUsd": 0.002564,
+        "costUsd": 0.002181,
         "simulated": false,
         "reasoning": ""
       }
     ],
-    "costUsd": 0.002683
+    "costUsd": 0.002289
   }
 }
