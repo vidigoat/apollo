@@ -47,3 +47,80 @@ last.
 
 **Suggestion:** for hackathon-issued promo codes, let credits be redeemed before billing verification,
 or give a specific next step rather than an unavailable country list.
+
+---
+
+### 2026-09-20 · A reasoning model can return an empty answer, successfully, and bill you
+
+**What happened.** First live call to `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` came back with
+`finish_reason: "stop"`, a valid `usage` block, and `message.content` as the empty string. No error,
+no warning, a real charge. The pipeline read it as "the model declined to answer" and fell through
+to its offline path.
+
+The cause is that Nemotron 3 emits its working-out in `message.reasoning`, separately from
+`message.content`, and **both are billed as completion tokens with reasoning spent first.** Our
+`max_tokens` was sized for the answer, so the thinking consumed the whole allowance and the answer
+had nowhere to go.
+
+**Why it is worth reporting.** It is silent, it costs money, and it is invisible to anyone porting a
+prompt from a non-reasoning model — which is most people arriving at Nemotron for the first time.
+Nothing in the response distinguishes "the model chose to say nothing" from "the budget ran out
+before it got to the answer". `finish_reason` says `stop` in both cases, which is the field you
+would reach for.
+
+**Suggestions, cheapest first:**
+
+1. `finish_reason: "reasoning_exhausted"` — or anything other than `stop` — when the allowance is
+   consumed before `content` begins. One string, and the failure becomes self-diagnosing.
+2. Split the usage block: `completion_tokens_details.reasoning_tokens`, the way other providers
+   already report it. We could not see where the money went.
+3. One line in the model card: *"reasoning is charged as completion tokens and emitted before the
+   answer; budget for both."* This is the single fact we most needed and had to derive from a bill.
+
+**What it cost us:** roughly forty minutes and a wrong diagnosis. We first assumed a bad prompt,
+then a bad model id, before dumping the raw response.
+
+---
+
+### 2026-09-20 · Model ids are not discoverable from the documentation
+
+**What happened.** Three model ids were written from how the models are named in prose, and all
+three 404'd:
+
+```
+nvidia/NVIDIA-Nemotron-3-Ultra-550B     ✗ does not exist
+nvidia/Nemotron-3-Ultra-550b-a55b       ✓ actual
+```
+
+`GET /v1/models` gave the correct list immediately. The 404 body was genuinely helpful — it named
+the model that did not exist rather than returning a generic error — and that is worth saying,
+because it is the reason this took two minutes to fix rather than an afternoon.
+
+**Why it is worth reporting.** The casing and the `-a55b`/`-a12b`/`-A3B` suffixes are not guessable,
+and they vary *between* models in the same family: `Nano-30B-A3B` is capitalised, `super-120b-a12b`
+is not. Anyone typing an id by hand gets it wrong, and if their code has a simulated fallback — ours
+did — the failure looks like a deliberate offline mode rather than a typo.
+
+**Suggestions:**
+
+1. Put the exact, copyable id in the model card, adjacent to the display name. Ours were inferred
+   from the display name and every one was wrong.
+2. Normalise the casing across the family, or document that it is deliberate.
+
+---
+
+### 2026-09-20 · There is no per-key spend ceiling
+
+**What happened.** An afternoon of screenshots put 145 model calls through one key, because a page
+that re-judged on every load was refreshed a lot. Small money — under fifteen cents — but nothing
+in the platform would have stopped it at any number.
+
+**Why it is worth reporting.** Hackathon entrants are running on promotional credits with a
+hard floor at zero, and many are building **hosted demos**, which is what the submission rules ask
+for. A public URL that makes model calls per visitor is an unbounded spend authorised by a stranger
+with a refresh key. We ended up writing our own on-disk ledger and pre-flight check to feel safe
+publishing one.
+
+**Suggestion:** a per-key monthly cap, settable in the console, that returns a distinct error code
+when hit. Even a hard stop with no warning would be better than no ceiling, and for this audience it
+is the difference between publishing a demo URL and not.
