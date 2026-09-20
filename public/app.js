@@ -196,11 +196,20 @@ function caveatFor(result) {
 /** Draw a finished run. Identical for the fixture and the live registry — same shapes, same code. */
 function present(result) {
   $('#s-twins').textContent = `${result.twinsForked} twins`;
-  $('#s-cost').textContent = `$${result.costUsd}`;
+  /*
+   * The total is part measured and part estimated, so it renders with the caveat attached.
+   * `sandboxUsdEstimated` comes back true until somebody supplies a real sandbox price — see
+   * pricing.js. The model spend inside this figure IS measured, from real usage blocks; the
+   * sandbox half is a placeholder, and printing them added together without saying so lets the
+   * invented half borrow the credibility of the measured one.
+   */
+  $('#s-cost').textContent = result.sandboxUsdEstimated
+    ? `~$${result.costUsd} est.`
+    : `$${result.costUsd}`;
   statusEl.textContent =
     `${result.twinsForked} twins · ${result.quiet} packages behaved identically · ` +
     `${result.pairs.filter((p) => p.diff.changed).length} changed · ` +
-    `${result.modelCalls} model calls · $${result.costUsd}` +
+    `${result.modelCalls} model calls · ${result.sandboxUsdEstimated ? '~' : ''}$${result.costUsd}${result.sandboxUsdEstimated ? ' est.' : ''}` +
     (result.live ? ` · live, in ${(result.wallMs / 1000).toFixed(1)}s` : '');
 
   $('#cansee').textContent = caveatFor(result);

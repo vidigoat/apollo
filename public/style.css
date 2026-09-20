@@ -95,6 +95,9 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
 .strip {
   margin-top: 26px; padding: 16px; background: var(--panel); border: 1px solid var(--edge);
   border-radius: 4px; display: flex; gap: 3px; align-items: stretch;
+  /* No max-width on the marks: capping them at 18px left thirty machines huddled against the left
+     edge of a full-width panel, which reads as a bar chart that ran out of data. Every machine in
+     the run is on screen and the strip is the whole run, so the strip is the whole width. */
 }
 /*
  * A progress bar made of a thousand real things, so each thing gets to look like one.
@@ -105,7 +108,7 @@ section { padding-block: 64px; border-top: 1px solid var(--rule); }
  * right is the only animation in the product.
  */
 .mark {
-  display: block; flex: 1 1 0; min-width: 3px; max-width: 18px;
+  display: block; flex: 1 1 0; min-width: 3px;
   height: 30px; border-radius: 1px; background: #191f27;
   transition: background 200ms cubic-bezier(.22,.61,.36,1), flex-grow 200ms cubic-bezier(.22,.61,.36,1);
 }
