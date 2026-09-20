@@ -233,6 +233,36 @@ function present(result) {
    * sandbox half is a placeholder, and printing them added together without saying so lets the
    * invented half borrow the credibility of the measured one.
    */
+  /*
+   * Say which models actually ran, not which models the page would like to claim.
+   *
+   * The slate advertises the Nemotron chain because a visitor should see the stack without pressing
+   * anything. Once a run has happened, this replaces the advertisement with what HAPPENED — and if
+   * there was no key, it says so rather than leaving three model names on screen implying they were
+   * consulted.
+   */
+  const judged = $('#s-judged');
+  if (judged) {
+    /*
+     * Three states, not two, and the third is the one that needed saying.
+     *
+     * A verdict served from `judge/verdicts/` is a REAL Nemotron verdict — it carries
+     * `simulated: false` because it was produced by a real call — but the call did not happen just
+     * now. Reporting it as "9 calls on Token Factory" is true of the verdict and false of the
+     * visit, and on the hosted demo, where every verdict is cached, it would have been the only
+     * thing this line ever said.
+     */
+    const judgements = (result.pairs || []).map((p) => p.judgement).filter(Boolean);
+    const anyReal = judgements.some((j) => (j.spend || []).some((c) => c.simulated === false));
+    const anyFresh = judgements.some((j) => !j.cached && (j.spend || []).some((c) => c.simulated === false));
+
+    judged.textContent = !anyReal
+      ? 'Nemotron 3 · simulated, no key set'
+      : anyFresh
+        ? `Nemotron 3 · ${result.modelCalls} calls on Token Factory`
+        : `Nemotron 3 on Token Factory · ${result.modelCalls} verdicts, served from cache`;
+  }
+
   $('#s-cost').textContent = result.sandboxUsdEstimated
     ? `~$${result.costUsd} est.`
     : `$${result.costUsd}`;
