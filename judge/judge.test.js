@@ -237,5 +237,28 @@ const VERDICT = (o = {}) => ({
     assert.match(payload.reason, /not in the source/);
   });
 
-  console.log(`\n${passed} passed`);
+    await it('the reasoning is cut at a word, never mid-word', async () => {
+    /*
+     * A hard slice(600) ended the most interesting sentence on the page mid-word:
+     * "Actually they used ebpf which cannot observe e". That sentence is the prompt's blind-spot
+     * caveat visibly working — a model reasoning about what its strategy could not see — and the
+     * cut made it read as a rendering bug.
+     */
+    const { trimReasoning } = require('./index');
+    assert.equal(typeof trimReasoning, 'function', 'trimReasoning is no longer exported');
+
+    assert.equal(trimReasoning('Short enough.'), 'Short enough.');
+    assert.equal(trimReasoning(null), '');
+    assert.equal(trimReasoning(undefined), '');
+
+    const long = `${'alpha '.repeat(300)}omega`;
+    const cut = trimReasoning(long);
+    assert.ok(cut.length <= 701, `too long: ${cut.length}`);
+    assert.ok(cut.endsWith('…'), 'no ellipsis to show it was cut');
+    // The character before the ellipsis must end a word, not sit inside one.
+    const body = cut.slice(0, -1);
+    assert.ok(!long.startsWith(body + 'a'), 'the cut landed inside a word');
+  });
+
+console.log(`\n${passed} passed`);
 })();

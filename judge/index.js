@@ -48,6 +48,27 @@ function parseVerdict(text) {
   };
 }
 
+/**
+ * The model's working-out, cut to a readable length.
+ *
+ * Truncated because it is evidence for a person, not a transcript for a machine — but cut at a
+ * WORD boundary. A hard `slice(600)` ended the most interesting sentence on the page mid-word:
+ * "Actually they used ebpf which cannot observe e". That sentence is the prompt's blind-spot
+ * caveat visibly working — the model reasoning about what the strategy could not see — and it read
+ * as a rendering bug.
+ */
+function trimReasoning(text, limit = 700) {
+  if (typeof text !== 'string' || !text) return '';
+  const clean = text.trim();
+  if (clean.length <= limit) return clean;
+
+  const cut = clean.slice(0, limit);
+  // Prefer the last sentence end; fall back to the last space. Never mid-word.
+  const sentence = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('? '), cut.lastIndexOf('! '));
+  const at = sentence > limit * 0.6 ? sentence + 1 : cut.lastIndexOf(' ');
+  return `${cut.slice(0, at > 0 ? at : limit).trimEnd()}…`;
+}
+
 /** Rules-only severities that always earn a real look, whatever triage thinks. */
 const ALWAYS_JUDGE = new Set(['alarming', 'notable']);
 
@@ -89,7 +110,7 @@ async function judgeOne(d, record, deps = {}) {
       model: r.model,
       costUsd: r.costUsd,
       simulated: r.simulated,
-      reasoning: typeof r.reasoning === 'string' && r.reasoning ? r.reasoning.slice(0, 600) : '',
+      reasoning: trimReasoning(r.reasoning),
     });
     return r;
   };
@@ -203,4 +224,4 @@ async function judgeRun(pairs, deps = {}) {
   };
 }
 
-module.exports = { judgeOne, judgeRun, parseVerdict };
+module.exports = { judgeOne, judgeRun, parseVerdict, trimReasoning };
