@@ -109,7 +109,7 @@ async function renderedPage(treeExtra = {}) {
     canSee: r.results[0].diff.canSee,
     twinsForked: r.twinsForked,
     quiet: r.quiet,
-    costUsd: Number((r.twinsForked * 0.0146).toFixed(2)),
+    costUsd: require('../pricing').sandboxCost(r.twinsForked).usd,
     modelCalls: judged.modelCalls,
     pairs,
   };

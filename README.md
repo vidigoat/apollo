@@ -349,7 +349,7 @@ WHAT WATCHING BEHAVIOUR CANNOT SEE
 ──────────────────────────────────────────────────────────────────────────────
 THE BILL
 
-  30 sandboxes          $0.44
+  30 sandboxes          ~$0.44 est.
   9 model calls        (not 15 — triage is the design)
   10 quiet packages     0 model calls, 0 searches
 
@@ -572,6 +572,7 @@ Stated plainly, because this is the section a judge should be able to trust.
 | The kernel-level strategies (eBPF / proxy / fsdiff) | **Written**; none has watched a real kernel yet |
 | Nemotron calls | **Falls back to a local deterministic judge** when `NEBIUS_API_KEY` is absent. Every simulated verdict is labelled `simulated: true` in the payload and "simulated, no key set" on the page. |
 | Tavily calls | Same pattern — recorded corpus when `TAVILY_API_KEY` is absent, always labelled |
+| The sandbox cost on the bill | **An estimate, and labelled `est.` everywhere it renders.** No sandbox here has ever been billed, so there is no measured price to quote. `pricing.js` holds the one placeholder; set `STAKEOUT_SANDBOX_USD` and the caveat disappears. The model spend next to it is the opposite — measured from real usage blocks and recorded to a ledger on disk. |
 | The 1,214-package tree | **A fixture.** Three packages are deliberately planted, and they are labelled as planted below, in `corpus.js`, and on the page itself. |
 
 A detection you cannot reproduce is a magic trick. This project is meant to be the opposite of one,

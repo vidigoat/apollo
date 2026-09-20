@@ -1,5 +1,6 @@
 /* STAKEOUT — zero-dependency dev server. node server.js -> http://localhost:8791 */
 const http = require('http');
+const { sandboxCost } = require('./pricing');
 const fs = require('fs');
 const path = require('path');
 
@@ -196,12 +197,14 @@ function handler(req, res) {
               twinsForked: r.twinsForked,
               quiet: r.quiet,
               wallMs: r.wallMs,
-              sandboxUsd: Number((r.twinsForked * 0.0146).toFixed(2)),
+              sandboxUsd: sandboxCost(r.twinsForked).usd,
+              sandboxUsdEstimated: sandboxCost(r.twinsForked).estimated,
+              sandboxUsdLabel: sandboxCost(r.twinsForked).label,
               modelUsd: judged.costUsd,
               modelCalls: judged.modelCalls,
               accused: judged.accused,
               simulatedJudgement: judged.simulated,
-              costUsd: Number((r.twinsForked * 0.0146 + judged.costUsd).toFixed(2)),
+              costUsd: Number((sandboxCost(r.twinsForked).usd + judged.costUsd).toFixed(2)),
               pairs,
             }),
             'application/json'

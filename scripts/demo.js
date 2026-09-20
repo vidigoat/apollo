@@ -9,6 +9,7 @@
  */
 
 const { SimulatedSandboxes } = require('../adapters/simulated');
+const { sandboxCost } = require('../pricing');
 const { runAll } = require('../runPair');
 const { judgeOne } = require('../judge');
 const { lookUp } = require('../evidence/tavily');
@@ -104,8 +105,8 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
   /* ── the bill ─────────────────────────────────────────────────────── */
 
   rule('THE BILL');
-  const sandboxUsd = run.twinsForked * 0.0146;
-  console.log(`\n  ${run.twinsForked} sandboxes          $${sandboxUsd.toFixed(2)}`);
+  const sandbox = sandboxCost(run.twinsForked);
+  console.log(`\n  ${run.twinsForked} sandboxes          ${sandbox.label}`);
   console.log(`  ${modelCalls} model calls        ${C.dim}(not ${changed.length * 3} — triage is the design)${C.off}`);
   console.log(`  ${run.quiet} quiet packages     0 model calls, 0 searches`);
   console.log(`\n  ${C.bold}Accused: ${accused.length ? C.red + accused.join(', ') + C.off : 'nothing'}${C.off}`);
