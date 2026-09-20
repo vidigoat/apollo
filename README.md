@@ -555,6 +555,25 @@ procurement. The tree is mostly boring and paying frontier prices to be told so 
 
 ---
 
+### The demo URL had a cost leak
+
+Every load of `/api/run` re-judged all fifteen packages from scratch. On a laptop that is invisible;
+on the public demo URL this submission requires, a judge refreshing the page ten times pays for
+ninety Nemotron calls to be told the same thing ten times. An afternoon of screenshots put **145
+calls** through a live key before anyone noticed.
+
+A project whose entire argument is *do not pay a model to re-read evidence it has already read* was
+doing exactly that. `judge/cache.js` fixes it:
+
+```
+first run    29s   9 model calls   $0.0077
+second run    6s   0 model calls   $0.0000     every verdict served from cache
+```
+
+The first attempt only cached the judge tier, and so missed every `minor` package — which is the
+expensive half, because triage runs on **everything** that moved and the big models run on almost
+nothing. The calls that never got cached were the numerous ones.
+
 ## What is real and what is simulated
 
 Stated plainly, because this is the section a judge should be able to trust.
@@ -778,7 +797,7 @@ npm test
 ```
 
 ```
-22 suites · 264 checks
+23 suites · 275 checks
 all green
 ```
 
@@ -808,6 +827,11 @@ What the suites actually protect:
   actually reach every one of the eight conclusions it can print? It can. It also asserts the
   accusation — the strongest sentence this prints — is reachable through exactly one door, and that
   a model replying with something unparseable never counts as agreement
+- **`judge/cache.test.js`** — that a verdict is cached against the right question. A verdict is a
+  function of the evidence, the prompt and the models, and all three are in the key: different
+  evidence misses, a swapped model misses, a hardened prompt invalidates every old answer, and a
+  *simulated* verdict is never written at all, so one keyless run cannot poison every keyed one
+  that follows. It exists because of a bill — see below
 - **`absence.test.js`** — the one mistake this project cannot afford: presenting an absence of
   observation as an observation of absence. Its whole argument is a negative claim, and a negative
   claim is worth nothing if the watching was not real. The shape reappeared at four layers

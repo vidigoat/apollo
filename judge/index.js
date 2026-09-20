@@ -14,6 +14,11 @@
 
 const { buildPrompt } = require('./prompt');
 const { complete, MODELS } = require('./nemotron');
+const { JudgementCache } = require('./cache');
+
+/** One per process. Built lazily so importing this module never touches the filesystem. */
+let _judgeCache;
+const defaultJudgeCache = () => (_judgeCache ||= new JudgementCache());
 
 const SHAPE = ['meaning', 'explained', 'worthWaking', 'confidence'];
 
@@ -55,6 +60,21 @@ const ALWAYS_JUDGE = new Set(['alarming', 'notable']);
  */
 async function judgeOne(d, record, deps = {}) {
   const call = deps.complete || complete;
+
+  /*
+   * Ask the cache before asking a model.
+   *
+   * A verdict is a function of the evidence, the prompt and the models, and none of those changed
+   * between two loads of the same page. Re-judging is paying to be told the same thing again —
+   * which is precisely the waste this project exists to point at, so it should not be committing it.
+   * Opt out with `deps.judgeCache = null`, which the test suites do so they never touch a real one.
+   */
+  const cache = deps.judgeCache === undefined ? defaultJudgeCache() : deps.judgeCache;
+  const cacheJob = { diff: d, models: MODELS, record };
+  if (cache && d.changed) {
+    const hit = cache.get(cacheJob);
+    if (hit) return hit;
+  }
   const spend = [];
   /*
    * The spend record also carries the model's working-out.
@@ -86,12 +106,26 @@ async function judgeOne(d, record, deps = {}) {
 
   const worthIt = ALWAYS_JUDGE.has(d.severity) || triage?.worthWaking === true;
   if (!worthIt) {
-    return {
+    const settled = {
       pkg: d.pkg, severity: d.severity, judged: true, tier: 'triage',
       verdict: triage, accused: false,
       reason: triage ? 'triage saw nothing that needs a human tonight' : 'triage returned nothing usable',
       spend, costUsd: total(spend),
     };
+    /*
+     * Cache this one too.
+     *
+     * It was missed on the first pass because it is an early return and the cache write sat at the
+     * bottom of the function — so every `minor` package that triage decided to sleep on was
+     * re-triaged on every single run, for ever. Which is the more expensive half of the mistake:
+     * the whole design is that triage runs on EVERYTHING that moved and the expensive models run
+     * on almost nothing, so the calls that never get cached are the numerous ones.
+     *
+     * A triage verdict that could not be parsed is not cached — `settled.verdict` is null there,
+     * and freezing "the model returned nothing usable" would make one bad response permanent.
+     */
+    if (cache && triage) cache.put(cacheJob, settled);
+    return settled;
   }
 
   // 2. Judgement — the expensive model, on the handful that earned it.
@@ -112,7 +146,7 @@ async function judgeOne(d, record, deps = {}) {
     accused = second?.worthWaking === true && second?.explained === false;
   }
 
-  return {
+  const judgement = {
     pkg: d.pkg,
     severity: d.severity,          // still the rules'. The model never moved it.
     judged: true,
@@ -134,6 +168,9 @@ async function judgeOne(d, record, deps = {}) {
     spend,
     costUsd: total(spend),
   };
+
+  if (cache) cache.put(cacheJob, judgement);
+  return judgement;
 }
 
 /** What, precisely, two models agreed about. Derived from the evidence, never assumed. */

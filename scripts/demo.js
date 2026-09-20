@@ -53,12 +53,19 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
   // Tallied from the spend records rather than assumed, so the footer can say what actually ran.
   let modelSpendUsd = 0;
   let anyLiveModel = false;
+  // Calls this run actually MADE, as opposed to calls the verdicts are based on. A cached
+  // judgement still carries the spend record of the run that produced it, so counting those
+  // reports nine live calls for a run that made none.
+  let freshCalls = 0;
+  let cachedJudgements = 0;
 
   for (const p of changed) {
     const record = await lookUp(p.pkg, p.to, { recorded: PUBLIC_RECORD });
     const j = await judgeOne(p.diff, record);
     modelCalls += j.spend.length;
-    modelSpendUsd += j.costUsd || 0;
+    if (j.cached) cachedJudgements++;
+    else freshCalls += j.spend.length;
+    modelSpendUsd += j.cached ? 0 : j.costUsd || 0;
     if (j.spend.some((c) => c.simulated === false)) anyLiveModel = true;
     if (j.accused) accused.push(p.pkg);
 
@@ -114,6 +121,9 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
   const sandbox = sandboxCost(run.twinsForked);
   console.log(`\n  ${run.twinsForked} sandboxes          ${sandbox.label}`);
   console.log(`  ${modelCalls} model calls        ${C.dim}(not ${changed.length * 3} — triage is the design)${C.off}`);
+  if (cachedJudgements) {
+    console.log(`  ${C.dim}${freshCalls} of them actually ran — ${cachedJudgements} verdict${cachedJudgements === 1 ? '' : 's'} came from cache, costing nothing${C.off}`);
+  }
   console.log(`  ${run.quiet} quiet packages     0 model calls, 0 searches`);
   console.log(`\n  ${C.bold}Accused: ${accused.length ? C.red + accused.join(', ') + C.off : 'nothing'}${C.off}`);
   console.log(`  ${C.dim}An accusation needs two independent models to agree. One model is an opinion.${C.off}`);
@@ -128,9 +138,11 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
    * been simulated. A footer that describes the run has to be derived from the run; a constant
    * describing a variable is only true until the day it matters.
    */
-  const modelNote = anyLiveModel
-    ? `LIVE NVIDIA Nemotron 3 on Nebius Token Factory — ${modelCalls} calls, $${modelSpendUsd.toFixed(4)}`
-    : 'offline model fallback (no NEBIUS_API_KEY set)';
+  const modelNote = anyLiveModel && freshCalls > 0
+    ? `LIVE NVIDIA Nemotron 3 on Nebius Token Factory — ${freshCalls} call${freshCalls === 1 ? '' : 's'} this run, $${modelSpendUsd.toFixed(4)}`
+    : anyLiveModel
+      ? `every verdict served from cache — 0 model calls, $0.0000`
+      : 'offline model fallback (no NEBIUS_API_KEY set)';
   console.log(`${C.dim}Simulated sandboxes, recorded web results, ${modelNote} — all labelled`);
   console.log(`as such above and in the repository. \`npm start\` for the same run in a browser.${C.off}`);
   rule();

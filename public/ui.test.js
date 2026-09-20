@@ -100,7 +100,9 @@ async function renderedPage(treeExtra = {}) {
     record: p.diff.changed ? PUBLIC_RECORD[`${p.pkg}@${p.to}`] || null : null,
     invariant: INVARIANT_FAILURES[`${p.pkg}@${p.to}`] || null,
   }));
-  const judged = await judgeRun(pairs);
+  // judgeCache: null — the page is being rendered from a KNOWN payload, so a real cached verdict
+  // off somebody's disk would make this suite's result depend on what they ran yesterday.
+  const judged = await judgeRun(pairs, { judgeCache: null });
   pairs.forEach((p, i) => { p.judgement = judged.results[i]; });
 
   const payload = {

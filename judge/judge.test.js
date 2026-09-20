@@ -53,7 +53,14 @@ const MINOR = diff(t('2.0.0', {}), t('2.0.1', { fs: [{ op: 'write', path: '/home
 /** A package that did nothing different at all. */
 const QUIET = diff(t('3.0.0', {}), t('3.0.1', {}));
 
-/** A stub model. Records what it was asked, answers what the test tells it to. */
+/**
+ * A stub model. Records what it was asked, answers what the test tells it to.
+ *
+ * `judgeCache: null` is not optional. Without it these tests read real cached verdicts off the
+ * developer's disk, the stubs are never consulted, and five of them fail in ways that look like
+ * logic bugs in the cascade. Worse, they would PASS on a machine with a cold cache — a suite whose
+ * result depends on what somebody ran yesterday is not a suite.
+ */
 function stub(answers) {
   const calls = [];
   const complete = async ({ model, system, user }) => {
@@ -61,7 +68,7 @@ function stub(answers) {
     const a = answers[model] ?? answers.default;
     return { text: typeof a === 'string' ? a : JSON.stringify(a), model, costUsd: 0.0001, simulated: false };
   };
-  return { complete, calls };
+  return { complete, calls, judgeCache: null };
 }
 
 const VERDICT = (o = {}) => ({
@@ -195,7 +202,14 @@ const VERDICT = (o = {}) => ({
 
   await it('a simulated verdict is always labelled as one', async () => {
     delete process.env.NEBIUS_API_KEY;
-    const r = await judgeOne(EXFIL, null, {}); // the real client, with no key -> local fallback
+    /*
+     * `judgeCache: null` because this test is about the CLIENT, not the cache.
+     *
+     * Without it, a keyless run happily serves a cached real verdict — which is correct product
+     * behaviour and better than a fallback, but it means this assertion silently stops exercising
+     * the offline path the moment somebody has run the demo once.
+     */
+    const r = await judgeOne(EXFIL, null, { judgeCache: null }); // the real client, with no key -> local fallback
     assert.equal(r.spend.every((x) => x.simulated), true);
     assert.ok(r.verdict, 'the fallback should still produce a usable verdict');
   });
