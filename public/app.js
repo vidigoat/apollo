@@ -136,10 +136,40 @@ function judgementPanel(j) {
         ${j.spend.map((s) => `<li><code>${esc(shortModel(s.model))}</code></li>`).join('')}
       </ul>
       <p class="judge__call ${j.accused ? 'is-accused' : ''}">${esc(j.reason)}</p>
+      ${reasoningMarkup(j)}
     </div>`;
 }
 
 const shortModel = (m) => String(m).split('/').pop();
+
+/**
+ * The model's working-out, folded away.
+ *
+ * Nemotron 3 returns its reasoning separately from its verdict. Showing it matters here more than
+ * it would in most products: the claim this whole thing makes is that the RULES decide severity and
+ * the model only ever explains, so the explanation showing its work is the part a reader can
+ * actually check — and the part that proves the model was not the one choosing the colour.
+ *
+ * Collapsed by default, because it is evidence for somebody who wants it and noise for everybody
+ * else, and the page's argument is that almost nothing here needs your attention.
+ */
+function reasoningMarkup(j) {
+  const shown = (j.spend || []).filter((s) => s.reasoning);
+  if (!shown.length) return '';
+  return `
+    <details class="think">
+      <summary class="think__more">how ${shown.length === 1 ? 'the model' : 'the models'} got there</summary>
+      ${shown
+        .map(
+          (s) => `
+        <div class="think__one">
+          <p class="think__who"><code>${esc(shortModel(s.model))}</code></p>
+          <p class="think__text">${esc(s.reasoning)}</p>
+        </div>`
+        )
+        .join('')}
+    </details>`;
+}
 
 /* ── the catch ────────────────────────────────────────────────────── */
 

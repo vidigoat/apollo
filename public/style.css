@@ -226,3 +226,26 @@ footer { max-width: 1120px; margin: 0 auto; padding: 22px 24px; border-top: 1px 
   border: 1px solid var(--rule); border-radius: 4px; padding: 3px 6px; margin-left: 4px; }
 .pair__cached { font-family: var(--mono); font-size: 12px; color: var(--dim); margin: 10px 0 0; max-width: 78ch; }
 .pair__cached code { color: var(--silver); }
+
+/* ── the model's working-out ──────────────────────────────────────── */
+
+/*
+ * Folded away on purpose. It is evidence for a reader who wants it and noise for everybody else,
+ * and this page's whole argument is that almost nothing on it needs your attention.
+ */
+.think { margin: 14px 0 0; }
+.think__more {
+  font-family: var(--mono); font-size: 12px; color: var(--dim);
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 7px;
+  padding: 3px 0; transition: color 160ms ease;
+}
+.think__more::before { content: "▸"; font-size: 10px; transition: transform 160ms ease; }
+.think[open] .think__more::before { transform: rotate(90deg); }
+.think__more:hover { color: var(--silver); }
+.think__more::-webkit-details-marker { display: none; }
+.think__one { margin: 12px 0 0; border-left: 2px solid var(--rule); padding: 0 0 0 14px; }
+.think__who { font-family: var(--mono); font-size: 11px; color: var(--dim); margin: 0 0 5px; }
+.think__text {
+  font-size: 13.5px; line-height: 1.68; color: #9aa5b5; margin: 0; max-width: 78ch;
+  /* Not mono. This is prose the model wrote, not a transcript it produced. */
+}

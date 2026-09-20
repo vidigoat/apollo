@@ -56,7 +56,23 @@ const ALWAYS_JUDGE = new Set(['alarming', 'notable']);
 async function judgeOne(d, record, deps = {}) {
   const call = deps.complete || complete;
   const spend = [];
-  const track = (r) => { spend.push({ model: r.model, costUsd: r.costUsd, simulated: r.simulated }); return r; };
+  /*
+   * The spend record also carries the model's working-out.
+   *
+   * Nemotron 3 returns its reasoning separately from its answer, and this project's whole posture
+   * is that the RULES decide severity and the model only ever explains. An explanation that shows
+   * how it got there is the more honest artefact — and the only one a reader can actually argue
+   * with. It is truncated because it is evidence for a person, not a transcript for a machine.
+   */
+  const track = (r) => {
+    spend.push({
+      model: r.model,
+      costUsd: r.costUsd,
+      simulated: r.simulated,
+      reasoning: typeof r.reasoning === 'string' && r.reasoning ? r.reasoning.slice(0, 600) : '',
+    });
+    return r;
+  };
 
   // Nothing changed. There is no evidence to reason about, and paying a model to say so is theatre.
   if (!d.changed) {
