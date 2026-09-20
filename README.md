@@ -760,14 +760,32 @@ stop, never "assume nothing was spent".
 That is the opposite of every other failure path here — a broken cache degrades to a slower run —
 and it is deliberate, because this one guards money rather than time.
 
+Put these in a `.env` beside `package.json` — `env.js` reads it, with no dependency and no
+`--env-file` flag to remember. Anything already in the real environment wins, and a missing file is
+a supported state rather than an error.
+
 ```bash
-export STAKEOUT_BUDGET_USD=0.25    # the ceiling. raise it consciously, once
-export NEBIUS_API_KEY=...          # Nemotron judgement (otherwise: local deterministic fallback)
-export TAVILY_API_KEY=...          # the public record (otherwise: the recorded corpus)
-export NEBIUS_SANDBOX_URL=...      # Sandboxes base URL, if it differs
-export NEMOTRON_NANO=...           # override model ids
-export NEMOTRON_ULTRA=...
-export SECOND_OPINION=...
+NEBIUS_API_KEY=...            # Nemotron judgement (otherwise: local deterministic fallback)
+STAKEOUT_BUDGET_USD=0.25      # the ceiling. raise it consciously, once
+TAVILY_API_KEY=...            # the public record (otherwise: the recorded corpus)
+NEBIUS_SANDBOX_URL=...        # Sandboxes base URL, if it differs
+STAKEOUT_SANDBOX_USD=...      # a real sandbox price; until then the bill renders "est."
+STAKEOUT_JUDGE_CACHE=...      # where verdicts are cached locally
+NEMOTRON_NANO=...             # override model ids — but check them against GET /v1/models first;
+NEMOTRON_ULTRA=...            # all three shipped ids were wrong for weeks because nobody had
+SECOND_OPINION=...            # ever called the API to find out
+```
+
+The key is the thing to get right first. Without it every verdict comes back `simulated: true`,
+which is a supported mode and is labelled everywhere it appears — but it is *not* a valid Nebius
+submission, because the rules require a runtime call to Token Factory. `npm run preflight` is the
+one command that tells you, and it checks every model id against the live registry:
+
+```
+✓ the key works  24 models visible
+✓ triage: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B   $0.000098 · "Reads AWS secret and connects…"
+✓ judge:  nvidia/Nemotron-3-Ultra-550b-a55b       $0.001885 · "The new version reads the AWS_…"
+✓ second: nvidia/nemotron-3-super-120b-a12b       $0.000423 · "The package now reads the AWS_…"
 ```
 
 To run against real sandboxes, swap the adapter in `server.js`:
