@@ -10,8 +10,8 @@ Checklist against the stated requirements:
 
 | required | state |
 |---|---|
-| runs on Token Factory or Nebius AI Cloud | `adapters/contree.js`, pending Sandboxes access |
-| uses at least one NVIDIA open source model | Nemotron 3 Nano / Ultra / Super — `judge/` |
+| runs on Token Factory or Nebius AI Cloud | **LIVE.** Every judgement is a real chat-completions call to Token Factory — `judge/nemotron.js`. Verified 2026-09-20 by `npm run preflight`. (Sandboxes, a separate product, still 404s pending access; the twins run on the simulated adapter and say so.) |
+| uses at least one NVIDIA open source model | **LIVE, three of them.** `NVIDIA-Nemotron-3-Nano-30B-A3B` triages, `Nemotron-3-Ultra-550b-a55b` judges, `nemotron-3-super-120b-a12b` vetoes. Preflight shows a parsed verdict and a real cost for each. |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |
 | **a working demo URL** — hosted app or test build | ready to deploy — `vercel.json` + `api/index.js`, zero dependencies |
@@ -105,6 +105,26 @@ something in public about somebody's library; the least we can do is read it fir
 twins can start from a provably identical state, and that identity is the entire basis for
 attributing a difference to the package rather than to the machine. A test wraps `adapter.fork` and
 fails if the two twins ever come from more than one checkpoint.
+
+**It actually calls Nemotron, and that took finding three bugs.** All three model ids in this
+repository were invented and had never been checked — `nvidia/NVIDIA-Nemotron-3-Ultra-550B` reads
+like a real identifier and does not exist. Because the project had never held a key, nothing
+contradicted them: every run fell back to the offline judge, labelled itself `simulated`, and looked
+like a deliberate no-key mode rather than three broken strings. The first real request answered
+`404 The model does not exist`, which is the API being good at its job.
+
+Then Nemotron 3 turned out to be a **reasoning** model. The working-out arrives in
+`message.reasoning`, separately from `message.content`, and is charged as completion tokens — spent
+*before* the answer. A `max_tokens` sized for the answer alone gets eaten by the thinking and
+`content` comes back empty with `finish_reason: "stop"`: a successful call, a real bill, and nothing
+to parse. That reasoning is now kept and shown on the page, folded away, because the claim this
+project makes is that the rules decide and the model only explains — so an explanation that shows
+its working is the part a reader can argue with.
+
+```
+preflight   Nano  $0.000098   Ultra  $0.001885   Super  $0.000423   — all parsed
+demo        9 live calls, $0.0077   ·   second run: 0 calls, $0.0000 (cached)
+```
 
 **Nemotron at three sizes, for three different jobs.** Nano triages everything that moved, Ultra
 judges only what earned it, and Super must independently agree before anything is accused. Nine
