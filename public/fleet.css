@@ -271,3 +271,30 @@ body {
 
 .reg tbody tr[data-at] { cursor: pointer; }
 .reg tbody tr[data-at]:hover .name { color: #fff; }
+
+/*
+ * Whose tree this is. Stated before the numbers, not after them, because somebody who reads the
+ * hero as their own and finds out afterwards has already been misled once.
+ */
+.whose {
+  margin: clamp(24px, 5vh, 40px) 0 -14px;
+  padding: 11px 14px;
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--brass);
+  color: var(--dim);
+  font-size: 12px;
+  max-width: 88ch;
+}
+.whose b { color: var(--bone); font-weight: 500; }
+.whose code { color: var(--watched); font-family: var(--mono); }
+
+/* An honest limit, not a broken click. */
+.cannot {
+  margin-top: 18px;
+  padding: 10px 13px;
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--brass);
+  color: var(--dim);
+  font-size: 12px;
+  max-width: 84ch;
+}

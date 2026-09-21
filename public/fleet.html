@@ -41,6 +41,13 @@
 
   <section class="fleet" id="fleet" hidden>
 
+    <p class="whose" id="whose" hidden>
+      This is not your fleet. It is a real scan of a checkout of
+      <b id="whoseWhat">a public repository</b>, bundled so this page has something measured to show
+      where there is no filesystem to read. Every count is the measured one.
+      <code>node scripts/fleet-scan.js ~ --out local/fleet.json</code> replaces it with yours.
+    </p>
+
     <!-- The hero: the fleet as it actually is, rather than a count of findings. -->
     <figure class="band">
       <figcaption class="band__head">
@@ -90,6 +97,7 @@
       <tbody id="rows"></tbody>
     </table>
 
+    <p class="cannot" id="cannot" hidden></p>
     <p class="foot" id="foot"></p>
   </section>
 

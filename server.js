@@ -236,8 +236,24 @@ function handler(req, res) {
      * scan") is the same answer the CLI gives for a missing index.
      */
     if (url.pathname === '/api/fleet') {
+      /*
+       * Your machine first; a public monorepo as the fallback.
+       *
+       * The committed demo is a real scan of a real checkout of vercel/turborepo — 24 projects,
+       * every count measured, reproducible by anyone who clones it and runs the same command. It
+       * exists because the hosted demo has no filesystem, and a judge opening the URL to an empty
+       * page learns nothing.
+       *
+       * It is NOT presented as the reader's own fleet. `demo: true` travels with it and the page
+       * says whose tree it is, because the interesting thing about a fleet view is that it is
+       * yours, and quietly substituting somebody else's would be the exact overclaim this project
+       * spends its test suite preventing.
+       */
       const file = path.join(__dirname, 'local', 'fleet.json');
-      if (!fs.existsSync(file)) {
+      const demo = path.join(PUBLIC, 'fleet-demo.json');
+      const using = fs.existsSync(file) ? file : fs.existsSync(demo) ? demo : null;
+
+      if (!using) {
         return send(res, 200, JSON.stringify({
           scanned: false,
           how: 'node scripts/fleet-scan.js ~ --out local/fleet.json',
@@ -245,7 +261,7 @@ function handler(req, res) {
         }), 'application/json');
       }
       try {
-        const fleet = JSON.parse(fs.readFileSync(file, 'utf8'));
+        const fleet = JSON.parse(fs.readFileSync(using, 'utf8'));
         /*
          * The index size comes from the SCAN, not from the manifest on disk right now. Both halves
          * of the reuse ratio have to be from the same instant — see scripts/fleet-scan.js. What is
@@ -258,9 +274,11 @@ function handler(req, res) {
           now = { packages: m.packages, versions: m.versions, revision: m.revision };
         } catch { /* no index on disk */ }
         const stale = Boolean(now && fleet.index && now.versions !== fleet.index.versions);
-        return send(res, 200, JSON.stringify({ scanned: true, indexNow: now, stale, ...fleet }), 'application/json');
+        return send(res, 200, JSON.stringify({
+          scanned: true, demo: using === demo, indexNow: now, stale, ...fleet,
+        }), 'application/json');
       } catch (e) {
-        return send(res, 500, JSON.stringify({ error: `local/fleet.json is unreadable: ${e.message}` }), 'application/json');
+        return send(res, 500, JSON.stringify({ error: `${path.basename(using)} is unreadable: ${e.message}` }), 'application/json');
       }
     }
 
@@ -273,14 +291,30 @@ function handler(req, res) {
      * simply not a project this server knows about.
      */
     if (url.pathname === '/api/project') {
-      const file = path.join(__dirname, 'local', 'fleet.json');
-      if (!fs.existsSync(file)) return send(res, 404, JSON.stringify({ error: 'no scan on disk' }), 'application/json');
+      const local = path.join(__dirname, 'local', 'fleet.json');
+      const bundled = path.join(PUBLIC, 'fleet-demo.json');
+      const from = fs.existsSync(local) ? local : bundled;
+      if (!fs.existsSync(from)) return send(res, 404, JSON.stringify({ error: 'no scan on disk' }), 'application/json');
 
-      const fleet = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const fleet = JSON.parse(fs.readFileSync(from, 'utf8'));
       const at = Number(url.searchParams.get('at'));
       const repo = Number.isInteger(at) ? fleet.repos[at] : null;
       if (!repo || !repo.dir) {
         return send(res, 404, JSON.stringify({ error: 'no such project in the scan' }), 'application/json');
+      }
+
+      /*
+       * Project directories are stored relative to the scan's root, so a scan can be committed
+       * without writing somebody's home directory into it. That means a scan taken on another
+       * machine has counts but nothing to drill into, and saying so is the right answer.
+       */
+      const root = fleet.root && fleet.root !== '(withheld)' ? fleet.root : null;
+      const dir = root ? path.resolve(root, repo.dir) : repo.dir;
+      if (!fs.existsSync(path.join(dir, 'package-lock.json'))) {
+        return send(res, 404, JSON.stringify({
+          error: `This scan was taken somewhere else — ${repo.name}'s lockfile is not on this machine. ` +
+                 'Its counts are real; there is nothing here to open.',
+        }), 'application/json');
       }
 
       try {
@@ -289,7 +323,7 @@ function handler(req, res) {
         const { parseLockfile } = require('./lockfile');
         const index = new Index();
 
-        const { versions } = parseLockfile(fs.readFileSync(path.join(repo.dir, 'package-lock.json'), 'utf8'));
+        const { versions } = parseLockfile(fs.readFileSync(path.join(dir, 'package-lock.json'), 'utf8'));
         const deps = [];
         for (const [name, version] of versions) {
           const entry = index.lookup(name, version);

@@ -66,7 +66,7 @@ function findLockfiles(root, { depth = 4 } = {}) {
  * ever looked", which is the normal state of almost every dependency tree on earth and is not a
  * finding — it is the work.
  */
-function scanRepo(lockfilePath, index) {
+function scanRepo(lockfilePath, index, root = null) {
   const dir = path.dirname(lockfilePath);
   // parseLockfile returns a report; `versions` is the name → version map everything else takes.
   const parsed = parseLockfile(fs.readFileSync(lockfilePath, 'utf8'));
@@ -91,7 +91,16 @@ function scanRepo(lockfilePath, index) {
   return {
     name: path.basename(dir) === path.basename(path.dirname(dir)) ? path.basename(dir)
       : `${path.basename(path.dirname(dir))}/${path.basename(dir)}`,
-    dir,
+    /*
+     * Relative to the scan root, not absolute.
+     *
+     * A scan is a thing you might want to commit — of a public monorepo, say, so a hosted demo has
+     * something real to show — and an absolute path writes somebody's home directory into it. The
+     * root is recorded once, at the top, and a reader who has that tree can resolve against it;
+     * a reader who does not gets a project with honest counts and no drill-down, which is the
+     * correct answer rather than a broken one.
+     */
+    dir: root ? path.relative(root, dir) : dir,
     deps: parsed.total,
     known: built.known,
     unknown: built.unknown.length,
@@ -106,13 +115,13 @@ function scanRepo(lockfilePath, index) {
   };
 }
 
-function scanFleet(root, { index = new Index(), depth = 4 } = {}) {
+function scanFleet(root, { index = new Index(), depth = 4, portable = false } = {}) {
   const repos = [];
   for (const file of findLockfiles(root, { depth })) {
     try {
-      repos.push(scanRepo(file, index));
+      repos.push(scanRepo(file, index, root));
     } catch (e) {
-      repos.push({ name: path.basename(path.dirname(file)), dir: path.dirname(file), error: e.message });
+      repos.push({ name: path.basename(path.dirname(file)), dir: path.relative(root, path.dirname(file)), error: e.message });
     }
   }
 
@@ -128,7 +137,7 @@ function scanFleet(root, { index = new Index(), depth = 4 } = {}) {
   const distinct = new Set();
   for (const r of ok) {
     try {
-      const { versions } = parseLockfile(fs.readFileSync(path.join(r.dir, 'package-lock.json'), 'utf8'));
+      const { versions } = parseLockfile(fs.readFileSync(path.join(root, r.dir, 'package-lock.json'), 'utf8'));
       for (const [name, version] of versions) distinct.add(`${name}@${version}`);
     } catch { /* counted as a repo error above */ }
   }
@@ -150,7 +159,16 @@ function scanFleet(root, { index = new Index(), depth = 4 } = {}) {
   } catch { /* no manifest yet: the page states what the scan alone can prove */ }
 
   return {
-    root,
+    /*
+     * `--portable` drops the root, for a scan meant to be committed.
+     *
+     * Every count survives; what goes is the one line that says whose laptop this was. A reader
+     * then gets real numbers and no drill-down, because the lockfiles are not on their machine —
+     * and `describes` tells them what to clone if they want them. Withholding a path is not the
+     * same as withholding a project, and the totals still add up.
+     */
+    root: portable ? null : root,
+    describes: portable ? path.basename(root) : undefined,
     scannedAt: new Date().toISOString(),
     index: indexAtScan,
     repos: repos.sort((a, b) => (b.deps || 0) - (a.deps || 0)),
@@ -172,9 +190,10 @@ if (require.main === module) {
   const root = args.find((a) => !a.startsWith('--')) || process.env.HOME;
   const outFlag = args.indexOf('--out');
   const out = outFlag >= 0 ? args[outFlag + 1] : path.join(__dirname, '..', 'local', 'fleet.json');
+  const flags = { portable: args.includes('--portable') };
 
   const index = new Index();
-  const fleet = scanFleet(root, { index });
+  const fleet = scanFleet(root, { index, portable: Boolean(flags.portable) });
 
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, JSON.stringify(fleet, null, 2));

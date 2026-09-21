@@ -197,7 +197,15 @@ async function showProject(at) {
   } catch {
     return;
   }
-  if (data.error) return;
+  // A bundled scan has counts and no lockfiles to open. Saying so beats a row that does nothing
+  // when clicked, which reads as a broken page rather than an honest limit.
+  if (data.error) {
+    $('cannot').hidden = false;
+    $('cannot').textContent = data.error;
+    setTimeout(() => { $('cannot').hidden = true; }, 6000);
+    return;
+  }
+  $('cannot').hidden = true;
 
   $('fleet').hidden = true;
   $('project').hidden = false;
@@ -268,7 +276,21 @@ async function load() {
   const ok = data.repos.filter((r) => !r.error && r.deps);
 
   $('fleet').hidden = false;
-  $('rev').textContent = `scanned ${new Date(data.scannedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}`;
+  const when = new Date(data.scannedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+  $('rev').textContent = data.demo ? `a public checkout, scanned ${when}` : `scanned ${when}`;
+
+  /*
+   * Whose tree this is, said plainly.
+   *
+   * The interesting thing about a fleet view is that it is YOURS. Quietly showing somebody else's
+   * numbers under the same heading would be the exact overclaim this project's test suite exists to
+   * prevent — so the bundled scan announces itself, names what it is a scan of, and gives the
+   * command that replaces it.
+   */
+  if (data.demo) {
+    $('whose').hidden = false;
+    $('whoseWhat').textContent = data.describes || 'a public repository';
+  }
 
   $('bandCount').textContent = num(t.depVersions);
   $('bandRepos').textContent = num(t.repos);
