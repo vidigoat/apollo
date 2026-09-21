@@ -23,21 +23,36 @@
  * near-black, arrows glued to link text. Each was considered and is a default rather than a choice.
  */
 
+/*
+ * One product, one voice.
+ *
+ * This page arrived with its own typeface, its own text colour and its own rust — three quiet
+ * disagreements with the page a reviewer sees first. Two display faces across two screens of one
+ * product is the clearest tell of something assembled rather than designed, and nobody can name
+ * what is wrong; they just feel it.
+ *
+ * So the tokens are the product's, from public/style.css, with one addition that belongs to this
+ * screen and is now available to both: `--watched`. The palette had a colour for ALARMING, for
+ * NOTABLE and for NOTHING CHANGED, and none for *observed, and unremarkable* — which is the
+ * majority state here and deserved a colour rather than borrowing one that means something else.
+ */
 :root {
-  --void:    #06080b;   /* the ground, and the colour of not knowing */
-  --raised:  #0d1217;
-  --rule:    #19212a;
-  --rule-lit:#27333f;
+  /* From the product. Cold graphite, not black: a lab, not a terminal theme. */
+  --void:     #0b0d10;
+  --raised:   #12151a;
+  --rule:     #1e232b;
+  --rule-lit: #2a313c;
 
-  --bone:    #ded9ce;   /* warm, against a cold ground */
-  --dim:     #6a7788;
-  --faint:   #3d4855;
+  --bone:  #e6eaf0;   /* the product's text colour */
+  --dim:   #8a94a6;
+  --faint: #39424f;   /* --quiet: the colour of nothing happening */
 
-  --watched: #82b4c2;   /* cold, deliberately unexciting */
-  --drift:   #c2543c;   /* the only saturated colour here */
-  --pinned:  #5e8f72;
+  /* Observed, and unremarkable. The state this page is mostly made of. */
+  --watched: #82b4c2;
+  --drift:   #e0574a;   /* --grease. Alarming, and assigned by arithmetic, never by a model. */
+  --pinned:  #57a773;   /* --verd. Nothing changed. */
 
-  --display: "Archivo", system-ui, sans-serif;
+  --display: "Inter Tight", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 
   --gutter: clamp(16px, 4vw, 56px);
@@ -73,7 +88,7 @@ body {
 .bar__spacer { flex: 1; }
 
 .wordmark {
-  font: 600 15px/1 var(--display);
+  font: 700 15px/1 var(--display);
   letter-spacing: -0.015em;
   color: var(--bone);
   text-decoration: none;
@@ -110,10 +125,12 @@ body {
 .band { margin: clamp(32px, 7vh, 64px) 0 0; position: relative; }
 
 .band__head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+/* The product's display weight and its headline white — the same treatment as the landing h1. */
 .band__count {
-  font: 500 clamp(30px, 6vw, 52px)/1 var(--display);
+  font: 600 clamp(30px, 6vw, 52px)/1 var(--display);
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
+  color: #f4f7fb;
 }
 .band__unit { color: var(--dim); }
 

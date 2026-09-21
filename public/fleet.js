@@ -16,11 +16,11 @@ const num = (n) => Number(n).toLocaleString('en-US');
 
 const COLOUR = {
   watched: '#82b4c2',
-  drift: '#c2543c',
-  rule: '#19212a',
-  hatch: '#141c25',    // the hatching over what nobody watched — never a fill
-  ceiling: '#232e3a',  // where the tree would reach if all of it were known
-  void: '#06080b',
+  drift: '#e0574a',
+  rule: '#1e232b',
+  hatch: '#19202a',    // the hatching over what nobody watched — never a fill
+  ceiling: '#2a313c',  // where the tree would reach if all of it were known
+  void: '#0b0d10',
 };
 
 let segments = [];
