@@ -176,6 +176,24 @@ without a test noticing. `architecture.test.js` now reads the repository and fai
 
 ---
 
+**I overwrote the index with fabricated data, and nothing noticed.** Reaching for a `--dry` flag
+that does not exist, a build ran as `--simulated --limit 0` and wrote **8,623 fabricated entries
+over 705 genuine observations**. Afterwards nothing in a single entry said which was which — the
+only marker was a `note` on the manifest, which is the wrong grain entirely, because the lock file,
+the CLI and the fleet page all read individual entries and take them as fact.
+
+It was silent, total, and I only caught it because a package count jumped. Provenance is per entry
+now and `put` refuses outright to mix the two directions. Refusing rather than warning, because a
+warning in a build log scrolls past and the damage downstream cannot be undone. Fabricated data
+indistinguishable from observed data is the one failure that makes this whole repository worthless.
+
+**A portable scan quietly became a no-op.** Making scans committable — project directories relative
+to the scan root, so a scan of a public repository carries no home directory in it — broke the
+ranking that reads them: it joined the relative path directly, every lockfile read failed, and the
+index builder printed `0 package-pairs` and **exited 0**. A silent no-op that reads as success in a
+log is the worst shape a bug can have. It was caught by starting a forty-minute background build and
+finding it finished in under a second.
+
 ## Accomplishments we're proud of
 
 **It sees something eBPF cannot.** 2026's attacks ship a decoder, and a string becoming a function
@@ -200,6 +218,30 @@ pair is paid for once — `lodash 4.17.20 → 4.17.21` did what it did and will 
 next Tuesday.
 
 ---
+
+**The fleet, and what ordering it by sharing is worth.** Pointed at a real machine, the scanner
+found 76 projects and 20,897 dependency-versions collapsing to 8,623 distinct ones — and
+`--from-fleet` indexes them in the order that buys the most, ranked by how many projects share each
+package-version rather than walking one lockfile alphabetically:
+
+| observations | questions answered | reuse |
+|---:|---:|---:|
+| 500 | 6,660 | 13.3× |
+| 1,000 | 9,448 | 9.4× |
+| 1,500 | 11,242 | 7.5× |
+
+The 1,500 row was predicted from the ranking before anything was installed, then built from real
+installs, and came out at **exactly 11,242** — 54% of the fleet covered by an index you could build
+in an afternoon. Stopping early is fine, because the best work is already done. That is the
+economics a central index has and a per-repo sandbox run does not.
+
+**The page draws the fleet rather than summarising it.** Every project is one segment, width
+proportional to its dependency count, and the part nobody has watched is drawn as *hatching under a
+ceiling hairline* rather than as a filled bar — because a filled rectangle reads as PRESENT, and a
+coverage chart that renders 9,655 unobserved dependencies as the dark half of a bar is quietly
+telling you they are fine. Clicking a project gives its packages with a six-slot channel strip
+whose third state is **nothing was watching**. Two of those three states get printed as "no
+findings" everywhere else.
 
 ## What's next
 
