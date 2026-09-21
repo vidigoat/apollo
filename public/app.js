@@ -17,8 +17,45 @@ const esc = (s) => String(s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;
 
 let TREE = null;
 
+/*
+ * The scale line, from a real scan or not at all.
+ *
+ * Everything else above the fold is about one dependency tree, and the run below it is a fixture.
+ * This is the sentence that says the idea is not a demonstration — and it is filled from measured
+ * numbers or hidden, never written into the markup, because a figure typed into a page is a figure
+ * that goes stale the day after somebody types it.
+ */
+async function showScale() {
+  /*
+   * Defensive to the point of paranoia, on purpose. This is an optional sentence on the page a
+   * reviewer opens first, and there is no version of "the scale line could not be filled" that
+   * justifies taking the rest of the page down with it. The interface test caught exactly that:
+   * its stub does not serve this route, and an unguarded `.json()` threw inside boot().
+   */
+  let fleet;
+  try {
+    const res = await fetch('/api/fleet');
+    fleet = res && typeof res.json === 'function' ? await res.json() : null;
+  } catch {
+    return;
+  }
+  if (!fleet || !fleet.scanned || !fleet.totals || !fleet.totals.depVersions) return;
+
+  const t = fleet.totals;
+  const n = (x) => x.toLocaleString();
+  $('#scale-where').textContent = fleet.demo
+    ? `a checkout of ${fleet.describes || 'a public repository'}`
+    : 'one machine';
+  $('#scale-projects').textContent = n(t.repos);
+  $('#scale-deps').textContent = n(t.depVersions);
+  $('#scale-pct').textContent = `${Math.round((t.known / t.depVersions) * 100)}%`;
+  $('#scale-obs').textContent = n(fleet.index?.versions ?? 0);
+  $('#scale').hidden = false;
+}
+
 async function boot() {
   TREE = await (await fetch('/api/tree')).json();
+  showScale().catch(() => {});   // never awaited, and never allowed to take the page down
   $('#s-total').textContent = `${TREE.total.toLocaleString()} packages`;
   $('#s-moved').textContent = `${TREE.moved} moved`;
   $('#s-twins').textContent = '—';

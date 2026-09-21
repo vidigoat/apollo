@@ -308,3 +308,12 @@ footer { max-width: 1120px; margin: 0 auto; padding: 22px 24px; border-top: 1px 
 .ways__here::before { content: "▸ "; color: var(--dim); }
 .ways__to { color: var(--dim); text-decoration: none; border-bottom: 1px solid transparent; }
 .ways__to:hover { color: var(--silver); border-bottom-color: var(--quiet); }
+
+/*
+ * The scale line. Quieter than the hero paragraph above it and carrying the only numbers above the
+ * fold that were measured rather than recorded — so the figures are lit and the sentence is not.
+ */
+.scale { margin-top: 14px; color: var(--dim); font-size: 15px; }
+.scale b { color: var(--silver); font-weight: 500; font-variant-numeric: tabular-nums; }
+.scale a { color: var(--silver); text-decoration: none; border-bottom: 1px solid var(--quiet); }
+.scale a:hover { border-bottom-color: var(--silver); }
