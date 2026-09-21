@@ -83,6 +83,22 @@ const from = (text, re, label) => {
  * has stopped mentioning the figure fails too, which is the point: these are the load-bearing
  * numbers, and quietly dropping one is its own kind of drift.
  */
+/** The fleet figures, if this machine has a scan. See the note beside where they are used. */
+function fleetClaims() {
+  let fleet;
+  try {
+    fleet = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'local', 'fleet.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+  const t = fleet.totals;
+  return [
+    { what: 'fleet: dependency-versions', value: t.depVersions.toLocaleString(), where: /([\d,]+) dependency-versions/g },
+    { what: 'fleet: observations', value: fleet.index.versions.toLocaleString(), where: /([\d,]+) observations in the index/g },
+    { what: 'fleet: answered', value: t.known.toLocaleString(), where: /answered ([\d,]+) of them/g },
+  ];
+}
+
 const CLAIMS = [
   // No `where` here: "N packages" is a phrase this README uses for several different counts — the
   // tree, the ones that moved, the ones in a survey — so matching it in context would be matching
@@ -107,6 +123,18 @@ const CLAIMS = [
   // runs — the survey, the demo, and a small worked example — so a contextual capture would match
   // whichever came first. The corpus size is embedded in the value instead, which is unambiguous.
   { what: 'survey corpus', value: `of ${require('./survey').PAIRS.length} behaved identically` },
+
+  /*
+   * The fleet figures, counted from the scan rather than from another sentence.
+   *
+   * These move every time the index grows, and the README quotes them in four places — an
+   * observation count, an answered count, a percentage and a reuse ratio, each of which was updated
+   * by hand today. One corrected sentence beside three stale ones reads as fixed and is not.
+   *
+   * Only checked when a scan is on disk: there is deliberately no bundled fleet, so on a fresh
+   * clone this has nothing to check against and says so rather than failing.
+   */
+  ...fleetClaims(),
   // NOTE: the suite count is checked by the runner itself (scripts/test.js), not here. Re-running
   // the whole suite from this script to learn a number the suite already printed made this check
   // slow enough that somebody would stop running it, and a check nobody runs protects nothing.
