@@ -112,6 +112,23 @@ Either create one yourself (Settings → Developer settings → GitHub Apps) and
 private key, **or** say "go ahead" and I will walk you through the three clicks when we get there.
 It stays in development mode — no public listing, no review.
 
+### 7b. Deploy the two demo URLs  ⏱ 2 minutes each, whenever you want them public
+
+Both are ready. `npx vercel --prod` in each repo — no build step, no framework config, no
+environment variables required. `DEPLOY.md` in each says what the hosted version deliberately cannot
+do and what it says instead.
+
+**I have not run it, and will not without you saying so.** A deploy publishes a URL, and that is
+your call rather than mine. Two things worth knowing before you do:
+
+- Nebius *requires* a working demo URL, so `~/cassandra` needs this before submission. It carries a
+  real committed scan of a checkout of vercel/turborepo so the hosted fleet page has measured
+  numbers to show where there is no filesystem to read — and it says whose tree it is rather than
+  letting it read as yours.
+- `~/second-set-of-hands` will show an **empty review queue** when hosted, because reading a manual
+  needs `pdftotext` and the host has none. That is the honest state and the bench says so. The
+  library, the diagnosis loop and the trust gate all work there.
+
 ### 8. Two decisions  ⏱ one reply each
 
 - **Does `~/cassandra` go public at submission?** Nebius *requires* it. MIT is already in place. I
@@ -154,6 +171,9 @@ done ✅  Tavily key · Vercel login · Builders Program · manual-download perm
 
 not blocking — resolves during recording week
   2   appliance photographs
+
+when you want them public
+  7b  `npx vercel --prod` in each repo — ready, and I have not run it
 
 later, when I ask
   7   GitHub App  ·  8  two public/private decisions  ·  9  rotate the AWS key
