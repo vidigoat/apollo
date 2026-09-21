@@ -364,6 +364,12 @@ than as a filled bar — because a filled bar reads as *present*, and a coverage
 Clicking a project gives you its packages, each with a six-slot strip: activity, watched-and-silent,
 and *nothing was watching*. Two of those three states get printed as "no findings" everywhere else.
 
+![One project's packages, each with a six-slot channel strip](docs/images/channels.jpg)
+
+The header line is the one that matters: *571 have been observed; 166 of those did something. 405
+were quiet under a strategy with no blind spots, which is the only state that supports saying a
+package does nothing.*
+
 There is no bundled fleet in this repository. A canned one would be a fabricated number sitting
 under the only claim this page makes, so with no scan on disk the page says so and tells you the
 command — the same answer the CLI gives for a missing index.
