@@ -1,44 +1,297 @@
-# Plan
+# Stakeout — the 10× plan
 
-Nebius × NVIDIA Global AI Hackathon. Submissions close **30 Oct 2026, 10:00 PT** (30 Oct, 22:30 IST).
-Judging 1–15 Dec. Winners ~11 Jan 2027.
+Nebius × NVIDIA Global AI Hackathon. Submissions close **30 Oct 2026, 10:00 PT** (22:30 IST).
 
-Target: **$20,000 grand prize** (awarded across all tracks) plus the **$3,000 Tavily** bonus. A project
-may win one overall award and one bonus award, so $23,000 is the ceiling for this entry.
+```
+written          21 Sep 2026
+build days left  29–31          freeze 20–22 Oct, then record and submit
+ceiling          $20,000 grand + $3,000 Tavily = $23,000
+                 (one overall OR one track award, plus one bonus — the rules cap it there)
+```
 
-## Runway
+Judged on four **equally weighted** criteria: Technological Implementation, Design, Potential
+Impact, Quality of the Idea. Ties break in that order. Our strongest axis breaks first; the problem
+is reaching the tie, and Design and Impact are what keep us short of it.
 
-| week | what has to be true by the end of it |
+---
+
+## 1. Where this actually is, stated without flattery
+
+**What is real and working today**
+
+| | |
 |---|---|
-| 0 · to 21 Sep | accounts live, credits claimed, **one real ConTree fork runs** — this is the go/no-go |
-| 1 · 22–28 Sep | base image boots to a healthy checkpoint; N branches fork and run in parallel; real logs come back |
-| 2 · 29 Sep–5 Oct | Nemotron writes scenarios from a real repo; Tavily seeds them; the verify gate refuses something |
-| 3 · 6–12 Oct | proof loop (re-fork until green), pinned regression test, the report |
-| 4 · 13–19 Oct | interface polish against real runs; README written; feedback drafted |
-| 5 · 20–28 Oct | video recorded, submission filled, **submit 28 Oct** with two days of slack |
+| the behavioural differ | pure, tested, no model involved. Severity is arithmetic |
+| the `nodert` strategy | genuinely runs real packages from the real registry |
+| the registry survey | 82 real upgrades, 79 behaved identically, exceptions stable under a 2× expansion |
+| Nemotron, all three tiers | **live on Token Factory** since 20 Sep. Reasoning captured and shown |
+| the judgement cache | a second visit costs $0.0000. Verdicts ship committed so serverless is free |
+| spend ceiling | on-disk, pre-flight, fails closed |
+| 23 suites, 276 checks | green, and the README cannot quote a figure a command does not produce |
 
-Amazon's deadline lands first (24 Oct), so weeks 1–4 here run second to that project. This one gets the
-full run of 22–28 Oct.
+**What is not**
 
-## The go/no-go
+- **It has never looked at anybody's repository.** The 1,214-package tree is a fixture and says so.
+- Sandboxes has never been reached. Confirmed 404 with a working key — access, not configuration.
+- There is one page. A developer cannot *use* this; they can only watch it.
+- No artefact leaves the tool. Nothing to commit, nothing to diff, nothing in CI.
 
-If a real fork has not run by **26 Sep**, this entry is at risk and we decide then whether to continue
-or fold the effort into the Amazon submission. The known failure mode is Token Factory billing
-activation — other entrants hit country-level blocks on the forum, so it is cleared first, not last.
+That last one is the whole gap. We built an argument and called it a product. A judge finishes the
+video thinking *that's clever*, not *I want that*.
 
-## Submission checklist
+---
 
-- [ ] Runtime call to Nebius Token Factory, and at least one NVIDIA open model
-- [ ] Public repository, MIT licence visible on the repo page
-- [ ] README with setup steps that actually work from a clean clone
-- [ ] Working demo URL, reachable **through 15 Dec** — do not take it down in November
-- [ ] Video under three minutes, public on YouTube, narration naming Token Factory and the Nemotron model
-- [ ] Track selected, project description written
-- [ ] Feedback on Nebius and NVIDIA tooling
-- [ ] Tavily called at runtime, for the bonus
+## 2. The thesis, sharpened into a primitive
 
-## What "done" means here
+The line has always been right. We have been treating it as a tagline when it should be a **file**.
 
-Not "it runs." A reviewer should be able to watch a wall of twins break, open one, read the log that
-proves it, see the fix go green five hundred times, and see the one case the system refused to file.
-If any of those four is missing, the entry is incomplete regardless of how much code exists.
+```
+package-lock.json    pins    express@4.18.3                        a version
+stakeout.lock        pins    express@4.18.3 reads no environment
+                             variable, opens no socket, spawns
+                             nothing, writes only inside node_modules   a behaviour
+```
+
+You commit `stakeout.lock`. CI diffs against it. **A dependency that changes what it DOES fails your
+build even when the version did not move** — which is precisely the 2024–26 supply-chain attack: a
+compromised maintainer publishing a patch release that no diff and no changelog reveals.
+
+Nobody has this primitive. It is the difference between a demo and a thing people adopt.
+
+### Why this also solves scale
+
+The expensive work is running a package. If we do that **once**, centrally, and publish the result,
+then checking your hundredth repository is a *lookup* rather than a hundred sandbox runs.
+
+```
+                ┌───────────────────────────────────────────────┐
+                │  THE INDEX                                    │
+                │  behaviour(package, version, strategy)        │
+                │  computed once, published as static JSON      │
+                │  + a query API. Free for anyone.              │
+                └───────────────────┬───────────────────────────┘
+                                    │  lookup — not a run
+        ┌───────────────────────────┼───────────────────────────┐
+        ▼                           ▼                           ▼
+  stakeout CLI               GitHub App                    stakeout.dev
+  `stakeout lock`            comments on your               sign in with GitHub,
+  `stakeout check`           Dependabot PR, sets            connect repos, browse
+  commit the lock, CI        a check run                    the index
+  fails on drift
+```
+
+Three surfaces, one engine. The index is the moat; everything else is a thin client over it.
+
+---
+
+## 3. The economics, before we promise anything
+
+This bounds the plan, so it goes near the top rather than in a footnote.
+
+```
+measured, 20 Sep          a full judgement run   9 Nemotron calls   $0.0077
+                          second run (cached)    0 calls            $0.0000
+                          model spend so far     171 calls          $0.1410
+
+estimated, unverified     one sandbox fork       ~$0.015  (placeholder — pricing.js
+                                                  labels every figure derived from it "est.")
+                          one package-pair       2 forks  ~$0.03
+```
+
+Free credits available: **$25** (code `NEBIUS-DEVPOST-GLOBAL26`) **+ $25** (Builders Program) = **$50**.
+
+```
+index size        sandbox cost (est.)      verdict
+  500 packages    ~$15                     comfortable
+1,000 packages    ~$30                     feasible, most of the budget
+5,000 packages    ~$150                    NOT possible on free credits
+```
+
+**So the deliverable is an index of roughly 1,000 packages, not "all of npm".** That is still 12×
+the current 82, it covers the overwhelming majority of real lockfile mass (the top 1,000 sit under
+almost everything), and it is honest. The README will say "1,000 packages" and "all of npm" will
+appear only under *what's next*, where it belongs.
+
+Model spend is a rounding error by comparison and is not a constraint.
+
+---
+
+## 4. Phases
+
+Dates assume Amazon has priority until its freeze on 13–15 Oct. This project gets fragments until
+then and the full run after, which is why the heavy lifting sits in Phase 3 onward.
+
+### Phase 1 · `stakeout.lock` and the CLI — the primitive (22–28 Sep)
+
+The smallest thing that makes this a tool instead of a page.
+
+```
+stakeout lock              walk package-lock.json, look every package up in the index,
+                           write stakeout.lock
+stakeout check             re-read, diff against the index, exit non-zero on drift
+stakeout explain <pkg>     what this package does, and where that was observed
+```
+
+- `stakeout.lock` format: JSON, one entry per package@version, the six channels, the strategy that
+  observed it, and the index revision it came from. **Human-diffable** — that is the whole point,
+  so a reviewer can read the change in a PR.
+- `stakeout check` must distinguish three outcomes, not two: **drift** (behaviour changed),
+  **unknown** (not in the index — say so, do not pass silently), **clean**.
+- Exit codes: `0` clean, `1` drift, `2` unknown-and-configured-to-fail.
+
+**Done when:** `npx stakeout lock && npx stakeout check` runs green in a real repository of Vidit's,
+and deliberately introducing a package the index has never seen produces `unknown`, not a pass.
+
+**Why this is first:** every other surface is a client of it, and it is the one piece that works
+with no Sandboxes, no hosting, and no auth.
+
+### Phase 2 · The index at scale (29 Sep – 12 Oct, in fragments)
+
+- Package selection: top ~1,000 by download count, taken from the registry, **published as a list
+  with the query that produced it** so nobody has to trust our sampling.
+- Adjacent-version pairs derived by `npm run pairs` — already built, already enforces
+  publication-order adjacency, forward semver, at most one major apart.
+- Runner: resumable, idempotent, writes one JSON file per package-version, content-addressed.
+  It must survive being killed and restarted — this will run for hours.
+- **Cost governor**: the existing `judge/budget.js` pattern extended to sandbox spend. A hard
+  ceiling, pre-flight, fails closed. It stops before the credits do.
+- Output: `index/` — static JSON, servable from anywhere, plus a single manifest with the revision.
+
+**Done when:** the index holds ≥500 packages, `stakeout check` resolves against it without a
+network call to us, and re-running the builder costs nothing for packages already done.
+
+**Sandboxes dependency:** see §6. There is a fallback and it is not fatal.
+
+### Phase 3 · The GitHub App (13–17 Oct)
+
+Where the decision actually gets made. A developer does not visit a dashboard; they look at a PR.
+
+- Installation is the auth. No login screen, no account system, no password reset.
+- On a PR that changes a lockfile: resolve both sides against the index, comment with the
+  behavioural diff, set a **check run** so it can be made required.
+- The comment must be *small*. One line per changed package, the alarming one expanded, a link for
+  the rest. A wall of text gets muted and muted is dead.
+- Silence when nothing changed. A bot that comments "no issues found" on every PR is uninstalled
+  within a week.
+
+**Done when:** it is installed on a real repository, a real Dependabot PR gets a real comment, and
+a screen recording of that exists.
+
+### Phase 4 · stakeout.dev — the web surface (18–20 Oct)
+
+- **Sign in with GitHub** (OAuth). Justified because we genuinely need to read lockfiles, not
+  because products have login pages.
+- Three screens, no more:
+  - **Repos** — connected repositories, last check, drift count. Dense, sortable, no cards.
+  - **A run** — the wall we already have, now over *their* dependencies.
+  - **The index** — search any package, see what it does at every version, with the evidence.
+- The index browser is the public-good surface and needs no login. It should be linkable and
+  indexable; it is the thing people will share.
+
+**Done when:** a stranger can sign in, connect a repo, and get a real answer in under ninety seconds.
+
+### Phase 5 · Design (throughout, concentrated 18–20 Oct)
+
+Not a phase so much as a standing constraint, but the concentrated pass sits here.
+
+- Real brand assets from official press kits only — Nebius, NVIDIA. **Never a redrawn logo.**
+- The look is an instrument: dense, small type, a lot of real data. Linear and Datadog, not a
+  landing page.
+- Banned: gradient hero, three-column feature grid, emoji-as-icon, big-number-small-label,
+  `01 / 02 / 03` step markers, tracked-out ALL-CAPS eyebrows. These are the tells.
+- One signature motion, already chosen: the fork strip going quiet, one row keeping its colour.
+- `~/hackathon-design` is the studio; `node check.js` there verifies every colour and typeface it
+  claims against this repository's actual CSS. **The product is the source of truth; the mockup is
+  what gets corrected.**
+
+### Phase 6 · Freeze (20–22 Oct), then record and submit
+
+- Freeze means no new capability. Review, polish, record, fill the form.
+- Repo goes **public** with the MIT licence already in place — Nebius requires it.
+- Demo URL deployed (`DEPLOY.md`, two commands).
+- `docs/FEEDBACK-NOTES.md` finalised — the Most Valuable Feedback prize is judged on completeness,
+  viability and impact, and three strong entries already exist.
+- Tavily: a functional runtime call is the whole criterion for $3,000. It is already written and
+  waiting for a key.
+
+---
+
+## 5. Cut order — what dies first
+
+A plan without this is a wish list. When time runs out, in this order:
+
+```
+1st to go    the index browser UI      the index still exists and the CLI still uses it
+2nd          stakeout.dev entirely     the GitHub App is the better demo anyway
+3rd          index size 1,000 → 300    still 4× the current survey, still honest
+4th          the GitHub App            falls back to the CLI plus a recorded run
+NEVER cut    stakeout.lock + check     without the primitive this is a demo again
+NEVER cut    the honesty machinery     labelled estimates, canSee caveats, the absence tests
+```
+
+The last line is not sentiment. The project's entire argument is that it does not overclaim, and
+every test enforcing that is load-bearing for the pitch.
+
+---
+
+## 6. Risks, and what we do about each
+
+**Sandboxes access never arrives.** *Likely.* Confirmed 404 with a working key on 20 Sep, so it is a
+queue, not a misconfiguration.
+→ **Fallback:** build the index with the `nodert` strategy locally. It is real, it already runs real
+packages, and it is the strategy that produced every finding we have. It is slower and weaker
+(Node's API surface only — a native addon goes underneath it), and the index records the strategy
+per entry, so nothing silently overclaims. **This is not fatal.** It changes the index from
+"kernel-level" to "runtime-level" and the honesty machinery already handles saying so.
+
+**The index run exceeds free credits.** → The cost governor stops it first, and 300 packages is a
+perfectly good index. Sized deliberately in §3.
+
+**A package does something destructive when run.** → Sandboxes are isolated; locally, `nodert`
+already requires `STAKEOUT_ALLOW_LOCAL=1` and warns that it executes packages as you. The hosted
+demo deliberately refuses `/api/real` entirely.
+
+**GitHub App review/approval delays.** → A GitHub App in development mode works on your own repos
+without review. Only public listing needs approval, and we do not need public listing.
+
+**Spreading too thin across two hackathons.** *The real risk.* → Amazon freezes seven days earlier.
+It gets priority until 15 Oct; this project gets the clean run 15–22 Oct. The phases above are
+ordered so that Phase 1 (the primitive) is done early and cheaply, which means even the worst case
+ships something new.
+
+---
+
+## 7. What the submission has to contain
+
+| required | state |
+|---|---|
+| runtime call to Token Factory + an NVIDIA open model | **live** — three Nemotron tiers, verified by `npm run preflight` |
+| public repo, OSS licence | MIT in place; **must be flipped public at submission** |
+| README with setup | yes, and every figure in it is checked by a command |
+| working demo URL | `DEPLOY.md`, two commands, costs nothing per visitor |
+| ≤3 min YouTube video with audio | `docs/DEMO-SCRIPT.md`, shot list numbered |
+| feedback on Nebius/NVIDIA tools | `docs/FEEDBACK-NOTES.md` — three substantial entries |
+| what changed during the window | built in it |
+| **Best Use of Tavily — $3,000** | judged on a *functional runtime call*. Written, needs a key |
+
+---
+
+## 8. Measurable targets
+
+These are what "10×" means in numbers rather than adjectives.
+
+```
+                             today          target        floor (acceptable)
+index size                   0              1,000 pkgs    300 pkgs
+repos it can check           0              unlimited     1 real repo, live
+surfaces                     1 page         CLI+App+web   CLI + App
+Nemotron                     live ✓         live ✓        live ✓
+cost per additional repo     n/a            $0 (lookup)   $0
+tests                        276            400+          keep green
+```
+
+---
+
+## 9. What is needed from Vidit
+
+See `docs/NEEDS.md` — one list, both projects, ordered by what blocks what.
