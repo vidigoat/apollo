@@ -18,6 +18,7 @@
     "lockfile": "node scripts/lockfile-run.js",
     "survey": "node scripts/survey.js",
     "index:build": "node scripts/index-build.js",
+    "fleet:scan": "node scripts/fleet-scan.js",
     "lock": "node cli.js lock",
     "check": "node cli.js check",
     "warm-cache": "node scripts/warm-cache.js",

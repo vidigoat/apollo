@@ -53,7 +53,10 @@ it('it does not promise a command that does not exist', () => {
   // A README telling somebody to run something that is not there is worse than a wrong number:
   // it is the first thing they try.
   const scripts = require('./package.json').scripts;
-  const promised = [...README.matchAll(/npm run ([a-z-]+)/g)].map((m) => m[1]);
+  // Colons are legal in a script name and this repo uses them (`index:build`, `fleet:scan`). A
+  // pattern that stopped at the colon read `npm run index:build` as a promise of `npm run index`
+  // and failed on a command that exists — which teaches people to edit the test.
+  const promised = [...README.matchAll(/npm run ([a-z][a-z:-]*)/g)].map((m) => m[1]);
   const missing = [...new Set(promised)].filter((s) => !scripts[s]);
   assert.deepEqual(missing, [], `README promises: ${missing.map((m) => `npm run ${m}`).join(', ')}`);
 });

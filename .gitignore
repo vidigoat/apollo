@@ -10,3 +10,5 @@ dist/
 # A published index is a deliberate artefact — see PLAN.md — not something that rides along
 # in every commit.
 index/data/
+
+local/

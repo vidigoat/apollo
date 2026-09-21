@@ -153,6 +153,71 @@ const json = async (p) => (await get(p)).json();
     assert.equal((await get('/api/nope')).status, 404);
   });
 
+  /* ── the fleet ────────────────────────────────────────────────────────── */
+
+  await it('/api/fleet is honest about having no scan, rather than inventing one', async () => {
+    /*
+     * There is deliberately no bundled fleet in this repository. A canned one would be a fabricated
+     * number sitting underneath the page's central claim, and the honest empty state — "run the
+     * scan" — is the same answer the CLI gives for a missing index.
+     *
+     * So the route is correct in BOTH states, and the test asserts whichever one this machine is
+     * in rather than requiring a scan to exist.
+     */
+    const r = await get('/api/fleet');
+    assert.equal(r.status, 200, 'a missing scan is not an error');
+    const body = await r.json();
+
+    if (!body.scanned) {
+      assert.match(body.how, /fleet-scan/, 'it did not say how to produce one');
+      return;
+    }
+
+    assert.ok(body.totals, 'a scan without totals');
+    for (const k of ['repos', 'depVersions', 'distinct', 'known']) {
+      assert.equal(typeof body.totals[k], 'number', `totals.${k} is missing`);
+    }
+    assert.ok(
+      body.totals.distinct <= body.totals.depVersions,
+      'more distinct packages than dependency-versions, which is arithmetically impossible'
+    );
+    assert.ok(
+      body.totals.known <= body.totals.depVersions,
+      'more questions answered than were asked'
+    );
+  });
+
+  await it('/api/fleet keeps the scan-time index size apart from the live one', async () => {
+    // Both halves of the reuse ratio have to be from the same instant. `stale` is how the page is
+    // told the index has moved since, without that fact leaking into the arithmetic.
+    const body = await json('/api/fleet');
+    if (!body.scanned) return;
+    assert.ok('stale' in body, 'the page cannot tell whether the scan is behind the index');
+    if (body.index && body.indexNow) {
+      assert.equal(body.stale, body.index.versions !== body.indexNow.versions);
+    }
+  });
+
+  await it('/api/project will not read a path off the query string', async () => {
+    /*
+     * The route takes a position in the scan, never a directory. A `?dir=` the server happily reads
+     * is a directory-traversal hole with a friendly name, and this one serves a page that is often
+     * left running on a laptop.
+     */
+    const src = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
+    const route = src.slice(src.indexOf("'/api/project'"), src.indexOf("'/api/project'") + 2400);
+    assert.ok(!/searchParams\.get\(['"]dir/.test(route), 'the project route reads a path from the URL');
+
+    for (const bad of ['../../etc', '/etc/passwd', 'NaN', '-1', '999999']) {
+      const r = await get(`/api/project?at=${encodeURIComponent(bad)}`);
+      assert.ok(r.status === 404 || r.status === 200, `unexpected ${r.status} for ${bad}`);
+      if (r.status === 200) {
+        const b = await r.json();
+        assert.ok(!b.packages, `${bad} resolved to a real project`);
+      }
+    }
+  });
+
   await it('the server is a plain handler, so a host can serve the same code', () => {
     // Nebius requires a working demo URL. The hosted deployment imports this exact function rather
     // than a second copy — a demo URL showing something the repository does not do is worse than no

@@ -227,6 +227,103 @@ function handler(req, res) {
         .catch((e) => send(res, 500, JSON.stringify({ error: e.message }), 'application/json'));
     }
 
+    /*
+     * The fleet: every project on this machine, and how much of each one anyone has watched.
+     *
+     * Read from disk rather than scanned on request — a scan walks a directory tree and belongs
+     * behind a command somebody typed, not behind a page load. There is deliberately no bundled
+     * sample: a canned fleet would be a fabricated number, and the honest empty state ("run the
+     * scan") is the same answer the CLI gives for a missing index.
+     */
+    if (url.pathname === '/api/fleet') {
+      const file = path.join(__dirname, 'local', 'fleet.json');
+      if (!fs.existsSync(file)) {
+        return send(res, 200, JSON.stringify({
+          scanned: false,
+          how: 'node scripts/fleet-scan.js ~ --out local/fleet.json',
+          why: 'Nothing here is bundled. This reads your machine or it reads nothing.',
+        }), 'application/json');
+      }
+      try {
+        const fleet = JSON.parse(fs.readFileSync(file, 'utf8'));
+        /*
+         * The index size comes from the SCAN, not from the manifest on disk right now. Both halves
+         * of the reuse ratio have to be from the same instant — see scripts/fleet-scan.js. What is
+         * read live is only whether the index has moved since, which the page reports as a reason
+         * to re-scan rather than quietly folding into the arithmetic.
+         */
+        let now = null;
+        try {
+          const m = JSON.parse(fs.readFileSync(path.join(__dirname, 'index', 'data', 'manifest.json'), 'utf8'));
+          now = { packages: m.packages, versions: m.versions, revision: m.revision };
+        } catch { /* no index on disk */ }
+        const stale = Boolean(now && fleet.index && now.versions !== fleet.index.versions);
+        return send(res, 200, JSON.stringify({ scanned: true, indexNow: now, stale, ...fleet }), 'application/json');
+      } catch (e) {
+        return send(res, 500, JSON.stringify({ error: `local/fleet.json is unreadable: ${e.message}` }), 'application/json');
+      }
+    }
+
+    /*
+     * One project's dependencies, and what the index knows about each.
+     *
+     * Addressed by its position in the scan, never by a path off the query string. A `?dir=` that
+     * the server happily reads is a directory-traversal hole with a nice name, and the scan already
+     * says which directories are in play — so that list is the allowlist, and anything not in it is
+     * simply not a project this server knows about.
+     */
+    if (url.pathname === '/api/project') {
+      const file = path.join(__dirname, 'local', 'fleet.json');
+      if (!fs.existsSync(file)) return send(res, 404, JSON.stringify({ error: 'no scan on disk' }), 'application/json');
+
+      const fleet = JSON.parse(fs.readFileSync(file, 'utf8'));
+      const at = Number(url.searchParams.get('at'));
+      const repo = Number.isInteger(at) ? fleet.repos[at] : null;
+      if (!repo || !repo.dir) {
+        return send(res, 404, JSON.stringify({ error: 'no such project in the scan' }), 'application/json');
+      }
+
+      try {
+        const { Index } = require('./index/schema');
+        const { quietness } = require('./transcript/schema');
+        const { parseLockfile } = require('./lockfile');
+        const index = new Index();
+
+        const { versions } = parseLockfile(fs.readFileSync(path.join(repo.dir, 'package-lock.json'), 'utf8'));
+        const deps = [];
+        for (const [name, version] of versions) {
+          const entry = index.lookup(name, version);
+          if (!entry) {
+            // Never observed. Not "it does nothing" — see index/schema.js.
+            deps.push({ name, version, observed: false });
+            continue;
+          }
+          const q = quietness({
+            strategy: entry.strategy,
+            net: entry.net || [], dns: entry.dns || [], fs: entry.fs || [],
+            env: entry.env || [], proc: entry.proc || [], exec: entry.exec || [],
+          });
+          deps.push({
+            name, version, observed: true,
+            strategy: entry.strategy,
+            canSee: entry.canSee,
+            counts: Object.fromEntries(
+              ['net', 'dns', 'fs', 'env', 'proc', 'exec'].map((c) => [c, entry[c] ? entry[c].length : null])
+            ),
+            quiet: q.quiet,
+            blindTo: q.blindTo,
+            trustworthy: q.trustworthy,
+          });
+        }
+
+        return send(res, 200, JSON.stringify({
+          name: repo.name, deps: deps.length, state: repo.state, packages: deps,
+        }), 'application/json');
+      } catch (e) {
+        return send(res, 500, JSON.stringify({ error: e.message }), 'application/json');
+      }
+    }
+
     const rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
     const file = path.join(PUBLIC, rel);
     if (!file.startsWith(PUBLIC)) return send(res, 403, 'no', 'text/plain');

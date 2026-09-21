@@ -297,6 +297,44 @@ for proving the pipeline on packages you already trust, never for triaging one y
 
 ---
 
+## Point it at every repo you own
+
+One project answers "is my lockfile pinned". The question somebody who owns thirty of them actually
+has is *which one should I look at first* — and the honest answer is usually "none of them, and here
+is how much of your tree nobody has ever watched".
+
+```bash
+npm run index:build -- --from-lockfile package-lock.json   # observe some packages
+npm run fleet:scan -- ~ --out local/fleet.json             # read every lockfile on the machine
+npm start                                                  # http://localhost:8791/fleet.html
+```
+
+The scan reads lockfiles and asks the index what it already knows. It installs nothing, runs
+nothing, and never touches the network — which is the entire reason an index exists.
+
+Measured on the machine this was written on:
+
+```
+76 projects · 20,897 dependency-versions · 8,623 distinct
+476 observations in the index answered 3,247 of them
+```
+
+Those two gaps are the argument. **20,897 against 8,623** is how much of a fleet is the same
+packages appearing again, so the work is done once and answered many times. **476 against 3,247** is
+what that is worth today: nearly seven dependency-version questions settled per package actually
+run, on an index barely started. The hundredth repo is a lookup, not a hundredth sandbox run.
+
+The page draws the fleet rather than summarising it. Every project is one segment, width
+proportional to its dependency count, and the part nobody has watched is drawn as hatching rather
+than as a filled bar — because a filled bar reads as *present*, and a coverage chart that renders
+17,650 unobserved dependencies as the dark half of a bar is quietly telling you they are fine.
+Clicking a project gives you its packages, each with a six-slot strip: activity, watched-and-silent,
+and *nothing was watching*. Two of those three states get printed as "no findings" everywhere else.
+
+There is no bundled fleet in this repository. A canned one would be a fabricated number sitting
+under the only claim this page makes, so with no scan on disk the page says so and tells you the
+command — the same answer the CLI gives for a missing index.
+
 ## What a run looks like
 
 ![The whole argument in one screen: silence, one catch, three ways of watching, and the bill](docs/images/terminal.png)
@@ -831,7 +869,7 @@ npm test
 ```
 
 ```
-26 suites · 317 checks
+27 suites · 331 checks
 all green
 ```
 
