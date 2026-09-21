@@ -266,10 +266,24 @@ function present(result) {
   $('#s-cost').textContent = result.sandboxUsdEstimated
     ? `~$${result.costUsd} est.`
     : `$${result.costUsd}`;
+  /*
+   * The same distinction the line above makes, in the line below it.
+   *
+   * "9 model calls" is true of the verdicts and false of the visit when every one came from
+   * `judge/verdicts/` — and on the hosted demo every one does. Saying "calls" there would have made
+   * this status line claim a number of API requests that were not made, on the surface most likely
+   * to be read as a receipt.
+   */
+  const cachedRun = !(result.pairs || [])
+    .map((p) => p.judgement)
+    .filter(Boolean)
+    .some((j) => !j.cached && (j.spend || []).some((c) => c.simulated === false));
+
   statusEl.textContent =
     `${result.twinsForked} twins · ${result.quiet} packages behaved identically · ` +
     `${result.pairs.filter((p) => p.diff.changed).length} changed · ` +
-    `${result.modelCalls} model calls · ${result.sandboxUsdEstimated ? '~' : ''}$${result.costUsd}${result.sandboxUsdEstimated ? ' est.' : ''}` +
+    `${result.modelCalls} ${cachedRun ? 'verdicts from cache' : 'model calls'} · ` +
+    `${result.sandboxUsdEstimated ? '~' : ''}$${result.costUsd}${result.sandboxUsdEstimated ? ' est.' : ''}` +
     (result.live ? ` · live, in ${(result.wallMs / 1000).toFixed(1)}s` : '');
 
   $('#cansee').textContent = caveatFor(result);

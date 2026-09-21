@@ -247,7 +247,27 @@ async function renderedPage(treeExtra = {}) {
     const { dom, payload } = await renderedPage();
     const quiet = payload.pairs.filter((p) => !p.diff.changed);
     quiet.forEach((p) => assert.equal(p.judgement.spend.length, 0, `${p.pkg} paid for a model it did not need`));
-    assert.match(dom.get('status').textContent, new RegExp(`${payload.modelCalls} model calls`));
+    /*
+     * The count is always shown; what it is CALLED depends on whether the calls happened.
+     *
+     * Every verdict in this fixture comes from `judge/verdicts/`, which is how the hosted demo runs
+     * too — real Nemotron verdicts, produced by real calls, that were not made just now. Saying
+     * "9 model calls" there is true of the verdicts and false of the visit, on the line most likely
+     * to be read as a receipt.
+     */
+    const status = dom.get('status').textContent;
+    assert.match(status, new RegExp(`${payload.modelCalls} (?:model calls|verdicts from cache)`));
+
+    const fresh = payload.pairs
+      .map((p) => p.judgement)
+      .filter(Boolean)
+      .some((j) => !j.cached && (j.spend || []).some((c) => c.simulated === false));
+    assert.match(
+      status,
+      fresh ? /model calls/ : /verdicts from cache/,
+      fresh ? 'a run that really called the models called it a cache hit'
+            : 'a cached run claimed API calls it did not make'
+    );
   });
 
   await it('the caveat names what would get past this particular strategy', async () => {
