@@ -14,6 +14,13 @@ is the dominant experience, because the silence is what gives the other five the
 It also runs on real packages from the real registry, on your machine, today — that is further
 down, and it is how the one finding in this README was produced.
 
+**And it is meant to be pointed at all of your repositories at once.** A package observed once
+answers for every project that depends on it, which is invisible on one repository and the whole
+argument across seventy: on the machine this was written on, 76 projects hold 20,897
+dependency-versions that collapse to 8,623 distinct ones, and **2,120 observations answer 12,986 of
+them.** Sixty-two per cent, from an index you could build in an afternoon. That is
+[further down too](#point-it-at-every-repo-you-own).
+
 ![The behavioural diff wall — most packages identical, one is not](docs/images/hero-wall.png)
 
 ---
