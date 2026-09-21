@@ -316,14 +316,13 @@ Measured on the machine this was written on:
 
 ```
 76 projects · 20,897 dependency-versions · 8,623 distinct
-1,500 observations in the index answered 11,242 of them
+2,120 observations in the index answered 12,986 of them
 ```
 
 Those two gaps are the argument. **20,897 against 8,623** is how much of a fleet is the same
-packages appearing again, so the work is done once and answered many times. **1,500 against
-11,242** is what that is worth: seven and a half dependency-version questions settled per package
-actually run, and **54% of a seventy-six project fleet** covered by an index you could build in an
-afternoon.
+packages appearing again, so the work is done once and answered many times. **2,120 against
+12,986** is what that is worth: six dependency-version questions settled per package actually run,
+and **62% of a seventy-six project fleet** covered by an index you could build in an afternoon.
 
 ### Index the packages that buy the most
 
@@ -336,17 +335,20 @@ sixty projects; this does not. Measured across the same 76 projects:
 | 500 | 6,660 | 13.3× |
 | 1,000 | 9,448 | 9.4× |
 | 1,500 | 11,242 | 7.5× |
+| 2,120 | 12,986 | 6.1× |
 | 2,000 | 12,734 | 6.4× |
 
 The curve is the economics of a central index, and it is why stopping early is fine: the best work
 is already done. The 1,500 row is not a projection — it was predicted from the ranking, then built
-from real installs, and came out at exactly 11,242.
+from real installs, and came out at exactly 11,242. The 2,120 row is where the build was stopped.
 
 The hosted demo has no filesystem to read, so a real scan of a checkout of
 [vercel/turborepo](https://github.com/vercel/turborepo) is committed — 24 projects, 3,107
-dependency-versions, 1,704 of them already answered. The page says whose tree it is rather than
+dependency-versions, 1,984 of them already answered — 64% of a public monorepo. The page says whose tree it is rather than
 letting it read as yours, and clicking a project there says plainly that its lockfile is not on this
 machine instead of doing nothing. The hundredth repo is a lookup, not a hundredth sandbox run.
+
+![The fleet band — 76 projects, each a segment, the unwatched surface hatched under a ceiling hairline](docs/images/fleet.jpg)
 
 The page draws the fleet rather than summarising it. Every project is one segment, width
 proportional to its dependency count, and the part nobody has watched is drawn as hatching rather

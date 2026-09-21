@@ -46,7 +46,7 @@ video thinking *that's clever*, not *I want that*.
 | phase | stated | where it got to |
 |---|---|---|
 | 1 · the primitive | `stakeout.lock` + CLI | **Done.** Proven on a real 691-package tree; exit codes 0/1/2/3 verified in a child process. |
-| 2 · index at scale | 5,000 target, 500 floor | **1,500 observations**, answering **11,242** of a 76-project fleet's 20,897 dependency-versions — 54% coverage, 7.5× reuse. Above the floor, below the target, and the target is now a question of hours rather than of whether it works. |
+| 2 · index at scale | 5,000 target, 500 floor | **2,120 observations**, answering **12,986** of a 76-project fleet's 20,897 dependency-versions — 62% coverage, 6.1× reuse. Above the floor, below the target, and the target is now a question of hours rather than of whether it works. |
 | 3 · GitHub App | 13–17 Oct | Not started. Blocked on Vidit creating the app. |
 | 4 · web surface | stakeout.dev | **The fleet view is built** — every project on a machine, the unwatched surface drawn as absence rather than as the dark half of a bar, and a per-project view whose channel strip distinguishes *watched and silent* from *nothing was watching*. |
 
@@ -59,6 +59,7 @@ alphabetically:
 | 500 | 6,660 | 13.3× |
 | 1,000 | 9,448 | 9.4× |
 | 1,500 | 11,242 | 7.5× |
+| 2,120 | 12,986 | 6.1× |
 | 2,000 | 12,734 | 6.4× |
 
 The 1,500 row was predicted from the ranking before anything was installed and came out at exactly

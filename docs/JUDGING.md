@@ -62,7 +62,7 @@ you how many of your dependency-versions they answered.
 | what to look at | where |
 |---|---|
 | **The shape of the problem**: 20,897 dependency-versions across 76 real projects, 8,623 distinct | `README.md` → "Point it at every repo you own" |
-| **The leverage**: 1,500 observations answered 11,242 of them — 54% coverage, 7.5× reuse | measured, and the 1,500 figure was predicted from the ranking before anything was installed |
+| **The leverage**: 2,120 observations answered 12,986 of them — 62% coverage, 6.1× reuse | measured, and the 1,500-observation figure on the way there was predicted from the ranking before anything was installed |
 | Adoption cost: zero dependencies, no build step, one command | `package.json` — there is nothing to install |
 | It refuses to fail the build on *unknown* by default, because a tool that red-lights on day one is removed before it finds anything | `cli.test.js` — "check exits 2 for unknowns only when asked to" |
 | A scan you can commit without publishing your home directory | `scripts/fleet-scan.js` `--portable`, `fleet.test.js` |

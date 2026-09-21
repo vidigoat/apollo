@@ -229,10 +229,11 @@ package-version rather than walking one lockfile alphabetically:
 | 500 | 6,660 | 13.3× |
 | 1,000 | 9,448 | 9.4× |
 | 1,500 | 11,242 | 7.5× |
+| 2,120 | 12,986 | 6.1× |
 
 The 1,500 row was predicted from the ranking before anything was installed, then built from real
-installs, and came out at **exactly 11,242** — 54% of the fleet covered by an index you could build
-in an afternoon. Stopping early is fine, because the best work is already done. That is the
+installs, and came out at **exactly 11,242**. The build was carried on to 2,120 observations and
+12,986 answers — **62% of the fleet** covered by an index you could build in an afternoon. Stopping early is fine, because the best work is already done. That is the
 economics a central index has and a per-repo sandbox run does not.
 
 **The page draws the fleet rather than summarising it.** Every project is one segment, width
