@@ -75,6 +75,18 @@ function entryFor(transcript) {
     canSee: transcript.canSee,
     observedAt: new Date().toISOString(),
   };
+  /*
+   * A simulated entry says so, permanently, in the file.
+   *
+   * This was a real accident, not a hypothetical. A build invoked with `--simulated` and no limit
+   * wrote 8,623 fabricated entries straight over an index that held 705 genuine observations, and
+   * nothing about a single entry afterwards said which was which — the only marker was a `note` on
+   * the manifest, which is the wrong grain entirely. Every number the fleet page prints is built on
+   * these entries. Fabricated data that cannot be told apart from observed data is the one failure
+   * that would make this whole project worthless, so it is recorded per entry, at the point of
+   * writing, and `put` refuses to mix the two.
+   */
+  if (transcript.simulated) out.simulated = true;
   for (const c of CHANNELS) {
     // Absent means the strategy could not see it. Empty means it saw nothing. Those are different
     // facts and the index has to be able to express both.
@@ -133,7 +145,31 @@ class Index {
   put(name, transcript) {
     const file = fileFor(this.dir, name);
     const existing = this.package(name) || { schema: SCHEMA, name, versions: {} };
-    existing.versions[transcript.version] = entryFor(transcript);
+    const entry = entryFor(transcript);
+
+    /*
+     * An index is either observed or it is a rehearsal. Never half of each.
+     *
+     * Refusing here rather than warning is deliberate: the damage from a mixed index is silent and
+     * total, because every downstream number reads it as fact. Point a simulated build at its own
+     * directory (`--out`), or delete the real one on purpose.
+     */
+    const priorSimulated = Object.values(existing.versions).some((v) => v.simulated);
+    const priorReal = Object.values(existing.versions).some((v) => !v.simulated);
+    if (entry.simulated && priorReal) {
+      throw new Error(
+        `Refusing to write a simulated entry for ${name} into an index holding real observations. ` +
+        'Build simulated runs into their own directory with --out.'
+      );
+    }
+    if (!entry.simulated && priorSimulated) {
+      throw new Error(
+        `Refusing to write a real observation for ${name} into an index holding simulated entries. ` +
+        'Delete the simulated index first.'
+      );
+    }
+
+    existing.versions[transcript.version] = entry;
     existing.updatedAt = new Date().toISOString();
 
     fs.mkdirSync(path.dirname(file), { recursive: true });

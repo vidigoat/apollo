@@ -316,13 +316,13 @@ Measured on the machine this was written on:
 
 ```
 76 projects · 20,897 dependency-versions · 8,623 distinct
-476 observations in the index answered 3,247 of them
+705 observations in the index answered 5,288 of them
 ```
 
 Those two gaps are the argument. **20,897 against 8,623** is how much of a fleet is the same
-packages appearing again, so the work is done once and answered many times. **476 against 3,247** is
-what that is worth today: nearly seven dependency-version questions settled per package actually
-run, on an index barely started. The hundredth repo is a lookup, not a hundredth sandbox run.
+packages appearing again, so the work is done once and answered many times. **705 against 5,288** is
+what that is worth today: seven and a half dependency-version questions settled per package actually
+run, from an index of one repository's dependency tree. The hundredth repo is a lookup, not a hundredth sandbox run.
 
 The page draws the fleet rather than summarising it. Every project is one segment, width
 proportional to its dependency count, and the part nobody has watched is drawn as hatching rather
@@ -869,7 +869,7 @@ npm test
 ```
 
 ```
-27 suites · 331 checks
+27 suites · 335 checks
 all green
 ```
 

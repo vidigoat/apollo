@@ -175,4 +175,50 @@ it('summary says nothing when there is nothing', () => {
   assert.equal(fresh().summary(), 'no index built yet');
 });
 
+/* ── observed, or a rehearsal ────────────────────────────────────────────── */
+
+it('a simulated entry says so, in the file', () => {
+  const idx = fresh();
+  idx.put('p', { ...transcript('1.0.0'), simulated: true });
+  assert.equal(idx.lookup('p', '1.0.0').simulated, true);
+  // And a real one carries no such field, so absence is not ambiguous either.
+  idx.put('q', transcript('1.0.0'));
+  assert.ok(!('simulated' in idx.lookup('q', '1.0.0')));
+});
+
+it('a simulated build will not write into an index of real observations', () => {
+  /*
+   * This happened. `--simulated` with no limit wrote 8,623 fabricated entries over an index holding
+   * 705 genuine ones, and afterwards nothing in a single entry said which was which — the only
+   * marker was a note on the manifest, which is the wrong grain entirely.
+   *
+   * Every number the fleet page prints is read off these entries as fact. Fabricated data that
+   * cannot be told from observed data is the one failure that makes the whole project worthless, so
+   * this refuses rather than warns.
+   */
+  const idx = fresh();
+  idx.put('p', transcript('1.0.0'));
+  assert.throws(
+    () => idx.put('p', { ...transcript('2.0.0'), simulated: true }),
+    /Refusing to write a simulated entry/
+  );
+  assert.equal(idx.lookup('p', '1.0.0').simulated, undefined, 'the real entry was touched');
+});
+
+it('and a real observation will not be written into a simulated index', () => {
+  // The same rule in the other direction: half-real is not a state this index has a meaning for.
+  const idx = fresh();
+  idx.put('p', { ...transcript('1.0.0'), simulated: true });
+  assert.throws(() => idx.put('p', transcript('2.0.0')), /Refusing to write a real observation/);
+});
+
+it('a simulated index is still perfectly usable on its own', () => {
+  // Rehearsing the pipeline without running anything is a supported thing to do. The rule is about
+  // MIXING, not about simulation.
+  const idx = fresh();
+  idx.put('p', { ...transcript('1.0.0'), simulated: true });
+  idx.put('p', { ...transcript('1.0.1'), simulated: true });
+  assert.equal(idx.versions('p').length, 2);
+});
+
 console.log(`\n${passed} passed`);

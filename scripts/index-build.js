@@ -41,7 +41,7 @@ const { bestStrategy } = require('../observe');
 const { LocalMachines } = require('../adapters/local');
 const { SimulatedSandboxes } = require('../adapters/simulated');
 const { PAIRS } = require('./survey');
-const { lockfileOnDisk } = require('../lockfile');
+const { lockfileOnDisk, parseLockfile } = require('../lockfile');
 
 const C = process.stdout.isTTY
   ? { red: '\x1b[31m', green: '\x1b[32m', amber: '\x1b[33m', dim: '\x1b[2m', bold: '\x1b[1m', off: '\x1b[0m' }
@@ -86,10 +86,72 @@ function work(flags) {
     return limit ? singles.slice(0, limit) : singles;
   }
 
+  /*
+   * `--from-fleet <fleet.json>` indexes in the order that buys the most.
+   *
+   * A lockfile is one project's opinion about what matters, and indexing it in alphabetical order
+   * treats a package nobody else depends on exactly like one that appears in sixty projects. A
+   * fleet scan already knows the difference: it has read every lockfile on the machine, so it can
+   * count how many projects share each package-version and index the most-shared first.
+   *
+   * That ordering is the whole economics of a central index. The first thousand observations
+   * answer far more than the next thousand, and stopping early still leaves the best thousand
+   * done — which matters, because a full tree is hours of real installs and almost nobody will run
+   * it to completion on the first day.
+   *
+   * Dependency-versions, not names. An observation of 4.17.21 says nothing about 3.10.1, and
+   * ranking by name would pool versions that are not substitutes for one another.
+   */
+  if (flags['from-fleet']) {
+    const fleet = JSON.parse(fs.readFileSync(flags['from-fleet'], 'utf8'));
+    const shared = new Map();
+
+    for (const repo of fleet.repos) {
+      if (!repo.dir) continue; // a redacted scan carries counts but no paths, so it cannot be built from
+      let versions;
+      try {
+        ({ versions } = parseLockfile(fs.readFileSync(path.join(repo.dir, 'package-lock.json'), 'utf8')));
+      } catch {
+        continue; // already reported as unreadable by the scan
+      }
+      for (const [pkg, version] of versions) {
+        const key = `${pkg}\u0000${version}`;
+        shared.set(key, (shared.get(key) || 0) + 1);
+      }
+    }
+
+    const ranked = [...shared.entries()]
+      .map(([key, projects]) => {
+        const [pkg, version] = key.split('\u0000');
+        return { pkg, version, single: true, projects };
+      })
+      // Ties broken by name so a resumed build walks the same order as the one it is continuing.
+      .sort((a, b) => b.projects - a.projects || a.pkg.localeCompare(b.pkg));
+
+    const limit = Number(flags.limit) || 0;
+    return limit ? ranked.slice(0, limit) : ranked;
+  }
+
   const pairs = PAIRS.map(([pkg, from, to]) => ({ pkg, from, to }));
   const limit = Number(flags.limit) || 0;
   return limit ? pairs.slice(0, limit) : pairs;
 }
+
+/*
+ * Exported so the ordering can be tested without building anything.
+ *
+ * `work()` decides WHAT to observe and in what order, which is the part with the interesting
+ * failure modes — and it is pure, so a test can check it against a fixture tree in milliseconds
+ * rather than installing two thousand packages to find out.
+ */
+module.exports = { work };
+
+/*
+ * Guarded, because requiring this file used to start a build. A test that imports it would have
+ * hit the STAKEOUT_ALLOW_LOCAL refusal and exited the whole test process — which is why nothing
+ * here was tested until now.
+ */
+if (require.main !== module) return;
 
 (async () => {
   const flags = parseArgs(process.argv.slice(2));
@@ -139,15 +201,16 @@ function work(flags) {
         // runOne, not an inline fork: every branch in this project is released by the same code
         // that took it, and architecture.test.js enforces that.
         const t = await runOne({ adapter, checkpoint, pkg: job.pkg, version: job.version, strategy });
-        index.put(job.pkg, t);
+        // The mark travels with the entry, not with the run. See index/schema.js.
+        index.put(job.pkg, { ...t, simulated });
         indexed++;
         const quiet = CHANNELS.every((c) => !Array.isArray(t[c]) || t[c].length === 0);
         console.log(`  ${quiet ? C.green + 'quiet' : C.amber + 'acts '}${C.off} ${label}`);
       } else {
         const { before, after } = await runPair({ adapter, checkpoint, ...job, strategy });
         // Written immediately. An index that only persists at the end loses everything to one hang.
-        index.put(job.pkg, before);
-        index.put(job.pkg, after);
+        index.put(job.pkg, { ...before, simulated });
+        index.put(job.pkg, { ...after, simulated });
         indexed += 2;
         const moved = JSON.stringify(stripVolatile(before)) !== JSON.stringify(stripVolatile(after));
         console.log(`  ${moved ? C.amber + 'moved' : C.green + 'same '}${C.off} ${label}`);
