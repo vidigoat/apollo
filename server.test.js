@@ -218,6 +218,38 @@ const json = async (p) => (await get(p)).json();
     }
   });
 
+  await it('everything the server reads at runtime is in the deployed bundle', () => {
+    /*
+     * Vercel traces what a function `require`s. It cannot see `fs.readFile(path.join(PUBLIC, rel))`
+     * — that path is assembled at runtime — so every directory this server reads off disk has to be
+     * named in `includeFiles` or it is simply absent in production.
+     *
+     * The failure is invisible locally and total when hosted: the page 404s on its own stylesheet
+     * and a judge opening the demo URL sees unstyled text. Nebius asks for a working demo URL, and
+     * a demo URL showing something the repository does not do is worse than no demo URL.
+     *
+     * `index/data` is deliberately NOT here. It is gitignored — a published index is its own
+     * artefact, see PLAN.md — so the hosted fleet page answers from the committed scan's own
+     * recorded index size and says so.
+     */
+    const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, 'vercel.json'), 'utf8'));
+    const included = cfg.functions?.['api/index.js']?.includeFiles || '';
+    const src = fs.readFileSync(path.join(__dirname, 'server.js'), 'utf8');
+
+    for (const dir of ['public', 'judge/verdicts']) {
+      assert.ok(
+        included.includes(dir),
+        `server.js reads ${dir}/ at runtime but vercel.json does not ship it`
+      );
+    }
+    // And the bundled fleet scan really is in the directory that gets shipped.
+    assert.ok(src.includes("'fleet-demo.json'"), 'the fallback scan is no longer read from PUBLIC');
+    assert.ok(
+      fs.existsSync(path.join(__dirname, 'public', 'fleet-demo.json')),
+      'the hosted demo has no scan to fall back to'
+    );
+  });
+
   await it('the server is a plain handler, so a host can serve the same code', () => {
     // Nebius requires a working demo URL. The hosted deployment imports this exact function rather
     // than a second copy — a demo URL showing something the repository does not do is worse than no

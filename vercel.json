@@ -10,7 +10,7 @@
     "api/index.js": {
       "memory": 512,
       "maxDuration": 30,
-      "includeFiles": "judge/verdicts/**"
+      "includeFiles": "{public,judge/verdicts}/**"
     }
   }
 }

@@ -893,7 +893,7 @@ npm test
 ```
 
 ```
-27 suites · 335 checks
+27 suites · 336 checks
 all green
 ```
 
