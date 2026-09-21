@@ -84,37 +84,46 @@ Three surfaces, one engine. The index is the moat; everything else is a thin cli
 
 ---
 
-## 3. The economics, before we promise anything
+## 3. The economics — rewritten 21 Sep, and the constraint is gone
 
-This bounds the plan, so it goes near the top rather than in a footnote.
+The first version of this section sized the index at ~1,000 packages because sandbox time looked
+like it would eat the credits. Nebius's own console says otherwise:
 
-```
-measured, 20 Sep          a full judgement run   9 Nemotron calls   $0.0077
-                          second run (cached)    0 calls            $0.0000
-                          model spend so far     171 calls          $0.1410
+> **Free while in beta — runs don't consume your credits.**
 
-estimated, unverified     one sandbox fork       ~$0.015  (placeholder — pricing.js
-                                                  labels every figure derived from it "est.")
-                          one package-pair       2 forks  ~$0.03
-```
-
-Free credits available: **$25** (code `NEBIUS-DEVPOST-GLOBAL26`) **+ $25** (Builders Program) = **$50**.
+So **sandbox compute is not a cost constraint at all.** What bounds the index now is wall-clock
+time and the documented beta limits, which is a far better problem:
 
 ```
-index size        sandbox cost (est.)      verdict
-  500 packages    ~$15                     comfortable
-1,000 packages    ~$30                     feasible, most of the budget
-5,000 packages    ~$150                    NOT possible on free credits
+50 concurrent operations          documented limit — "contact us if you need it lifted"
+180 days checkpoint retention     far longer than this hackathon
 ```
 
-**So the deliverable is an index of roughly 1,000 packages, not "all of npm".** That is still 12×
-the current 82, it covers the overwhelming majority of real lockfile mass (the top 1,000 sit under
-almost everything), and it is honest. The README will say "1,000 packages" and "all of npm" will
-appear only under *what's next*, where it belongs.
+At 50 concurrent forks, a package-pair taking ~40s means roughly **4,500 package-pairs an hour**.
+The binding constraint is now how long we are willing to let it run, not what it costs.
 
-Model spend is a rounding error by comparison and is not a constraint.
+```
+index size        time at 50 concurrent      verdict
+  1,000 pkgs      ~15 min                    trivial
+  5,000 pkgs      ~70 min                    comfortable
+ 20,000 pkgs      ~4.5 hrs                   an overnight run
+```
 
----
+**Revised target: 5,000 packages, stretch 20,000.** That is 60× the current survey, and at 20,000
+it is a genuine behavioural map of the part of npm that matters.
+
+### Model spend is the only thing that costs money, and it is tiny
+
+```
+measured, 20–21 Sep       a full judgement run    9 Nemotron calls   $0.0077
+                          second run (cached)     0 calls            $0.0000
+                          total spend to date     171 calls          $0.1410
+```
+
+**Credit warning.** The console on 21 Sep reads **`Trial: $0.85 · 25 days`**. That is the original
+$1 trial minus our $0.14 of spend — which means **the $25 promo code never actually applied**. It
+is not urgent, because the index is free and judgement is pennies, but it should be chased: see
+`docs/NEEDS.md`.
 
 ## 4. Phases
 
@@ -147,7 +156,7 @@ with no Sandboxes, no hosting, and no auth.
 
 ### Phase 2 · The index at scale (29 Sep – 12 Oct, in fragments)
 
-- Package selection: top ~1,000 by download count, taken from the registry, **published as a list
+- Package selection: top ~5,000 by download count, taken from the registry, **published as a list
   with the query that produced it** so nobody has to trust our sampling.
 - Adjacent-version pairs derived by `npm run pairs` — already built, already enforces
   publication-order adjacency, forward semver, at most one major apart.
@@ -157,7 +166,7 @@ with no Sandboxes, no hosting, and no auth.
   ceiling, pre-flight, fails closed. It stops before the credits do.
 - Output: `index/` — static JSON, servable from anywhere, plus a single manifest with the revision.
 
-**Done when:** the index holds ≥500 packages, `stakeout check` resolves against it without a
+**Done when:** the index holds ≥2,000 packages, `stakeout check` resolves against it without a
 network call to us, and re-running the builder costs nothing for packages already done.
 
 **Sandboxes dependency:** see §6. There is a fallback and it is not fatal.
@@ -223,7 +232,7 @@ A plan without this is a wish list. When time runs out, in this order:
 ```
 1st to go    the index browser UI      the index still exists and the CLI still uses it
 2nd          stakeout.dev entirely     the GitHub App is the better demo anyway
-3rd          index size 1,000 → 300    still 4× the current survey, still honest
+3rd          index size 5,000 → 500    still 6× the current survey, still honest
 4th          the GitHub App            falls back to the CLI plus a recorded run
 NEVER cut    stakeout.lock + check     without the primitive this is a demo again
 NEVER cut    the honesty machinery     labelled estimates, canSee caveats, the absence tests
@@ -244,8 +253,9 @@ packages, and it is the strategy that produced every finding we have. It is slow
 per entry, so nothing silently overclaims. **This is not fatal.** It changes the index from
 "kernel-level" to "runtime-level" and the honesty machinery already handles saying so.
 
-**The index run exceeds free credits.** → The cost governor stops it first, and 300 packages is a
-perfectly good index. Sized deliberately in §3.
+**The index run takes longer than expected.** Sandboxes are free in beta, so cost is no longer the
+limit — wall clock and the 50-concurrent cap are. → The builder is resumable and content-addressed,
+so it can be stopped and restarted across days, and 500 packages is already a perfectly good index.
 
 **A package does something destructive when run.** → Sandboxes are isolated; locally, `nodert`
 already requires `STAKEOUT_ALLOW_LOCAL=1` and warns that it executes packages as you. The hosted
@@ -282,7 +292,7 @@ These are what "10×" means in numbers rather than adjectives.
 
 ```
                              today          target        floor (acceptable)
-index size                   0              1,000 pkgs    300 pkgs
+index size                   0              5,000 pkgs    500 pkgs
 repos it can check           0              unlimited     1 real repo, live
 surfaces                     1 page         CLI+App+web   CLI + App
 Nemotron                     live ✓         live ✓        live ✓
