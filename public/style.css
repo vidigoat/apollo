@@ -288,3 +288,23 @@ footer { max-width: 1120px; margin: 0 auto; padding: 22px 24px; border-top: 1px 
  * not break on its own, so a long one scrolls inside its own block rather than widening the page.
  */
 .catch__transcript, .blind__probe, .diagram { max-width: 100%; }
+
+/*
+ * The way to the other surface.
+ *
+ * A bar rather than a link in the prose, because this page is a demo somebody is being walked
+ * through and the second surface is a different question, not a footnote to this one.
+ */
+.ways {
+  display: flex;
+  gap: 18px;
+  align-items: baseline;
+  padding: 11px clamp(16px, 4vw, 56px);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.ways__here { color: var(--silver); }
+.ways__here::before { content: "▸ "; color: var(--dim); }
+.ways__to { color: var(--dim); text-decoration: none; border-bottom: 1px solid transparent; }
+.ways__to:hover { color: var(--silver); border-bottom-color: var(--quiet); }

@@ -79,7 +79,10 @@ body {
   text-decoration: none;
 }
 .wordmark:hover { color: #fff; }
-.bar__where { color: var(--dim); }
+.bar__back { color: var(--dim); text-decoration: none; border-bottom: 1px solid transparent; font-size: 12px; }
+.bar__back:hover { color: var(--bone); border-bottom-color: var(--rule-lit); }
+.bar__where { color: var(--bone); font-size: 12px; }
+.bar__where::before { content: "▸ "; color: var(--faint); }
 .bar__meta { color: var(--faint); font-size: 12px; }
 
 /* ── empty ────────────────────────────────────────────────────────────────── */
