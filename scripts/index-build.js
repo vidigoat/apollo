@@ -106,11 +106,24 @@ function work(flags) {
     const fleet = JSON.parse(fs.readFileSync(flags['from-fleet'], 'utf8'));
     const shared = new Map();
 
+    /*
+     * Project directories in a scan are relative to its root, so that a scan can be committed
+     * without writing somebody's home directory into it. Resolving them is not optional: joining
+     * the relative path directly made every lockfile read fail, the ranking came back empty, and
+     * the builder reported "0 package-pairs" and exited 0 — a silent no-op that looks like success.
+     */
+    const root = fleet.root && fleet.root !== '(withheld)' ? fleet.root : null;
+    if (!root) {
+      console.error('\n  That scan is portable — it has counts and no paths, so there is nothing here to build from.');
+      console.error('  Re-run scripts/fleet-scan.js without --portable.\n');
+      process.exit(3);
+    }
+
     for (const repo of fleet.repos) {
-      if (!repo.dir) continue; // a redacted scan carries counts but no paths, so it cannot be built from
+      if (!repo.dir) continue;
       let versions;
       try {
-        ({ versions } = parseLockfile(fs.readFileSync(path.join(repo.dir, 'package-lock.json'), 'utf8')));
+        ({ versions } = parseLockfile(fs.readFileSync(path.resolve(root, repo.dir, 'package-lock.json'), 'utf8')));
       } catch {
         continue; // already reported as unreadable by the scan
       }

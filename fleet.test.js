@@ -216,4 +216,38 @@ it('an empty tree scans to zero rather than throwing', () => {
   assert.equal(fleet.totals.distinct, 0);
 });
 
+/* ── a scan you can commit ────────────────────────────────────────────────── */
+
+it('project directories are relative to the scan root, not absolute', () => {
+  /*
+   * So a scan of a public repository can be committed without writing somebody's home directory
+   * into it. Every count survives; what goes is the line that says whose laptop this was.
+   */
+  const { root, index } = fixture({ a: [['lodash', '4.17.21']] });
+  const [repo] = scanFleet(root, { index }).repos;
+  assert.ok(!path.isAbsolute(repo.dir), `dir is absolute: ${repo.dir}`);
+  assert.equal(repo.dir, 'a');
+});
+
+it('a portable scan keeps its counts and drops its root', () => {
+  const { root, index } = fixture({ a: [['lodash', '4.17.21'], ['chalk', '5.3.0']] });
+  const fleet = scanFleet(root, { index, portable: true });
+  assert.equal(fleet.root, null);
+  assert.equal(fleet.describes, path.basename(root));
+  assert.equal(fleet.totals.depVersions, 2, 'the counts did not survive');
+  assert.ok(!JSON.stringify(fleet).includes(root), 'the root leaked into the scan anyway');
+});
+
+it('anything that reads a scan resolves dirs against its root', () => {
+  /*
+   * This is not a style point. `--from-fleet` joined the relative path directly, so every lockfile
+   * read failed, the ranking came back empty, and the index builder reported "0 package-pairs" and
+   * exited 0 — a silent no-op that reads as success in a log.
+   */
+  const { root, index } = fixture({ a: [['lodash', '4.17.21']] });
+  const fleet = scanFleet(root, { index });
+  const resolved = path.resolve(fleet.root, fleet.repos[0].dir, 'package-lock.json');
+  assert.ok(fs.existsSync(resolved), 'a scan\'s own paths do not resolve against its own root');
+});
+
 console.log(`\n${passed} passed`);
