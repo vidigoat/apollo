@@ -75,4 +75,25 @@ it('it still states the limitation it is easiest to quietly drop', () => {
   assert.match(README, /not a clean-room audit/i);
 });
 
+it('every file the judging map points at is really there', () => {
+  /*
+   * This one rotted silently and badly. `docs/JUDGING.md` is the first thing a reviewer opens, and
+   * it pointed at `orchestrator.js`, `orchestrator.test.js`, `scenarios/index.js` and a
+   * `contree.js` that had all been renamed or removed in an earlier restructure — four dead ends in
+   * the first two tables. A map to files that do not exist is worse than no map: it spends a
+   * reviewer's goodwill before they have seen anything.
+   *
+   * README.md is checked the same way elsewhere in this file. There was no reason the document
+   * written FOR reviewers should have been the unchecked one.
+   */
+  const map = fs.readFileSync(path.join(__dirname, 'docs', 'JUDGING.md'), 'utf8');
+  const named = [...map.matchAll(/`([a-zA-Z][a-zA-Z0-9_/.-]*\.(?:js|md|json|css|html))`/g)]
+    .map((m) => m[1]);
+
+  const missing = [...new Set(named)].filter(
+    (f) => !fs.existsSync(path.join(__dirname, f)) && !fs.existsSync(path.join(__dirname, 'docs', f))
+  );
+  assert.deepEqual(missing, [], `docs/JUDGING.md points at files that do not exist: ${missing.join(', ')}`);
+});
+
 console.log(`\n${passed} passed`);
