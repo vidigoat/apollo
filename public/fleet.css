@@ -200,9 +200,22 @@ body {
 
 .foot { margin-top: 28px; color: var(--faint); font-size: 12px; max-width: 74ch; }
 
+/*
+ * A table may be wider than a phone. The page may not.
+ *
+ * Measured at 400px, the register ran to 438 and took the whole document with it — every section
+ * on the page then scrolled sideways to accommodate one table. The fixed character widths are what
+ * did it: 8ch + 8ch + 14ch plus a name column does not fit, and `display: none` on the coverage
+ * column was not enough to save it.
+ */
+.scroller { overflow-x: auto; }
+
 @media (max-width: 720px) {
   .reg__bar { display: none; }
   .reg tbody td:nth-child(4) { display: none; }
+  /* Let the remaining columns size to their content rather than to a character count. */
+  .reg__num, .reg__state { width: auto; }
+  .reg thead th, .reg tbody td { padding-left: 8px; padding-right: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
