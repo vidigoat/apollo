@@ -5,3 +5,8 @@ node_modules/
 .DS_Store
 /tmp/
 dist/
+
+# The built index. Large, machine-generated, and rebuildable with `npm run index:build`.
+# A published index is a deliberate artefact — see PLAN.md — not something that rides along
+# in every commit.
+index/data/

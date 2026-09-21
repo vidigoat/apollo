@@ -17,6 +17,9 @@
     "preflight": "node scripts/preflight.js",
     "lockfile": "node scripts/lockfile-run.js",
     "survey": "node scripts/survey.js",
+    "index:build": "node scripts/index-build.js",
+    "lock": "node cli.js lock",
+    "check": "node cli.js check",
     "warm-cache": "node scripts/warm-cache.js",
     "pairs": "node scripts/pairs.js",
     "validate-prompt": "node scripts/validate-prompt.js",
@@ -29,5 +32,8 @@
     "sandboxes",
     "nemotron",
     "behavioural-diff"
-  ]
+  ],
+  "bin": {
+    "stakeout": "./cli.js"
+  }
 }

@@ -1,0 +1,184 @@
+#!/usr/bin/env node
+/**
+ * Build the behavioural index.
+ *
+ *   STAKEOUT_ALLOW_LOCAL=1 node scripts/index-build.js --limit 20
+ *   node scripts/index-build.js --from-survey        # seed from pairs already surveyed
+ *
+ * This is the thing that makes every other surface possible. Run a package ONCE, here, and
+ * `stakeout lock` in somebody else's repository becomes a lookup rather than a sandbox run. The
+ * expensive work happens in one place and the answer is reusable by everyone — which is the only
+ * definition of "scale" that means anything for this project.
+ *
+ * ── Resumable, because it will be interrupted ───────────────────────────────
+ *
+ * At the target size this runs for hours. It will be killed, the laptop will sleep, a package will
+ * hang. So: every entry is written the moment it is known, nothing is held in memory until the end,
+ * and a package already in the index is skipped unless `--force`. Stopping and restarting costs
+ * only the package that was in flight.
+ *
+ * ── Which strategy, and why it is recorded ──────────────────────────────────
+ *
+ * Today this runs `nodert` locally: really installing and importing real packages, watched through
+ * Node's own API surface. That is weaker than a kernel tracer — a native addon goes underneath it —
+ * and the index records the strategy on every entry so nothing silently overclaims. When Sandboxes
+ * beta access arrives, the same builder points at ConTree and entries observed there say so.
+ *
+ * ── Safety ──────────────────────────────────────────────────────────────────
+ *
+ * Running strangers' packages executes their install scripts as you. `adapters/local.js` refuses
+ * without `STAKEOUT_ALLOW_LOCAL=1` for exactly that reason, and that refusal is deliberate: this
+ * project's whole subject is packages doing things you did not expect.
+ */
+
+require('../env').loadEnv();
+
+const fs = require('node:fs');
+const path = require('node:path');
+const { Index, CHANNELS } = require('../index/schema');
+const { runPair, runOne } = require('../runPair');
+const { bestStrategy } = require('../observe');
+const { LocalMachines } = require('../adapters/local');
+const { SimulatedSandboxes } = require('../adapters/simulated');
+const { PAIRS } = require('./survey');
+const { lockfileOnDisk } = require('../lockfile');
+
+const C = process.stdout.isTTY
+  ? { red: '\x1b[31m', green: '\x1b[32m', amber: '\x1b[33m', dim: '\x1b[2m', bold: '\x1b[1m', off: '\x1b[0m' }
+  : { red: '', green: '', amber: '', dim: '', bold: '', off: '' };
+
+function parseArgs(argv) {
+  const flags = {};
+  for (let i = 0; i < argv.length; i++) {
+    if (!argv[i].startsWith('--')) continue;
+    const [k, inline] = argv[i].slice(2).split('=');
+    flags[k] = inline ?? (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : true);
+  }
+  return flags;
+}
+
+/**
+ * Which packages to index, and at which versions.
+ *
+ * `--from-survey` uses the 82 pairs already verified against the registry by `npm run pairs` —
+ * every one real, published, and adjacent in publication order. That is the honest seed: it means
+ * the first index is built from a list somebody already checked rather than one we invented.
+ */
+function work(flags) {
+  /*
+   * `--from-lockfile <path>` indexes exactly what one repository depends on.
+   *
+   * This is the product flow rather than a convenience. The survey list is ours, chosen by us, and
+   * a developer's answer to "does this cover MY tree" is almost always no. Pointing the builder at
+   * their own lockfile means the first thing they index is the thing they actually care about,
+   * and every package indexed that way is one more package everyone else gets for free.
+   *
+   * Single versions here, not pairs: a lockfile pins one version of each package, and what we need
+   * to know is what THAT version does. Drift is found later by re-checking, not by guessing which
+   * neighbouring version to compare against.
+   */
+  if (flags['from-lockfile']) {
+    const tree = lockfileOnDisk(flags['from-lockfile'], process.cwd());
+    const singles = [...tree.versions.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([pkg, version]) => ({ pkg, version, single: true }));
+    const limit = Number(flags.limit) || 0;
+    return limit ? singles.slice(0, limit) : singles;
+  }
+
+  const pairs = PAIRS.map(([pkg, from, to]) => ({ pkg, from, to }));
+  const limit = Number(flags.limit) || 0;
+  return limit ? pairs.slice(0, limit) : pairs;
+}
+
+(async () => {
+  const flags = parseArgs(process.argv.slice(2));
+  const index = new Index({ dir: flags.out || undefined });
+
+  const simulated = Boolean(flags.simulated);
+  const adapter = simulated ? new SimulatedSandboxes() : new LocalMachines();
+
+  if (!simulated && process.env.STAKEOUT_ALLOW_LOCAL !== '1') {
+    console.error(`\n  ${C.red}Refusing to run.${C.off}`);
+    console.error(`  ${C.dim}Building the index installs and imports real packages from the real registry,`);
+    console.error(`  as you, with your network and your files. Set STAKEOUT_ALLOW_LOCAL=1 if that is`);
+    console.error(`  what you meant — and read adapters/local.js first.`);
+    console.error(`  Or pass --simulated to exercise the pipeline without running anything.${C.off}\n`);
+    process.exit(3);
+  }
+
+  const jobs = work(flags);
+  const strategy = bestStrategy(adapter);
+
+  console.log(`\n  ${C.bold}building the behavioural index${C.off}`);
+  console.log(`  ${C.dim}${jobs.length} package-pairs · strategy "${strategy}"${simulated ? ' · SIMULATED' : ''}${C.off}`);
+  console.log(`  ${C.dim}${index.summary()}${C.off}\n`);
+
+  // `boot` prepares one healthy machine; every pair forks from that same instant, which is what
+  // makes any difference attributable to the package rather than to the machine.
+  const checkpoint = await adapter.boot();
+  let indexed = 0;
+  let skipped = 0;
+  let failed = 0;
+  const started = Date.now();
+
+  for (const [i, job] of jobs.entries()) {
+    const label = job.single ? `${job.pkg}@${job.version}` : `${job.pkg} ${job.from} → ${job.to}`;
+    const have = job.single
+      ? index.has(job.pkg, job.version)
+      : index.has(job.pkg, job.from) && index.has(job.pkg, job.to);
+
+    if (have && !flags.force) {
+      skipped++;
+      console.log(`  ${C.dim}skip  ${label}${C.off}`);
+      continue;
+    }
+
+    try {
+      if (job.single) {
+        // runOne, not an inline fork: every branch in this project is released by the same code
+        // that took it, and architecture.test.js enforces that.
+        const t = await runOne({ adapter, checkpoint, pkg: job.pkg, version: job.version, strategy });
+        index.put(job.pkg, t);
+        indexed++;
+        const quiet = CHANNELS.every((c) => !Array.isArray(t[c]) || t[c].length === 0);
+        console.log(`  ${quiet ? C.green + 'quiet' : C.amber + 'acts '}${C.off} ${label}`);
+      } else {
+        const { before, after } = await runPair({ adapter, checkpoint, ...job, strategy });
+        // Written immediately. An index that only persists at the end loses everything to one hang.
+        index.put(job.pkg, before);
+        index.put(job.pkg, after);
+        indexed += 2;
+        const moved = JSON.stringify(stripVolatile(before)) !== JSON.stringify(stripVolatile(after));
+        console.log(`  ${moved ? C.amber + 'moved' : C.green + 'same '}${C.off} ${label}`);
+      }
+    } catch (e) {
+      failed++;
+      // One package that will not install must never end the run. It is recorded as absent, which
+      // is honest, and `stakeout check` reports absent as "unknown" rather than as clean.
+      console.log(`  ${C.red}fail ${C.off} ${label} ${C.dim}${String(e.message).split('\n')[0].slice(0, 70)}${C.off}`);
+    }
+
+    if ((i + 1) % 10 === 0) index.writeManifest({ note: 'build in progress' });
+  }
+
+  const manifest = index.writeManifest({
+    note: simulated ? 'SIMULATED — not a real observation' : `built locally with ${strategy}`,
+  });
+
+  const secs = Math.round((Date.now() - started) / 1000);
+  console.log(`\n  ${C.green}${manifest.packages} packages · ${manifest.versions} versions${C.off}`);
+  console.log(`  ${C.dim}${indexed} written, ${skipped} already present, ${failed} failed · ${secs}s${C.off}`);
+  console.log(`  ${C.dim}strategies: ${manifest.strategies.join(', ')} · revision ${manifest.revision}${C.off}\n`);
+
+  if (failed) {
+    console.log(`  ${C.dim}Failures are absent from the index, not recorded as quiet. \`stakeout check\``);
+    console.log(`  reports them as "unknown", which is the honest answer.${C.off}\n`);
+  }
+})();
+
+/** Timing and pids differ between two runs of the same thing and are not behaviour. */
+function stripVolatile(t) {
+  const { timing, result, version, observedAt, ...rest } = t;
+  return rest;
+}
