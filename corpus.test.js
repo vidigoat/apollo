@@ -167,11 +167,30 @@ const planted = (id) => CHANGED.find((c) => c.planted === id);
   });
 
   await it('the run is deterministic — the same corpus twice gives the same answer', async () => {
+    /*
+     * BEHAVIOUR is compared, not the wall clock.
+     *
+     * `diff.timing.importDeltaMs` is a measured difference in milliseconds between the two imports.
+     * It is almost always 0 here and occasionally 1, because a machine under load schedules the two
+     * runs a millisecond apart — and this test compared it as though it were a finding. It failed
+     * about one run in twelve, only ever inside the full suite, which is the worst possible shape
+     * for a flake: green in isolation, red in front of whoever runs `npm test` once.
+     *
+     * The claim is that the same corpus gives the same ANSWER. A millisecond of scheduler noise is
+     * not an answer, so it is dropped here rather than removed from the diff — on a real run that
+     * number is a genuine signal, and a package that suddenly imports four hundred milliseconds
+     * slower is worth somebody's attention.
+     */
+    const behaviour = (r) => r.results.map(({ diff }) => {
+      const { timing, ...rest } = diff;
+      return rest;
+    });
+
     const one = await runAll({ adapter: new SimulatedSandboxes(), changed: CHANGED });
     const two = await runAll({ adapter: new SimulatedSandboxes(), changed: CHANGED });
     assert.equal(
-      JSON.stringify(one.results.map((p) => p.diff)),
-      JSON.stringify(two.results.map((p) => p.diff)),
+      JSON.stringify(behaviour(one)),
+      JSON.stringify(behaviour(two)),
       'a demo that differs between runs cannot be checked by anyone'
     );
   });
