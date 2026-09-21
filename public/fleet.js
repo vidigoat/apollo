@@ -310,9 +310,29 @@ async function load() {
   if (observations) {
     $('obs').textContent = num(observations);
     $('answered').textContent = num(t.known);
-    $('reuse').textContent = `${(t.known / observations).toFixed(1)}`;
+
+    /*
+     * "Questions settled per package actually run" is only a reuse figure when the index was built
+     * FOR this tree. On the bundled turborepo scan it came out at 0.9 — because most of that index
+     * exists for seventy-six other projects — and a number below one reads as "the index is barely
+     * worth having" on the first screen a reviewer sees. It is not a fact about the index; it is a
+     * fact about which tree you happened to point it at.
+     *
+     * So below 1.5 the sentence changes to the thing that IS true of this tree: how much of it the
+     * index answers.
+     */
+    const ratio = t.known / observations;
+    if (ratio >= 1.5) {
+      $('reuse').textContent = ratio.toFixed(1);
+    } else {
+      const pct = Math.round((t.known / t.depVersions) * 100);
+      $('reuseLine').innerHTML =
+        `<b>${num(observations)}</b> observations in the index answer <b>${num(t.known)}</b> of them ` +
+        `&mdash; <b>${pct}%</b> of this tree. Most of that index was built for other projects, which ` +
+        `is the point of it being central.`;
+    }
   } else {
-    $('obs').closest('.claim__line').hidden = true;
+    $('reuseLine').hidden = true;
   }
 
   // Position in the scan is how a project is addressed — the server will not take a path.
