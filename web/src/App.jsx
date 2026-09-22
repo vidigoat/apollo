@@ -1,0 +1,138 @@
+import { useEffect, useState } from 'react';
+import { motion, useScroll, useSpring } from 'motion/react';
+import Hero from './sections/Hero.jsx';
+import Run from './sections/Run.jsx';
+import Fleet from './sections/Fleet.jsx';
+import How from './sections/How.jsx';
+import Check from './sections/Check.jsx';
+import Limits from './sections/Limits.jsx';
+import { tree, fleet, num } from './lib/api.js';
+
+const SECTIONS = [
+  ['top', 'stakeout'],
+  ['run', 'the run'],
+  ['check', 'on the pull request'],
+  ['fleet', 'the fleet'],
+  ['how', 'how it works'],
+  ['limits', 'limits'],
+];
+
+export default function App() {
+  const [meta, setMeta] = useState(null);
+  const [scan, setScan] = useState(null);
+  const [here, setHere] = useState('top');
+
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 28, restDelta: 0.001 });
+
+  useEffect(() => {
+    // Both are optional. If the server cannot answer, the elements that would have held those
+    // numbers are simply not rendered — a page that prints a fallback figure is a page that lies
+    // quietly on the day the API breaks.
+    tree().then(setMeta).catch(() => {});
+    fleet().then(setScan).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const seen = new Map();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) seen.set(e.target.id, e.intersectionRatio);
+        const best = [...seen.entries()].sort((a, b) => b[1] - a[1])[0];
+        if (best && best[1] > 0) setHere(best[0]);
+      },
+      { threshold: [0, 0.15, 0.4, 0.7, 1] }
+    );
+    for (const [id] of SECTIONS) {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    }
+    return () => io.disconnect();
+  }, [meta, scan]);
+
+  return (
+    <>
+      {/* How far down the record you have read. One hairline, at the very top. */}
+      <motion.div
+        style={{
+          scaleX: progress,
+          transformOrigin: '0 50%',
+          position: 'fixed',
+          insetInline: 0,
+          top: 0,
+          height: 1,
+          background: 'var(--watched)',
+          zIndex: 50,
+        }}
+      />
+
+      <nav aria-label="sections">
+        <ul className="spine">
+          {SECTIONS.map(([id, label]) => (
+            <li key={id}>
+              <button
+                className="spine__item"
+                data-on={here === id}
+                onClick={() => document.getElementById(id)?.scrollIntoView({ block: 'start' })}
+              >
+                <span className="spine__tick" aria-hidden="true" />
+                <span className="spine__label">{label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <main>
+        <Hero />
+
+        {meta && (
+          <div className="wrap" style={{ paddingBottom: 'clamp(40px, 7vh, 80px)' }}>
+            <dl className="slate">
+              <div>
+                <dt>dependency tree</dt>
+                <dd>{num(meta.total)}</dd>
+              </div>
+              <div>
+                <dt>versions that moved</dt>
+                <dd>{num(meta.moved)}</dd>
+              </div>
+              <div>
+                <dt>re-run</dt>
+                <dd>
+                  {num(meta.moved)} <small>not {num(meta.unchanged)}</small>
+                </dd>
+              </div>
+              {scan?.index && (
+                <div>
+                  <dt>observations held</dt>
+                  <dd>{num(scan.index.versions)}</dd>
+                </div>
+              )}
+              <div className="wide">
+                <dt>judged by</dt>
+                <dd>Nemotron 3 — Nano 30B, then Ultra 550B, then Super 120B as a veto</dd>
+              </div>
+              <div className="wide">
+                <dt>running on</dt>
+                <dd>Nebius Token Factory · open source, MIT</dd>
+              </div>
+            </dl>
+          </div>
+        )}
+
+        <Run strategies={meta?.strategies || []} />
+        <Check />
+        {scan && <Fleet data={scan} />}
+        <How />
+        <Limits />
+      </main>
+
+      <footer className="wrap">
+        <span>Stakeout — a behavioural lockfile</span>
+        <span>Nebius × NVIDIA · Coding &amp; Agentic Engineering</span>
+        <a href="https://github.com/vidigoat/cassandra">the source</a>
+      </footer>
+    </>
+  );
+}

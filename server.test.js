@@ -1,18 +1,18 @@
 /**
  * The API contract.
  *
- * There is a gap that no other suite covers. `public/ui.test.js` drives the real interface, but it
- * builds the payload itself — so if the server stops sending a field the page reads, the interface
- * test still passes and the page silently renders a blank. That is exactly the failure that only
- * shows up in front of an audience.
+ * There is a gap that no other suite covers. `ui.test.js` drives the interface, but it builds the
+ * payload itself — so if the server stops sending a field the page reads, the interface test still
+ * passes and the page silently renders a blank. That is exactly the failure that only shows up in
+ * front of an audience.
  *
  * So this runs the actual server over actual HTTP and checks two things:
  *
- *   1. Every `result.<field>` that app.js reads is really in the response.
+ *   1. Every `data.<field>` the run section reads is really in the response.
  *   2. Every per-package field the renderer touches is on every pair.
  *
- * The first is derived from app.js rather than typed out, so adding a field to the page and
- * forgetting to send it fails here instead of on stage.
+ * The first is derived from the component's own source rather than typed out, so adding a field to
+ * the page and forgetting to send it fails here instead of on stage.
  *
  * Run: node server.test.js
  */
@@ -24,7 +24,8 @@ const { spawn } = require('node:child_process');
 
 const PORT = 8794;
 const BASE = `http://localhost:${PORT}`;
-const APP = fs.readFileSync(path.join(__dirname, 'public', 'app.js'), 'utf8');
+// The section that renders a run. Derived from, rather than a copy of, what the page needs.
+const APP = fs.readFileSync(path.join(__dirname, 'web', 'src', 'sections', 'Run.jsx'), 'utf8');
 
 let passed = 0;
 const it = async (name, fn) => {
@@ -65,9 +66,9 @@ const json = async (p) => (await get(p)).json();
     assert.ok(tree.moved > 0 && tree.moved < tree.total);
   });
 
-  await it('every top-level field app.js reads is actually sent', () => {
+  await it('every top-level field the run section reads is actually sent', () => {
     // Derived from the source, so a new field on the page cannot be forgotten here.
-    const read = [...APP.matchAll(/\bresult\.([a-zA-Z]+)/g)].map((m) => m[1]);
+    const read = [...APP.matchAll(/\bdata\.([a-zA-Z]+)/g)].map((m) => m[1]);
     const wanted = [...new Set(read)];
     assert.ok(wanted.length >= 5, `only found ${wanted.length} fields — the scan is probably broken`);
     const missing = wanted.filter((f) => !(f in run));
@@ -132,14 +133,19 @@ const json = async (p) => (await get(p)).json();
   });
 
   await it('the page and its assets are served', async () => {
-    for (const [p, type] of [['/', 'text/html'], ['/app.js', 'text/javascript'], ['/style.css', 'text/css']]) {
+    // The built site if there is one, and the data file both it and the API read either way.
+    const built = fs.existsSync(path.join(__dirname, 'dist', 'index.html'));
+    const want = built
+      ? [['/', 'text/html'], ['/fleet-demo.json', 'application/json']]
+      : [['/fleet-demo.json', 'application/json']];
+    for (const [p, type] of want) {
       const r = await get(p);
       assert.equal(r.status, 200, `${p} returned ${r.status}`);
       assert.match(r.headers.get('content-type'), new RegExp(type));
     }
   });
 
-  await it('it will not serve files outside public/', async () => {
+  await it('it will not serve files outside the roots it was given', async () => {
     for (const p of ['/../server.js', '/../../etc/passwd', '/..%2fserver.js']) {
       const r = await get(p);
       assert.ok(r.status === 403 || r.status === 404, `${p} returned ${r.status}`);
@@ -283,6 +289,26 @@ const json = async (p) => (await get(p)).json();
 
     for (const kept of ['.env', 'local/', 'index/data/']) {
       assert.ok(lines.includes(kept), `${kept} is gitignored but would still be uploaded to a public URL`);
+    }
+  });
+
+  await it('the built site is committed, so a fresh clone can just start it', () => {
+    /*
+     * `dist/` is a build artefact and committing one is normally a smell. It is committed here for
+     * a specific reason: the README promises `npm install && npm start` with nothing to install and
+     * nothing to build, and a judge who clones this at 1am should get the site, not a blank page and
+     * an instruction to go and install a toolchain first. The tool keeps its promise; the website
+     * pays for it by being checked in.
+     */
+    const index = path.join(__dirname, 'dist', 'index.html');
+    assert.ok(fs.existsSync(index), 'dist/index.html is missing — `npm start` after a clone shows nothing');
+
+    const html = fs.readFileSync(index, 'utf8');
+    for (const ref of [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+)"/g)].map((m) => m[1])) {
+      assert.ok(
+        fs.existsSync(path.join(__dirname, 'dist', ref)),
+        `the built page asks for ${ref}, which was not committed`
+      );
     }
   });
 

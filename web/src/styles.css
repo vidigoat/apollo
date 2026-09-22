@@ -1,0 +1,656 @@
+/*
+ * ── Stakeout ────────────────────────────────────────────────────────────────
+ *
+ * The register of an evidence log, at night.
+ *
+ * The subject is surveillance: something is being watched precisely because it looks still. So the
+ * page is mostly quiet, mostly unsaturated, ruled rather than boxed — and exactly one colour in it
+ * is loud. `--drift` never appears except where a dependency changed behaviour. If you see red on
+ * this page, something happened.
+ *
+ * Deliberately not used, and each for a reason:
+ *
+ *   cards            A card is a container for things that are alike. Findings are not alike —
+ *                    one of them matters and the rest are the silence that gives it weight.
+ *   drop shadows     Nothing here is floating above anything. Rules and hairlines instead.
+ *   gradient washes  Decoration that means nothing, in a project whose argument is that every
+ *                    mark should be evidence.
+ *   rounded corners  Past 3px they read as software-for-software. This is an instrument panel.
+ *   a second accent  --watched is a desaturated slate, not a rival to --drift. The moment two
+ *                    colours compete, neither one means anything.
+ */
+
+:root {
+  /* Ground. Ink with a blue cast — a tinted near-black (#0B0B0B, #111) is the tell of a page
+     that chose "dark" rather than chose a colour. */
+  --ink: #0a0f14;
+  --ink-2: #0d141b;
+  --raised: #111a22;
+  --rule: #1d2a35;
+  --rule-soft: #16212a;
+
+  --bone: #e6eaf0;
+  --dim: #7f8d9c;
+  --dimmer: #566370;
+
+  /* Observed, and unremarkable. The overwhelming majority of everything here. */
+  --watched: #82b4c2;
+  /* The only saturated colour on the page, and it has exactly one meaning. */
+  --drift: #e0574a;
+  /* Not watched. Never a fill — hatching, always, because absence is not a quantity.
+     Muted on purpose: at #b3873f it was saturated enough to compete with --drift, and the moment
+     two colours shout, neither of them means anything. */
+  --blind: #a08a5a;
+
+  --sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --cond: 'IBM Plex Sans Condensed', 'IBM Plex Sans', ui-sans-serif, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* A measured ladder rather than a multiplier — the sizes that survived being looked at. */
+  --t-hero: clamp(2.5rem, 4.6vw, 3.9rem);
+  --t-head: clamp(1.7rem, 3.2vw, 2.45rem);
+  --t-sub: 1.0625rem;
+  --t-body: 1rem;
+  --t-small: 0.8125rem;
+  --t-mono: 0.8125rem;
+
+  --gut: clamp(20px, 5vw, 56px);
+  --col: 68ch;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--bone);
+  font: 400 var(--t-body)/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01' 1;
+  overflow-x: hidden;
+}
+
+::selection { background: color-mix(in oklab, var(--watched) 35%, transparent); }
+
+a { color: inherit; text-underline-offset: 3px; text-decoration-color: var(--dimmer); }
+a:hover { text-decoration-color: var(--watched); }
+
+:focus-visible {
+  outline: 2px solid var(--watched);
+  outline-offset: 3px;
+}
+
+h1, h2, h3 { font-family: var(--cond); font-weight: 600; letter-spacing: -0.012em; margin: 0; }
+
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+/* ── the spine ─────────────────────────────────────────────────────────────
+ *
+ * The page index as a rail rather than a sticky header. A log has a margin, and this is it: which
+ * section you are in, and how far down the record you have read. Below 1180px it is gone — there
+ * is no room for a margin on a phone, and a horizontal pill bar would be a different design
+ * wearing this one's clothes.
+ */
+.spine {
+  position: fixed;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+@media (max-width: 1180px) { .spine { display: none; } }
+
+.spine__item {
+  display: grid;
+  grid-template-columns: 22px auto;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--dimmer);
+  font: 500 10px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  text-align: left;
+}
+.spine__tick {
+  display: block;
+  height: 1px;
+  width: 14px;
+  background: currentColor;
+  transition: width 220ms ease, background 220ms ease;
+}
+.spine__item:hover { color: var(--dim); }
+.spine__item[data-on='true'] { color: var(--bone); }
+.spine__item[data-on='true'] .spine__tick { width: 22px; background: var(--watched); }
+.spine__label { opacity: 0; transition: opacity 180ms ease; }
+.spine__item:hover .spine__label,
+.spine__item[data-on='true'] .spine__label { opacity: 1; }
+
+/* ── page furniture ──────────────────────────────────────────────────────── */
+
+.wrap {
+  width: min(1120px, 100% - var(--gut) * 2);
+  margin-inline: auto;
+}
+
+section { padding-block: clamp(72px, 11vh, 132px); }
+
+.eyebrow {
+  font: 500 var(--t-mono)/1 var(--mono);
+  color: var(--dim);
+  letter-spacing: 0.02em;
+  margin: 0 0 14px;
+}
+
+.lede {
+  max-width: var(--col);
+  color: var(--dim);
+  font-size: var(--t-sub);
+  margin: 14px 0 0;
+}
+.lede b, .lede strong { color: var(--bone); font-weight: 500; }
+.lede code { color: var(--bone); }
+
+.rule { height: 1px; background: var(--rule-soft); border: 0; margin: 0; }
+
+/* ── hero ──────────────────────────────────────────────────────────────────
+ *
+ * One orchestrated moment on load and nothing else moves by itself. The two lines are the same
+ * package at the same version; the evidence arrives underneath the second one. That IS the product,
+ * so it is the first thing, at the size of a headline, rather than a screenshot of it further down.
+ */
+.hero {
+  min-height: 100svh;
+  display: grid;
+  align-content: center;
+  gap: clamp(30px, 5vw, 64px);
+  padding-block: clamp(90px, 13vh, 140px) clamp(50px, 7vh, 88px);
+  position: relative;
+}
+
+/*
+ * The claim on the left, the evidence on the right, on one screen.
+ *
+ * Stacked, the exhibit fell below the fold on a laptop — so the first thing anybody saw was a
+ * sentence asking to be believed, with the proof one scroll away. Side by side, the headline and
+ * the thing it is describing are read in one movement, which is the entire pitch.
+ */
+@media (min-width: 1040px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    align-items: center;
+  }
+  .hero .exhibit { margin-top: 0; }
+}
+
+.hero__mark {
+  font: 600 var(--t-mono)/1 var(--mono);
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--watched);
+  margin: 0 0 clamp(26px, 5vh, 46px);
+}
+
+.hero h1 {
+  font-size: var(--t-hero);
+  line-height: 1.0;
+  max-width: 19ch;
+  margin: 0;
+}
+/*
+ * The second line is the payoff, so the second line is the bright one. It read the other way round
+ * at first — the setup in white and the point in grey — which is backwards.
+ */
+.hero h1 { color: var(--dim); }
+.hero h1 .quiet { color: var(--bone); display: block; }
+
+.hero__sub {
+  max-width: 58ch;
+  color: var(--dim);
+  font-size: var(--t-sub);
+  margin: clamp(22px, 3vh, 32px) 0 0;
+}
+
+.hero__scroll {
+  margin-top: clamp(34px, 6vh, 56px);
+  font: 500 var(--t-mono)/1 var(--mono);
+  color: var(--dimmer);
+  letter-spacing: 0.06em;
+}
+
+/* ── the exhibit: two identical lines, and what arrived under one of them ── */
+
+.exhibit {
+  margin-top: clamp(34px, 6vh, 58px);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: linear-gradient(var(--ink-2), var(--ink-2));
+  position: relative;
+  overflow: hidden;
+  max-width: 760px;
+}
+
+.exhibit__row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: baseline;
+  gap: 14px;
+  padding: 13px 18px;
+  font: 400 var(--t-mono)/1.4 var(--mono);
+  border-bottom: 1px solid var(--rule-soft);
+}
+.exhibit__row:last-child { border-bottom: 0; }
+.exhibit__gutter { color: var(--dimmer); }
+.exhibit__when { color: var(--dimmer); font-size: 0.8em; white-space: nowrap; }
+
+.exhibit__row--found {
+  background: color-mix(in oklab, var(--drift) 9%, transparent);
+  color: var(--drift);
+}
+.exhibit__row--found .exhibit__gutter { color: var(--drift); }
+.exhibit__row--found .exhibit__when { color: color-mix(in oklab, var(--drift) 72%, var(--bone)); }
+
+.exhibit__scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--watched), transparent);
+  pointer-events: none;
+}
+
+.exhibit__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: baseline;
+  padding: 12px 18px;
+  border-top: 1px solid var(--rule);
+  font: 500 var(--t-mono)/1.4 var(--mono);
+  color: var(--dim);
+}
+.exhibit__verdict b { color: var(--drift); font-weight: 600; }
+
+/* ── the slate: figures, in mono, arguable ────────────────────────────────── */
+
+/*
+ * Four across, so the two double-width rows fill their line exactly. On auto-fit the figures took
+ * six columns and the second row ended in a two-thirds-empty box, which reads as something failing
+ * to load rather than as a layout.
+ */
+.slate {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--rule-soft);
+  border: 1px solid var(--rule-soft);
+  margin: 0;
+}
+@media (min-width: 760px) { .slate { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.slate > div {
+  background: var(--ink);
+  padding: 16px 18px;
+  display: grid;
+  gap: 6px;
+}
+.slate dt {
+  font: 400 var(--t-small)/1 var(--sans);
+  color: var(--dimmer);
+}
+.slate dd {
+  margin: 0;
+  font: 500 1.45rem/1 var(--mono);
+  color: var(--bone);
+  font-variant-numeric: tabular-nums;
+}
+.slate dd small { font-size: 0.55em; color: var(--dim); letter-spacing: 0.02em; }
+.slate .wide { grid-column: span 2; }
+.slate .wide dd { font-size: 0.9rem; line-height: 1.4; color: var(--dim); }
+@media (max-width: 560px) { .slate .wide { grid-column: span 1; } }
+
+/* ── buttons ──────────────────────────────────────────────────────────────── */
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--bone);
+  background: var(--bone);
+  color: var(--ink);
+  font: 500 var(--t-small)/1 var(--sans);
+  letter-spacing: 0.01em;
+  padding: 12px 20px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+.btn:hover { background: var(--watched); border-color: var(--watched); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn--ghost { background: none; color: var(--bone); border-color: var(--rule); }
+.btn--ghost:hover { background: none; border-color: var(--watched); color: var(--watched); }
+
+.status {
+  font: 400 var(--t-mono)/1 var(--mono);
+  color: var(--dim);
+}
+
+/* ── the run: one mark per forked twin ────────────────────────────────────── */
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  margin-top: 28px;
+}
+
+.twins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 30px;
+}
+.pair { display: flex; gap: 2px; }
+.twin {
+  /* `flex: none` so a wrapping row cannot shrink a mark to nothing — each twin is one twin. */
+  flex: none;
+  display: block;
+  width: 10px;
+  height: 30px;
+  background: var(--rule);
+  border-radius: 1px;
+}
+.twin[data-state='quiet'] { background: color-mix(in oklab, var(--watched) 45%, var(--rule)); }
+.twin[data-state='moved'] { background: var(--watched); }
+.twin[data-state='drift'] { background: var(--drift); }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 18px;
+  font: 400 var(--t-mono)/1 var(--mono);
+  color: var(--dimmer);
+}
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 9px; height: 9px; display: block; border-radius: 1px; }
+
+/* ── findings ─────────────────────────────────────────────────────────────── */
+
+.findings { margin-top: 34px; border-top: 1px solid var(--rule-soft); }
+
+.finding {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 16px 18px;
+  /* `border: 0` first: without it a <button> keeps its user-agent border on the three sides this
+     rule does not name, and every row comes out in a box. */
+  border: 0;
+  border-bottom: 1px solid var(--rule-soft);
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  background: none;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+}
+.finding:hover { background: var(--ink-2); }
+.finding[data-severity='alarming'] { border-left-color: var(--drift); }
+.finding[data-severity='notable'] { border-left-color: var(--watched); }
+.finding[data-open='true'] { background: var(--ink-2); }
+
+.finding__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
+.finding__pkg { font: 500 var(--t-body)/1.3 var(--mono); }
+.finding__move { font: 400 var(--t-mono)/1.3 var(--mono); color: var(--dim); }
+.finding__sev {
+  margin-left: auto;
+  font: 500 var(--t-mono)/1 var(--mono);
+  color: var(--dim);
+}
+.finding[data-severity='alarming'] .finding__sev { color: var(--drift); }
+
+.finding__body { padding: 4px 0 6px; }
+.channel {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  overflow-wrap: anywhere;
+  gap: 12px;
+  padding: 6px 0;
+  font: 400 var(--t-mono)/1.5 var(--mono);
+  border-top: 1px solid var(--rule-soft);
+}
+.channel__name { color: var(--dimmer); }
+.channel__gained { color: var(--drift); }
+.channel__lost { color: var(--dim); text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.verdicts { margin-top: 12px; display: grid; gap: 10px; }
+.verdict {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  font-size: var(--t-small);
+  color: var(--dim);
+  padding-top: 10px;
+  border-top: 1px solid var(--rule-soft);
+}
+.verdict__who { font: 500 var(--t-mono)/1.5 var(--mono); color: var(--watched); white-space: nowrap; }
+.verdict--simulated .verdict__who { color: var(--blind); }
+
+/* ── the fleet band ───────────────────────────────────────────────────────── */
+
+.band {
+  margin-top: 30px;
+  border: 1px solid var(--rule-soft);
+  background: var(--ink-2);
+}
+.band canvas { display: block; width: 100%; height: 132px; }
+
+.coverage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 26px;
+  margin-top: 30px;
+}
+.coverage h3 { font-size: 1rem; margin-bottom: 6px; }
+.coverage p { margin: 0; color: var(--dim); font-size: var(--t-small); }
+
+/* ── how it works: the pipeline, as steps you can stop on ─────────────────── */
+
+.pipe { margin-top: 34px; display: grid; gap: 0; border-top: 1px solid var(--rule-soft); }
+
+.step {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: start;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+@media (max-width: 720px) {
+  .step { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .step__cost { justify-self: start; }
+}
+.step__who { font: 500 var(--t-mono)/1.5 var(--mono); color: var(--bone); }
+.step__what { color: var(--dim); font-size: var(--t-small); margin: 0; }
+.step__what b { color: var(--bone); font-weight: 500; }
+.step__cost {
+  font: 400 var(--t-mono)/1.5 var(--mono);
+  color: var(--dimmer);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.step[data-model='true'] .step__who { color: var(--watched); }
+
+.diagram {
+  margin: 30px 0 0;
+  padding: 22px;
+  overflow-x: auto;
+  background: var(--ink-2);
+  border: 1px solid var(--rule-soft);
+  font: 400 12px/1.5 var(--mono);
+  color: var(--dim);
+  white-space: pre;
+}
+
+/* ── limits, as an accordion ──────────────────────────────────────────────── */
+
+.limits { margin-top: 30px; border-top: 1px solid var(--rule-soft); }
+.limit__trigger {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 16px 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule-soft);
+  color: var(--bone);
+  font: 500 var(--t-sub)/1.4 var(--sans);
+  text-align: left;
+  cursor: pointer;
+}
+.limit__trigger:hover { color: var(--watched); }
+.limit__sign {
+  font: 400 var(--t-mono)/1 var(--mono);
+  color: var(--dimmer);
+  margin-left: auto;
+  transition: transform 200ms ease;
+}
+.limit__trigger[data-state='open'] .limit__sign { transform: rotate(45deg); }
+.limit__body {
+  overflow: hidden;
+  color: var(--dim);
+  font-size: var(--t-small);
+  max-width: var(--col);
+}
+.limit__body p { margin: 0; padding: 4px 0 20px; }
+
+/* ── footer ───────────────────────────────────────────────────────────────── */
+
+footer {
+  border-top: 1px solid var(--rule-soft);
+  padding-block: 34px 56px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  font: 400 var(--t-mono)/1.5 var(--mono);
+  color: var(--dimmer);
+}
+footer a { color: var(--dim); }
+
+/* ── tabs ─────────────────────────────────────────────────────────────────── */
+
+.tabs { display: flex; gap: 0; margin-top: 26px; border-bottom: 1px solid var(--rule-soft); }
+.tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--dim);
+  font: 500 var(--t-small)/1 var(--sans);
+  padding: 12px 16px 11px;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.tab:hover { color: var(--bone); }
+.tab[data-state='active'] { color: var(--bone); border-bottom-color: var(--watched); }
+
+/* ── the accordion, measured by Radix ─────────────────────────────────────
+ *
+ * `--radix-accordion-content-height` is published by the library after it measures the panel, so
+ * the open and shut transition is two keyframes rather than JavaScript re-measuring something that
+ * has already been measured.
+ */
+.finding__body[data-state='open'] { animation: panel-open 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+.finding__body[data-state='closed'] { animation: panel-shut 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes panel-open {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-accordion-content-height); opacity: 1; }
+}
+@keyframes panel-shut {
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
+}
+.finding__body { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .finding__body[data-state='open'],
+  .finding__body[data-state='closed'] { animation: none; }
+}
+
+/* ── the check run ────────────────────────────────────────────────────────
+ *
+ * Not a screenshot of GitHub. A screenshot would be a picture of somebody else's product, and it
+ * would go stale the next time they change a border. This is the text the App actually posts,
+ * set in this page's own register, with the conclusion in the margin where it is the only thing
+ * carrying colour.
+ */
+.check {
+  margin-top: 0;
+  border: 1px solid var(--rule);
+  border-top: 0;
+  background: var(--ink-2);
+}
+.check__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.check__mark {
+  font: 500 14px/1 var(--mono);
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  color: var(--dim);
+  flex: none;
+}
+.check__name { font: 500 var(--t-small)/1.4 var(--mono); color: var(--bone); }
+.check__title { font: 400 var(--t-small)/1.4 var(--sans); color: var(--dim); }
+.check__conclusion {
+  margin-left: auto;
+  font: 500 var(--t-mono)/1.4 var(--mono);
+  color: var(--dim);
+}
+.check[data-conclusion='failure'] .check__mark,
+.check[data-conclusion='failure'] .check__conclusion { color: var(--drift); }
+.check[data-conclusion='success'] .check__mark,
+.check[data-conclusion='success'] .check__conclusion { color: var(--watched); }
+.check[data-conclusion='neutral'] .check__mark,
+.check[data-conclusion='neutral'] .check__conclusion { color: var(--blind); }
+
+.check__body { padding: 14px 20px 20px; display: grid; gap: 10px; }
+.check__body p {
+  margin: 0;
+  color: var(--dim);
+  font: 400 var(--t-small)/1.6 var(--mono);
+  max-width: 76ch;
+}
+.check__body p:first-child { color: var(--bone); }
+
+/* The tab strip sits directly on the panel, so it needs no bottom rule of its own there. */
+#check .tabs { margin-bottom: 0; border-bottom-color: var(--rule); }

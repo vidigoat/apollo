@@ -313,7 +313,7 @@ is how much of your tree nobody has ever watched".
 ```bash
 npm run fleet:scan -- ~ --out local/fleet.json             # read every lockfile on the machine
 npm run index:build -- --from-fleet local/fleet.json --limit 1500   # observe the most-shared first
-npm start                                                  # http://localhost:8791/fleet.html
+npm start                                                  # http://localhost:8791 — the fleet band
 ```
 
 The scan reads lockfiles and asks the index what it already knows. It installs nothing, runs
@@ -805,7 +805,10 @@ judge/index.js           triage → judgement → veto; cost accounting; reply v
 evidence/tavily.js       changelog / advisory / nothing; version-exact matching
 corpus.js                the 1,214-package fixture and the three planted packages
 server.js                zero-dependency dev server; /api/tree and /api/run
-public/                  the behavioural diff wall
+web/                     the site — React, Motion, Radix; its own package.json, so `stakeout`
+                         itself still has no dependencies and no build step
+public/                  what the site and the API both read (fleet-demo.json)
+github/                  the GitHub App: signature, two-hop auth, one check run
 scripts/demo.js          the whole argument in a terminal
 scripts/test.js          runs every suite; never lets an early failure hide a later one
 scripts/capture.js       the README's screenshots, from a real run, via headless Chrome
@@ -908,7 +911,7 @@ npm test
 ```
 
 ```
-28 suites · 369 checks
+28 suites · 362 checks
 all green
 ```
 
@@ -995,11 +998,14 @@ What the suites actually protect:
 - **`corpus.test.js`** — holds the README's own arithmetic: 1,214 packages, 14 moved, 10 quiet,
   exactly one alarming, and each plant still doing the job it was planted for
 - **`server.test.js`** — the API contract over real HTTP. The list of fields it requires is
-  *derived from `app.js`*, so adding something to the page and forgetting to send it fails here
-  rather than on stage; also checks nothing outside `public/` can be served
-- **`public/ui.test.js`** — drives the real `public/app.js` against the real corpus with a stub DOM:
-  every id exists, every class is styled, the quiet majority renders as quiet, and a simulated
-  verdict always says so
+  *derived from `web/src/sections/Run.jsx`*, so adding something to the page and forgetting to send
+  it fails here rather than on stage; also checks that a deploy cannot carry this machine off the
+  machine, and that nothing outside the roots it was given can be served
+- **`ui.test.js`** — the site's own guarantees, read off its source: no number is ever a typed-in
+  fallback, every animated component respects reduced motion, and exactly one saturated colour is
+  used anywhere — the one that means drift
+- **`github.test.js`** — every decision the App makes about somebody's pull request, without an App
+  or a network: the signature over the raw bytes, and `unknown` as neutral rather than failure
 
 ---
 

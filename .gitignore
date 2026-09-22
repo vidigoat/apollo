@@ -13,3 +13,6 @@ index/data/
 
 local/
 .vercel
+
+# web/ is the website's own package. `stakeout` still installs nothing.
+web/node_modules/

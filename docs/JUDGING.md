@@ -6,15 +6,16 @@ and a test asserts that every file named here exists.
 
 ## Start here
 
+**Live:** <https://cassandra-nu.vercel.app> — the same handler this repository runs, no login.
+
 ```bash
 npm run demo      # the whole argument, in a terminal, in about two seconds
-npm start         # http://localhost:8791 — one dependency tree
-                  # http://localhost:8791/fleet.html — every repo on a machine
-npm test          # 28 suites, 369 checks
+npm start         # http://localhost:8791 — the site, the run, the fleet, the check run
+npm test          # 28 suites, 362 checks
 ```
 
-The demo is the primitive: a version that did not move, behaving differently, caught. The fleet page
-is the same idea at the scale where it pays for itself.
+The demo is the primitive: a version that did not move, behaving differently, caught. The fleet
+section is the same idea at the scale where it pays for itself.
 
 ## Technological implementation
 *How well is it built, and how effectively does it use Token Factory and an NVIDIA open model?*
@@ -29,6 +30,9 @@ is the same idea at the scale where it pays for itself.
 | **Nemotron reads the diffs, never the packages.** Quiet ones never reach a model | `judge/index.js`; verdicts are committed JSON you can read, not a screenshot |
 | Three Nemotron sizes, chosen per finding, with the reasoning tokens budgeted separately | `judge/nemotron.js` |
 | **Absence is not ignorance** — a strategy's blind spots travel with every claim | `transcript/schema.js` `quietness()`, `absence.test.js` |
+| **The GitHub App** — the answer on the pull request that bumps the dependency, not in a log nobody opens | `github/webhook.js`, `github/api.js`, `github/handle.js` |
+| Two-hop App auth with no dependencies: RS256 JWT → installation token, scoped and hour-long, never a personal token | `github/api.js` `appJwt`; `github.test.js` verifies the signature against its own key |
+| The signature is checked against the **bytes**, before the body is believed, in constant time | `github.test.js` — a pretty-printed body with an odd key order is posted over real HTTP |
 | Every suite reported together | `npm test` |
 
 The one worth running yourself:
@@ -36,25 +40,26 @@ The one worth running yourself:
 ```bash
 npm run fleet:scan -- ~ --out local/fleet.json
 npm run index:build -- --from-fleet local/fleet.json --limit 500
-npm start   # then open /fleet.html
+npm start   # then open http://localhost:8791
 ```
 
 Five hundred observations, chosen by how many of your projects share them, and the page will tell
 you how many of your dependency-versions they answered.
 
-**Not there yet:** the GitHub App, and the index published as an artefact rather than built locally.
+**Not there yet:** the index published as an artefact rather than built locally.
 
 ## Design
 *Does it deliver a complete product experience, not a proof of concept?*
 
 | what to look at | where |
 |---|---|
-| **The fleet drawn rather than summarised** — every project one segment, width by dependency count | `public/fleet.js` `draw()` |
+| **The first screen is the product, performed** — two lockfile lines a patch apart, then what arrived underneath the second | `web/src/sections/Hero.jsx`; one orchestrated moment, and nothing else on the site moves by itself |
+| **The fleet drawn rather than summarised** — every project one segment, width by dependency count | `web/src/sections/Fleet.jsx` |
 | **Absence drawn as absence.** Unwatched surface is hatching under a ceiling hairline, never a filled bar | the first version filled it and came out looking like an ordinary coverage chart |
-| **The channel strip** — six slots whose third state is *nothing was watching* | `public/fleet.js` `strip()`; two of those three states get printed as "no findings" everywhere else |
-| The register, not cards: rules and hairlines, one saturated colour, and it means drift | `public/fleet.css` — the "deliberately not used" list is at the top |
-| A page that says whose fleet it is before the numbers, when it is showing a bundled one | `public/fleet.html` `.whose` |
-| Works at 400px without the page scrolling sideways | `public/fleet.css` — the table scrolls in its own box; the page does not |
+| The register, not cards: rules and hairlines, one saturated colour, and it only ever means drift | `web/src/styles.css` — the "deliberately not used" list is at the top |
+| **The check run, in three states, with `unknown` as neutral** — the one design decision the whole adoption story rests on | `web/src/sections/Check.jsx`, asserted in `github.test.js` |
+| A page that says whose fleet it is before the numbers, when it is showing a bundled one | `web/src/sections/Fleet.jsx` — `data.demo` |
+| Reduced motion is respected, focus is visible, and it works at 400px without scrolling sideways | `web/src/styles.css`; every animated component reads `useReducedMotion` |
 
 ## Potential impact
 *Does it solve a real problem, and could it be adopted?*
@@ -79,7 +84,6 @@ you how many of your dependency-versions they answered.
 
 ## What is honestly not here
 
-- **The GitHub App.** Phase 3 of `PLAN.md`, blocked on creating it.
 - **A published index.** The index is built locally and gitignored; publishing it is a deliberate
   artefact, not a side effect of a commit.
 - **eBPF.** `nodert` is the strategy that runs; the stronger ones are described by `CAN_SEE` and

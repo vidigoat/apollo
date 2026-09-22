@@ -15,9 +15,24 @@ const { CHANGED, TOTAL, PUBLIC_RECORD, INVARIANT_FAILURES } = require('./corpus'
 const { STRATEGIES } = require('./transcript/schema');
 
 const PORT = Number(process.env.PORT) || 8791;
-// Resolved from this file, so it is correct whether started with `npm start` from the repo root or
-// imported by a host that runs from somewhere else entirely.
+
+/**
+ * Where the site is served from.
+ *
+ * `dist/` is the built site — React, and one orchestrated moment on the first screen. `public/`
+ * holds what both the site and the API read, `fleet-demo.json` above all, and is the fallback when
+ * nothing has been built yet.
+ *
+ * Resolved from this file, so it is correct whether started with `npm start` from the repository
+ * root or imported by a host that runs from somewhere else entirely.
+ *
+ * The site has its own dependencies and its own package.json, in `web/`. `stakeout` itself still
+ * has none and still needs no build step — that is a claim this project makes in its README, and a
+ * website is not a reason to stop keeping it.
+ */
+const DIST = path.join(__dirname, 'dist');
 const PUBLIC = path.join(__dirname, 'public');
+const ROOTS = fs.existsSync(DIST) ? [DIST, PUBLIC] : [PUBLIC];
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -371,13 +386,24 @@ function handler(req, res) {
       }
     }
 
-    const rel = url.pathname === '/' ? 'index.html' : url.pathname.slice(1);
-    const file = path.join(PUBLIC, rel);
-    if (!file.startsWith(PUBLIC)) return send(res, 403, 'no', 'text/plain');
-    fs.readFile(file, (err, buf) => {
-      if (err) return send(res, 404, 'not found', 'text/plain');
-      send(res, 200, buf, TYPES[path.extname(file)] || 'application/octet-stream');
-    });
+    const rel = url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname.slice(1));
+
+    /*
+     * Each root is tried in turn, and a path that climbs out of the one it was resolved against is
+     * refused rather than tried against the next — `../server.js` must not become a miss that
+     * falls through to somewhere it does happen to exist.
+     */
+    const tryRoot = (i) => {
+      if (i >= ROOTS.length) return send(res, 404, 'not found', 'text/plain');
+      const root = ROOTS[i];
+      const file = path.resolve(root, rel);
+      if (!file.startsWith(root + path.sep)) return send(res, 403, 'no', 'text/plain');
+      fs.readFile(file, (err, buf) => {
+        if (err) return tryRoot(i + 1);
+        send(res, 200, buf, TYPES[path.extname(file)] || 'application/octet-stream');
+      });
+    };
+    tryRoot(0);
 }
 
 /**
