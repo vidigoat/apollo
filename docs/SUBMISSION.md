@@ -176,6 +176,34 @@ without a test noticing. `architecture.test.js` now reads the repository and fai
 
 ---
 
+**Every observation in the index was overclaiming, and publishing it is what found that.** A
+transcript records what the strategy could see alongside what it saw, which is the whole argument of
+this project — a silence is worth nothing unless you know something was listening. `nodert` was
+recorded as `fs: true` for months. It is not: the probe hooks *writes*, so a package that only reads
+a file is invisible to it. The table was corrected. **The 2,129 entries already on disk were not**,
+and `quietness()` reads exactly that field to decide what a silence is worth — so every claim
+derived from the index had been weighed against a visibility nobody had.
+
+Re-observing two thousand packages to correct a field that was never an observation would be absurd,
+and the reason it is not necessary is the point: *what a strategy can see is a property of the
+strategy, not of an observation.* The stored copy was a cache of a table, and it is restated from the
+table on read. A published index is read with the reader's own table, and any disagreement with the
+publisher's is printed rather than absorbed — because reading somebody else's recording with code
+that means something different by the same field is precisely how an overclaim travels between
+machines.
+
+The general lesson is the uncomfortable one. A project can hold a rule so firmly that it writes tests
+for it, argues for it in its documentation, and designs its data format around it — and still have
+two thousand violations sitting in a directory, because the rule was enforced at the moment of
+writing and the belief it encoded changed afterwards. **A correction to code is not a correction to
+data.** Nothing here would have found it: the entries were valid, the schema was satisfied, and the
+only symptom was a page that was slightly too confident.
+
+It surfaced because the index was being prepared for publication — the first time anybody had to ask
+what, exactly, was about to be put on a public URL with this project's name on it.
+
+---
+
 **I overwrote the index with fabricated data, and nothing noticed.** Reaching for a `--dry` flag
 that does not exist, a build ran as `--simulated --limit 0` and wrote **8,623 fabricated entries
 over 705 genuine observations**. Afterwards nothing in a single entry said which was which — the
