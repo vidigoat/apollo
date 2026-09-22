@@ -25,7 +25,19 @@ import { num, fleetTotals } from '../lib/api.js';
  * paragraph, because twenty-four repositories described as if they were twenty-eight is the same
  * lie the hatching exists to prevent.
  */
-export default function Fleet({ data }) {
+/** Kilobytes, for a download size a reader is being asked to accept. */
+const kb = (bytes) => `${Math.round(bytes / 1024)} kB`;
+
+/**
+ * The URL this page is being read from.
+ *
+ * Printed into the command rather than hard-coded, so the copy a reader pastes is the one that
+ * reaches the index they are looking at — including on a preview deployment, where a hard-coded
+ * production URL would quietly point somewhere else.
+ */
+const origin = () => (typeof location === 'undefined' ? '' : location.origin);
+
+export default function Fleet({ data, published }) {
   const canvas = useRef(null);
   const still = useReducedMotion();
 
@@ -191,6 +203,51 @@ export default function Fleet({ data }) {
           never observed — not "observed, did nothing"
         </span>
       </div>
+
+      {/*
+        The offer, on the section that makes the claim.
+
+        "Run a package once. Answer for every repository that depends on it." was, until this week,
+        a sentence about an artefact that existed on exactly one laptop: the index was built locally
+        and gitignored, so checking the claim meant installing two thousand packages first. It is
+        published now, and the only honest place to say so is directly underneath the sentence.
+
+        Every figure here comes from `/api/index`, which reads the file being offered. A number
+        typed into this block would be one `npm run index:publish` away from being wrong, on the one
+        claim a reader might actually act on.
+      */}
+      {published?.published && (
+        <div className="offer">
+          <p className="offer__lead">
+            That index is a file. <b>{num(published.counts.packages)}</b> packages,{' '}
+            <b>{num(published.counts.versions)}</b> versions, <b>{kb(published.gzipBytes)}</b> over
+            the wire — point a repository of your own at it and nothing has to be installed first.
+          </p>
+
+          {/*
+            The whole command, including the clone.
+
+            The first version began at `node cli.js`, which silently assumed the reader had already
+            cloned this — the one thing a person reading a web page has definitely not done. A
+            command that only works if you already did something else is a command that fails the
+            first time somebody tries it, which is the only time that matters.
+          */}
+          <pre className="offer__cmd">
+            <code>
+              {'git clone https://github.com/vidigoat/cassandra ~/stakeout\n'}
+              {'cd ~/your-project\n'}
+              {'node ~/stakeout/cli.js lock --index '}
+              <span className="offer__url">{origin()}/index.json</span>
+            </code>
+          </pre>
+
+          <p className="offer__after">
+            Most of your tree will come back <b>unknown</b>, because most of npm has never been
+            watched by anybody. That is reported as its own outcome and never as a pass — and it is
+            the number that would have to fall for this to be worth adopting.
+          </p>
+        </div>
+      )}
 
       <div className="coverage">
         <div>

@@ -4,6 +4,7 @@ require('./env').loadEnv();
 const { sandboxCost } = require('./pricing');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('node:zlib');
 
 const { SimulatedSandboxes } = require('./adapters/simulated');
 const { runAll, runPair } = require('./runPair');
@@ -263,6 +264,40 @@ function handler(req, res) {
      * sample: a canned fleet would be a fabricated number, and the honest empty state ("run the
      * scan") is the same answer the CLI gives for a missing index.
      */
+    /*
+     * ── What the published index holds ───────────────────────────────────────
+     *
+     * The header of `public/index.json`, without the six hundred kilobytes underneath it.
+     *
+     * The page needs four numbers to make an honest offer — how many packages somebody would get by
+     * pointing `--index` at this URL, and how big the download is. Fetching the whole artefact to
+     * read its first five fields would make the page slower for no reason, and typing the numbers
+     * into the page would put them one publish away from being wrong.
+     */
+    if (url.pathname === '/api/index') {
+      const file = path.join(PUBLIC, 'index.json');
+      if (!fs.existsSync(file)) {
+        return send(res, 200, JSON.stringify({
+          published: false,
+          how: 'npm run index:publish',
+          why: 'No index has been published from this checkout, so there is nothing to offer.',
+        }), 'application/json');
+      }
+      const raw = fs.readFileSync(file, 'utf8');
+      const doc = JSON.parse(raw);
+      return send(res, 200, JSON.stringify({
+        published: true,
+        url: '/index.json',
+        revision: doc.revision,
+        generatedAt: doc.generatedAt,
+        strategies: doc.strategies,
+        canSee: doc.canSee,
+        counts: doc.counts,
+        bytes: Buffer.byteLength(raw),
+        gzipBytes: zlib.gzipSync(raw).length,
+      }), 'application/json');
+    }
+
     if (url.pathname === '/api/fleet') {
       /*
        * Your machine first; a public monorepo as the fallback.

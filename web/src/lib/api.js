@@ -17,6 +17,15 @@ export const run = (strategy) => get(`/api/run${strategy ? `?strategy=${strategy
 export const fleet = () => get('/api/fleet');
 
 /**
+ * The header of the published index, without the six hundred kilobytes under it.
+ *
+ * The page makes an offer — point `--index` at this URL and get these packages for free — and
+ * every number in that offer has to come from the artefact being offered. Typing them in would put
+ * them one `npm run index:publish` away from being wrong, on the one claim a reader might act on.
+ */
+export const published = () => get('/api/index');
+
+/**
  * Thousands separators, and never a fabricated zero for something that is simply unknown.
  *
  * NaN is caught here too. It is a number by `typeof`, and it reached the live fleet paragraph as

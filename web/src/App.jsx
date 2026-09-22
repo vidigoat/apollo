@@ -6,7 +6,7 @@ import Fleet from './sections/Fleet.jsx';
 import How from './sections/How.jsx';
 import Check from './sections/Check.jsx';
 import Limits from './sections/Limits.jsx';
-import { tree, fleet, num } from './lib/api.js';
+import { tree, fleet, published, num } from './lib/api.js';
 
 const SECTIONS = [
   ['top', 'stakeout'],
@@ -20,6 +20,7 @@ const SECTIONS = [
 export default function App() {
   const [meta, setMeta] = useState(null);
   const [scan, setScan] = useState(null);
+  const [index, setIndex] = useState(null);
   const [here, setHere] = useState('top');
 
   const { scrollYProgress } = useScroll();
@@ -31,6 +32,7 @@ export default function App() {
     // quietly on the day the API breaks.
     tree().then(setMeta).catch(() => {});
     fleet().then(setScan).catch(() => {});
+    published().then(setIndex).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -131,7 +133,7 @@ export default function App() {
 
         <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />
-        {scan && <Fleet data={scan} />}
+        {scan && <Fleet data={scan} published={index} />}
         <How tree={meta} />
         <Limits />
       </main>

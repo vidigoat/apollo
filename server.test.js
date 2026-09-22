@@ -199,6 +199,47 @@ const json = async (p) => (await get(p)).json();
 
   /* ── the fleet ────────────────────────────────────────────────────────── */
 
+  await it('/api/index describes the published index, and the file it describes is really there', async () => {
+    /*
+     * The page makes an offer on the strength of this: point `--index` at this URL and get these
+     * packages without installing anything. Every figure in that offer comes from here, so a wrong
+     * answer here is a wrong promise on the page — and the specific way it would go wrong is the
+     * header saying `published: true` about a file that 404s.
+     */
+    const meta = await json('/api/index');
+    if (!meta.published) {
+      // A checkout that has not run `npm run index:publish`. It says so and offers nothing.
+      assert.match(meta.how, /index:publish/);
+      return;
+    }
+
+    assert.ok(meta.counts.packages > 0 && meta.counts.versions > 0);
+    assert.ok(meta.gzipBytes > 0 && meta.gzipBytes < meta.bytes, 'the sizes do not describe a real file');
+    assert.ok(Array.isArray(meta.strategies) && meta.strategies.length);
+
+    // The URL it offers has to actually serve the index — and serve the same index.
+    const res = await get(meta.url);
+    assert.equal(res.status, 200, `${meta.url} is offered by /api/index and answers ${res.status}`);
+    const doc = await res.json();
+    assert.deepEqual(doc.counts, meta.counts, 'the header and the file disagree about what is in it');
+    assert.equal(Object.keys(doc.packages).length, meta.counts.packages);
+  });
+
+  await it('the offered index says what watched it, in the same words the code does', async () => {
+    /*
+     * `canSee` travels with the index so a reader can disbelieve it. If the published table and
+     * this build's table disagree, somebody is reading somebody else's recording with code that
+     * means something different by the same field — which is how `nodert`'s `fs: true` survived a
+     * correction for months.
+     */
+    const meta = await json('/api/index');
+    if (!meta.published) return;
+    const { CAN_SEE } = require('./transcript/schema');
+    for (const s of meta.strategies) {
+      assert.deepEqual(meta.canSee[s], CAN_SEE[s], `the published table for ${s} is not this build's`);
+    }
+  });
+
   await it('/api/fleet is honest about having no scan, rather than inventing one', async () => {
     /*
      * There is deliberately no bundled fleet in this repository. A canned one would be a fabricated

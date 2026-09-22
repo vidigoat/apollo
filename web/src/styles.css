@@ -924,3 +924,38 @@ footer a { color: var(--dim); }
   white-space: pre-wrap;
   max-width: 78ch;
 }
+
+/* ── the offer: the one command on this page a reader can run ─────────────── */
+
+/*
+ * Set as a quoted passage rather than a panel with a button.
+ *
+ * Everything else in this section is an argument about scale; this is the only part that asks the
+ * reader to do something, and a CTA card in the middle of it would read as the page changing
+ * register to sell. A rule down the left is the same invitation at the volume the section is
+ * already speaking at.
+ */
+.offer {
+  margin-top: 34px;
+  padding-left: 18px;
+  border-left: 2px solid var(--watched);
+  max-width: 68ch;
+}
+.offer__lead { margin: 0; color: var(--dim); font-size: var(--t-body); }
+.offer__lead b { color: var(--bone); font-weight: 500; }
+
+.offer__cmd {
+  margin: 14px 0 0;
+  padding: 13px 15px;
+  border: var(--edge);
+  border-radius: var(--r);
+  background: var(--ink-2);
+  overflow-x: auto;
+  font: 400 var(--t-mono)/1.7 var(--mono);
+  color: var(--bone);
+}
+.offer__cmd code { white-space: pre; }
+.offer__url { color: var(--watched); }
+
+.offer__after { margin: 13px 0 0; color: var(--dim); font-size: var(--t-small); }
+.offer__after b { color: var(--blind); font-weight: 500; }
