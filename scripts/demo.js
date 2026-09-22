@@ -93,9 +93,21 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
       transcript({ pkg: 'flat-config', version: '3.2.0', strategy, raw: behaviourFor('flat-config', '3.2.0') }),
       transcript({ pkg: 'flat-config', version: '3.2.1', strategy, raw: behaviourFor('flat-config', '3.2.1') })
     );
-    const blind = Object.entries(d.canSee).filter(([, v]) => !v).map(([k]) => k);
+    /*
+     * `!== true`, not `!v`. A channel can be watched in part — nodert records filesystem writes
+     * and no reads — and truthy is not the same as seen. Under `!v` this line printed nothing at
+     * all for nodert, so the demo's own "three honest answers" was quietly making the strongest
+     * claim on the page about the strategy with a gap in it.
+     */
+    const table = Object.entries(d.canSee);
+    const unseen = table.filter(([, v]) => v === false).map(([k]) => k);
+    const partial = table.filter(([, v]) => v !== true && v !== false).map(([k, v]) => `${k}, and only its ${v}`);
+
     console.log(`  ${strategy.padEnd(8)} ${TONE[d.severity]}${d.severity.toUpperCase().padEnd(9)}${C.off} ${d.reasons[0] || 'nothing observed'}`);
-    if (blind.length) console.log(`           ${C.dim}cannot see: ${blind.join(', ')}${C.off}`);
+    if (unseen.length) console.log(`           ${C.dim}cannot see: ${unseen.join(', ')}${C.off}`);
+    // Said separately from "cannot see", because "cannot see: fs (writes only)" reads as though
+    // the filesystem were invisible, and half-watched is a different claim from unwatched.
+    if (partial.length) console.log(`           ${C.dim}watches ${partial.join('; ')}${C.off}`);
   }
 
   console.log(`\n  ${C.dim}Same package, same bytes, three honest answers. A string becoming a function`);

@@ -127,10 +127,21 @@ What is this change doing?`;
  * model the filesystem had been watched when only half of it had.
  */
 function canSeeCaveat(d) {
-  const gaps = Object.entries(d.canSee || {}).filter(([, v]) => v !== true);
-  if (!gaps.length) return '';
-  const named = gaps.map(([k, v]) => (v === false ? k : `${k} (${v} only)`));
-  return ` (this strategy CANNOT observe: ${named.join(', ')} — silence there means nothing)`;
+  const table = Object.entries(d.canSee || {});
+  const unseen = table.filter(([, v]) => v === false).map(([k]) => k);
+  // No nested brackets: the caveat is itself parenthesised, and "fs (only its writes)" inside it
+  // comes out as a thicket the model has to parse before it can use the fact.
+  const partial = table.filter(([, v]) => v !== true && v !== false).map(([k, v]) => `${v} on ${k}`);
+  if (!unseen.length && !partial.length) return '';
+
+  // Two clauses, because "CANNOT observe: fs (writes only)" reads to a model exactly as it reads
+  // to a person — as though the filesystem were invisible — and half-watched is a different fact.
+  const parts = [
+    unseen.length ? `CANNOT observe: ${unseen.join(', ')}` : null,
+    partial.length ? `observes only ${partial.join(', ')}` : null,
+  ].filter(Boolean);
+
+  return ` (this strategy ${parts.join('; and ')} — silence there means nothing)`;
 }
 
 module.exports = { buildPrompt, evidenceLines, SYSTEM };

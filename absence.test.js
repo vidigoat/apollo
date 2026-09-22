@@ -213,7 +213,21 @@ it('the model is told what was not watched, before it is asked to judge', () => 
   for (const strategy of BLIND) {
     const d = pairOf(strategy);
     const { user } = buildPrompt(d, null);
-    assert.match(user, /CANNOT observe/, `${strategy}: the prompt does not declare a blind spot`);
+
+    /*
+     * Either clause will do, and which one is the point.
+     *
+     * The caveat used to be a single "CANNOT observe:" list, and this assertion matched that exact
+     * phrase. Once a channel could be watched in PART — nodert records filesystem writes and no
+     * reads — that phrasing became wrong for it: telling a model the filesystem cannot be observed,
+     * when the writes were observed, is its own small lie. What has to be true is that every gap is
+     * named and that the consequence is spelled out; not that one particular sentence appears.
+     */
+    assert.match(
+      user,
+      /CANNOT observe|observes only/,
+      `${strategy}: the prompt does not declare a blind spot`
+    );
     for (const channel of d.blindTo) {
       assert.ok(user.includes(channel), `${strategy}: the prompt omits "${channel}" from what it cannot see`);
     }
