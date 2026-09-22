@@ -752,3 +752,42 @@ footer a { color: var(--dim); }
 }
 .check__finding b { color: var(--bone); font-weight: 500; }
 .check__foot { color: var(--dimmer) !important; }
+
+/* ── the model's working-out ──────────────────────────────────────────────
+ *
+ * A reasoning model's actual reasoning tokens, next to a verdict it did not get to set. Severity
+ * comes from rules in code; the model only ever explains. Showing the working is safe precisely
+ * because of that, and it is the most direct way to demonstrate it — so it is here, folded away,
+ * for the reader who wants to check rather than the one who wants a summary.
+ */
+.thinking { margin-top: 12px; border-top: 1px solid var(--rule-soft); padding-top: 10px; }
+.thinking summary {
+  cursor: pointer;
+  font: 400 var(--t-mono)/1.5 var(--mono);
+  color: var(--dim);
+  list-style: none;
+}
+.thinking summary::-webkit-details-marker { display: none; }
+.thinking summary::before { content: '▸ '; color: var(--dimmer); }
+.thinking[open] summary::before { content: '▾ '; }
+.thinking summary:hover { color: var(--watched); }
+
+.thinking__who {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  margin: 12px 0 4px;
+  font: 500 var(--t-mono)/1.4 var(--mono);
+  color: var(--watched);
+}
+.thinking__who span { color: var(--dimmer); font-weight: 400; }
+
+.thinking__text {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--rule);
+  font: 400 var(--t-small)/1.6 var(--sans);
+  color: var(--dim);
+  white-space: pre-wrap;
+  max-width: 78ch;
+}

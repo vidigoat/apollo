@@ -274,6 +274,33 @@ function Findings({ findings }) {
                         </span>
                       </div>
                     )}
+
+                    {/*
+                      The model's own working-out, shown because the rules already decided the
+                      colour.
+                      
+                      This is a reasoning model's actual reasoning tokens, next to a verdict it did
+                      not get to set — severity comes from `differ/diff.js`, in code anybody can
+                      re-run. A model explains a finding here; it can never escalate one. Showing
+                      the working is only safe BECAUSE of that, and it is the most direct way to
+                      demonstrate it.
+                    */}
+                    {p.judgement.spend?.some((x) => x.reasoning) && (
+                      <details className="thinking">
+                        <summary>how the models got there</summary>
+                        {p.judgement.spend
+                          .filter((x) => x.reasoning)
+                          .map((x) => (
+                            <div key={x.model}>
+                              <p className="thinking__who">
+                                {x.model.split('/').pop()}
+                                <span>{usd(x.costUsd)}</span>
+                              </p>
+                              <p className="thinking__text">{x.reasoning}</p>
+                            </div>
+                          ))}
+                      </details>
+                    )}
                   </div>
                 )}
               </div>
