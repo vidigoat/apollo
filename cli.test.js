@@ -180,6 +180,103 @@ it('check exits 2 for unknowns only when asked to', () => {
   assert.equal(strict.code, 2, '--fail-on-unknown did not produce its own exit code');
 });
 
+/* ── --index: somebody else's repository, somebody else's index ───────────── */
+
+it('a project with no index of its own can use a published one', () => {
+  /*
+   * The adoption story, as a test.
+   *
+   * Every check above hands the CLI an index it built itself. That is the only way this tool has
+   * ever been usable, and it means the first thing a new user has to do is install two thousand
+   * packages — which makes the project's own claim ("run a package once, answer for every
+   * repository") unverifiable by exactly the person it is addressed to.
+   *
+   * Here the project has NO index. It has a published file, the way a stranger would have a URL,
+   * and everything works.
+   */
+  const p = project([['alpha', '1.0.0'], ['beta', '2.0.0', { env: ['CI'] }]]);
+  const published = path.join(p.root, 'published.json');
+  execFileSync(
+    process.execPath,
+    [path.join(__dirname, 'scripts', 'publish-index.js'), '--out', published],
+    { env: { ...process.env, STAKEOUT_INDEX: p.indexDir }, stdio: 'ignore', cwd: __dirname }
+  );
+
+  const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'no-index-at-all-'));
+  const out = path.join(p.root, 'stakeout.lock');
+
+  const locked = run(['lock', '--index', published, '--out', out], {
+    env: withIndex(nowhere),
+    cwd: p.root,
+  });
+  assert.equal(locked.code, 0, locked.out);
+  assert.deepEqual(
+    Object.keys(JSON.parse(fs.readFileSync(out, 'utf8')).packages).sort(),
+    ['alpha@1.0.0', 'beta@2.0.0']
+  );
+
+  const checked = run(['check', '--index', published, '--lock', out], {
+    env: withIndex(nowhere),
+    cwd: p.root,
+  });
+  assert.equal(checked.code, 0, checked.out);
+  assert.match(checked.out, /clean — every package does exactly what the lock says/);
+
+  fs.rmSync(nowhere, { recursive: true, force: true });
+});
+
+it('a package the published index has never seen is unknown, not clean', () => {
+  /*
+   * The state a stranger's tree will actually be in. Most of npm has been watched by nobody, so a
+   * published index answers part of a tree and not the rest — and the part it did not answer must
+   * never be quietly counted as fine. `--fail-on-unknown` is how a pipeline says it cares.
+   */
+  const p = project([['alpha', '1.0.0']]);
+  const published = path.join(p.root, 'published.json');
+  execFileSync(
+    process.execPath,
+    [path.join(__dirname, 'scripts', 'publish-index.js'), '--out', published],
+    { env: { ...process.env, STAKEOUT_INDEX: p.indexDir }, stdio: 'ignore', cwd: __dirname }
+  );
+
+  // A second package appears in the tree that the published index has never observed.
+  const lockfile = path.join(p.root, 'package-lock.json');
+  const tree = JSON.parse(fs.readFileSync(lockfile, 'utf8'));
+  tree.packages['node_modules/never-watched'] = { name: 'never-watched', version: '9.9.9' };
+  fs.writeFileSync(lockfile, JSON.stringify(tree));
+
+  const out = path.join(p.root, 'stakeout.lock');
+  const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'no-index-at-all-'));
+
+  run(['lock', '--index', published, '--out', out], { env: withIndex(nowhere), cwd: p.root });
+
+  const relaxed = run(['check', '--index', published, '--lock', out], { env: withIndex(nowhere), cwd: p.root });
+  assert.equal(relaxed.code, 0, 'an unknown package failed the build by default');
+  assert.match(relaxed.out, /never seen|unknown/i, 'the unknown package was not mentioned at all');
+
+  const strict = run(['check', '--index', published, '--lock', out, '--fail-on-unknown'], {
+    env: withIndex(nowhere), cwd: p.root,
+  });
+  assert.equal(strict.code, 2, 'asked to fail on unknown, and did not');
+
+  fs.rmSync(nowhere, { recursive: true, force: true });
+});
+
+it('an index URL that does not answer is an environment error, not a finding', () => {
+  /*
+   * Exit 3, never exit 1. A pipeline that cannot tell a broken run from a real finding teaches
+   * people to ignore the real finding.
+   */
+  const p = project([['alpha', '1.0.0']]);
+  const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'no-index-at-all-'));
+  const r = run(['lock', '--index', path.join(p.root, 'does-not-exist.json')], {
+    env: withIndex(nowhere), cwd: p.root,
+  });
+  assert.equal(r.code, 3, `exited ${r.code} instead of 3`);
+  assert.match(r.out, /Could not read the index/);
+  fs.rmSync(nowhere, { recursive: true, force: true });
+});
+
 it('check with no lock exits 3, not 1', () => {
   // "You have not run lock yet" is an environment problem, not a finding.
   const p = project([['alpha', '1.0.0']]);

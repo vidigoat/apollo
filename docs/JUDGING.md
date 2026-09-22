@@ -47,7 +47,18 @@ npm start   # then open http://localhost:8791
 Five hundred observations, chosen by how many of your projects share them, and the page will tell
 you how many of your dependency-versions they answered.
 
-**Not there yet:** the index published as an artefact rather than built locally.
+**The shortest version, in a repository that has never heard of this project:**
+
+```bash
+cd ~/anything-with-a-package-lock
+node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
+```
+
+That reads the **published index** — 1,589 packages, 2,129 versions, sixty kilobytes over the wire
+— and writes a `stakeout.lock` for your tree. On a real one: 47 of 151 packages pinned from real
+observations, 104 recorded as unknown by name. Most of any tree comes back unknown, because most of
+npm has never been watched by anybody, and that is reported as its own outcome rather than as a
+pass. `scripts/publish-index.js` writes the file; `index/published.js` reads it.
 
 ## Design
 *Does it deliver a complete product experience, not a proof of concept?*
@@ -85,7 +96,9 @@ you how many of your dependency-versions they answered.
 
 ## What is honestly not here
 
-- **A published index.** The index is built locally and gitignored; publishing it is a deliberate
-  artefact, not a side effect of a commit.
+- **An index of any size.** 1,589 packages is published and it is a rounding error against npm.
+  The ordering work is what makes that useful — the index is built in the order of how many projects
+  share each package-version, so the first 500 observations answer far more than the last 500 — but
+  a tree pointed at it still comes back mostly unknown, and the tool says so rather than passing.
 - **eBPF.** `nodert` is the strategy that runs; the stronger ones are described by `CAN_SEE` and
   every claim carries which strategy made it, so nothing overstates what was watched.
