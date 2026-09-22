@@ -20,7 +20,7 @@
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
+const { spawn, execFileSync } = require('node:child_process');
 
 const PORT = 8794;
 const BASE = `http://localhost:${PORT}`;
@@ -408,6 +408,19 @@ const json = async (p) => (await get(p)).json();
      * an instruction to go and install a toolchain first. The tool keeps its promise; the website
      * pays for it by being checked in.
      */
+    /*
+     * Asked of GIT, not of this disk.
+     *
+     * `fs.existsSync` is true on any machine that has ever run a build and says nothing whatsoever
+     * about a clone. `dist/` was in .gitignore the entire time, so this check passed everywhere it
+     * did not matter and failed only where it did — which is how the sibling project's identical
+     * check was found to be passing over an identical hole tonight.
+     */
+    const tracked = execFileSync('git', ['ls-files', 'dist/index.html'], {
+      cwd: __dirname, encoding: 'utf8',
+    }).trim();
+    assert.ok(tracked, 'nothing serves `/` on a fresh clone: dist/index.html is not in git');
+
     const index = path.join(__dirname, 'dist', 'index.html');
     assert.ok(fs.existsSync(index), 'dist/index.html is missing — `npm start` after a clone shows nothing');
 

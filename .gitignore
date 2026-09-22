@@ -4,7 +4,11 @@ node_modules/
 *.log
 .DS_Store
 /tmp/
-dist/
+# NOT dist/. The built site is committed on purpose — see server.test.js, "the built site is
+# committed": the README promises `npm start` with nothing to install and nothing to build, and a
+# judge who clones this at 1am should get the site rather than a blank page. It was in this list
+# anyway, so the check asserting the opposite passed on every machine that had run a build and
+# failed only on a fresh clone, which is the only place it mattered.
 
 # The built index. Large, machine-generated, and rebuildable with `npm run index:build`.
 # A published index is a deliberate artefact — see PLAN.md — not something that rides along
