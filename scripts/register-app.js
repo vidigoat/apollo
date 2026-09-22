@@ -16,8 +16,16 @@
  *     4. GitHub redirects back here with a temporary code, good for one hour
  *     5. the code is exchanged for the app id, the private key, and the webhook secret
  *
+ *     6. the app id, key and secret are written to `.env`, pushed to the live deployment's
+ *        production environment, and the deployment is rebuilt so it picks them up
+ *
  * The exchange happens once and the credentials are never shown again, so they are written
  * straight to `.env`, which is gitignored and in `.vercelignore`.
+ *
+ * Step 6 is not a convenience. Without it the moment after registration is a live App pointed at
+ * an endpoint that 401s everything it sends — `no webhook secret is configured on this server` —
+ * and nothing anywhere saying a step was missing. A registration flow that leaves the thing it
+ * registered non-functional is not a registration flow.
  *
  * ── What it asks for, and what it deliberately does not ─────────────────────
  *
@@ -35,6 +43,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { spawnSync } = require('node:child_process');
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -143,14 +152,15 @@ const server = http.createServer(async (req, res) => {
     });
 
     write(out);
+    const live = publish(out);
 
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     res.end(
       done(
         `${out.name} is registered`,
-        `App id <code>${out.id}</code>. The private key and webhook secret were written to ` +
-          `<code>.env</code>, which is gitignored. Install it on a repository at ` +
-          `<code>${out.html_url}</code>.`
+        `App id <code>${out.id}</code>. The key and secret were written to <code>.env</code> and ` +
+          `${live ? 'pushed to the live deployment, which has been rebuilt' : '<b>not</b> pushed to the deployment — see the terminal'}. ` +
+          `Install it at <code>${out.html_url}/installations/new</code>.`
       )
     );
     finish(0, `${out.name} (${out.id}) — install it at ${out.html_url}/installations/new`);
@@ -160,6 +170,55 @@ const server = http.createServer(async (req, res) => {
     finish(1, e.message);
   }
 });
+
+/**
+ * The same three values, onto the deployment.
+ *
+ * ── Why this is here and not left as a manual step ──────────────────────────
+ *
+ * Writing `.env` makes the App work on this laptop. The webhook GitHub will actually call is the
+ * one on the demo URL, and that process has none of these — so without this, the moment after
+ * registration is a live App pointed at an endpoint that answers 401 to everything it sends, with
+ * `no webhook secret is configured on this server` as the reason, and nothing anywhere saying that
+ * one more step was needed.
+ *
+ * A registration flow that leaves the thing it registered non-functional is not a registration
+ * flow. So the three values go to the production environment and the deployment is rebuilt to pick
+ * them up, and if any of that fails it is reported rather than swallowed — a half-configured
+ * webhook is worse than an unconfigured one, because it looks finished.
+ */
+function publish(app) {
+  const env = {
+    GITHUB_APP_ID: String(app.id),
+    GITHUB_WEBHOOK_SECRET: app.webhook_secret,
+    GITHUB_PRIVATE_KEY: app.pem,
+  };
+
+  try {
+    for (const [name, value] of Object.entries(env)) {
+      // Replace rather than duplicate: a second value for the same name is a coin toss.
+      spawnSync('npx', ['vercel', 'env', 'rm', name, 'production', '--yes'], {
+        cwd: ROOT, stdio: 'ignore',
+      });
+      const put = spawnSync('npx', ['vercel', 'env', 'add', name, 'production'], {
+        cwd: ROOT, input: value, encoding: 'utf8',
+      });
+      if (put.status !== 0) throw new Error(`could not set ${name}: ${(put.stderr || '').trim().slice(0, 160)}`);
+    }
+
+    // Environment variables are read at build time, so the running deployment has to be replaced.
+    const deploy = spawnSync('npx', ['vercel', '--prod', '--yes'], { cwd: ROOT, encoding: 'utf8' });
+    if (deploy.status !== 0) throw new Error(`deployed variables, but the redeploy failed: ${(deploy.stderr || '').trim().slice(0, 160)}`);
+
+    console.log('  the live webhook now has the key and the secret, and has been redeployed');
+    return true;
+  } catch (e) {
+    console.log(`\n  ${e.message}`);
+    console.log('  The app IS registered and .env is written — only the deployment is behind.');
+    console.log('  Fix with: npx vercel env add GITHUB_APP_ID production   (and the other two)\n');
+    return false;
+  }
+}
 
 /**
  * Credentials to `.env`, and never to stdout.

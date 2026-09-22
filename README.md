@@ -815,9 +815,16 @@ npm run check-run
 drives the real handler over a delivery shaped exactly like GitHub's, with the real signature
 verification against the raw bytes, and prints all three check runs. Nothing is stubbed except the
 four calls that would reach github.com, and those are injected through the same parameter the tests
-use. `scripts/register-app.js` does the registration itself when somebody is at a keyboard: it
-opens GitHub's manifest page, captures the code it redirects back with, exchanges it, and writes
-the app id, private key and webhook secret to `.env`.
+use. `scripts/register-app.js` does the registration itself when somebody is at a keyboard, and it does
+all of it: opens GitHub's manifest page, captures the code it redirects back with, exchanges it,
+writes the app id, private key and webhook secret to `.env`, **pushes those three to the live
+deployment's production environment, and rebuilds it** so the hosted webhook can actually verify a
+signature.
+
+That last part is not a convenience. Without it the moment after registration is a live App
+pointed at an endpoint that 401s everything it sends — *no webhook secret is configured on this
+server* — with nothing anywhere saying a step was missed. One press, and the App is registered,
+configured and live.
 
 #### The whole corpus, read four ways
 

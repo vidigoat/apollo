@@ -268,9 +268,13 @@ It installs nothing and executes nobody's code. For a supply-chain tool that is 
 
 **Not registered yet**, and that is the one thing in this project that cannot be done from a
 terminal: GitHub has no REST endpoint for creating an App, only the web form or a browser manifest
-flow. `node scripts/register-app.js` drives the manifest flow end to end — it opens the page,
-captures the code GitHub redirects back with, exchanges it, and writes the app id, private key and
-webhook secret straight to `.env`. It needs one human press on GitHub's own page.
+flow. `node scripts/register-app.js` drives the manifest flow end to end — it opens the page, captures
+the code GitHub redirects back with, exchanges it, writes the app id, private key and webhook
+secret to `.env`, pushes those three to the live deployment's production environment and rebuilds
+it. One human press on GitHub's own page, and the App is registered, configured and live.
+
+`POST /apps` returns 404 — there is no endpoint, whatever the token. That press is the only thing
+in this project that cannot be done from a terminal.
 
 ## What's next
 
