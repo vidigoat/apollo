@@ -132,7 +132,7 @@ export default function App() {
         <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />
         {scan && <Fleet data={scan} />}
-        <How />
+        <How tree={meta} />
         <Limits />
       </main>
 

@@ -45,10 +45,15 @@ export default function Run({ strategies = [], tree = null }) {
     <section className="wrap" id="run">
       <p className="eyebrow">the run</p>
       <h2>Two twins per package, forked from one checkpoint at the same instant</h2>
+      {/*
+        The count comes from the tree, and if the tree has not answered yet the sentence simply does
+        not claim one. It used to fall back to the literal "1,214" — correct on the day it was
+        typed, and a number nobody would ever check again.
+      */}
       <p className="lede">
-        So anything that differs is the package, not the machine. Of {data ? num(data.tree.total) : '1,214'}{' '}
-        packages in this tree, only the ones whose version actually moved are re-run — re-running
-        the rest would be theatre.
+        So anything that differs is the package, not the machine.{' '}
+        {tree ? `Of ${num(tree.total)} packages in this tree, only` : 'Only'} the ones whose version
+        actually moved are re-run — re-running the rest would be theatre.
       </p>
 
       {/*

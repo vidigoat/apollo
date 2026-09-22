@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react';
+import { num } from '../lib/api.js';
 
 /**
  * The pipeline, as the thing it actually is: a sequence of decisions, each of which is allowed to
@@ -21,7 +22,7 @@ const STEPS = [
   {
     who: 'fork ×2',
     what: 'Two twins per package, at the same instant. Install the old version in one and the new in the other, then import both — where 2026\'s attacks actually fire.',
-    cost: '14 of 1,214',
+    cost: null,   // filled from the tree — see below
   },
   {
     who: 'transcript',
@@ -58,8 +59,21 @@ const STEPS = [
   },
 ];
 
-export default function How() {
+export default function How({ tree = null }) {
   const still = useReducedMotion();
+
+  /*
+   * The one figure in this list that is a measurement rather than a description.
+   *
+   * It was typed — "14 of 1,214" — and the corpus says fifteen. A number that describes the data
+   * has to come from the data, or it is only correct until somebody changes the data, and nothing
+   * anywhere says it stopped being correct.
+   */
+  const steps = STEPS.map((s) =>
+    s.cost === null
+      ? { ...s, cost: tree ? `${num(tree.moved)} of ${num(tree.total)}` : 'only what moved' }
+      : s
+  );
 
   return (
     <section className="wrap" id="how">
@@ -71,7 +85,7 @@ export default function How() {
       </p>
 
       <div className="pipe">
-        {STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <motion.div
             className="step"
             key={s.who}

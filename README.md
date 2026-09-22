@@ -940,7 +940,7 @@ npm test
 ```
 
 ```
-28 suites · 370 checks
+28 suites · 372 checks
 all green
 ```
 
