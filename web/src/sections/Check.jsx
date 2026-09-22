@@ -23,11 +23,13 @@ const OUTCOMES = [
     conclusion: 'failure',
     mark: '✕',
     title: '1 dependency behaves differently',
-    body: [
-      'The version did not move. The behaviour did.',
-      '— express-fileupload@2.1.1 — env: now AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN · net: now cdn-assets-delivery.workers.dev',
-      '412 packages were checked against the lock.',
-    ],
+    body: ['The version did not move. The behaviour did.'],
+    // The finding itself, as the App posts it: the package, then what it started doing.
+    finding: {
+      pkg: 'express-fileupload@2.1.1',
+      what: 'env: now AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN · net: now cdn-assets-delivery.workers.dev',
+    },
+    foot: '412 packages were checked against the lock.',
   },
   {
     key: 'unknown',
@@ -38,8 +40,8 @@ const OUTCOMES = [
     body: [
       'No dependency in this pull request behaves differently than the lock records.',
       '23 of them have never been observed by anything, so nothing is claimed about those.',
-      'That is the normal state of a dependency tree, not a finding. Run `npx stakeout index --from-lockfile package-lock.json` to shrink it.',
     ],
+    foot: 'That is the normal state of a dependency tree, not a finding. Run `npx stakeout index --from-lockfile package-lock.json` to shrink it.',
   },
   {
     key: 'clean',
@@ -49,8 +51,8 @@ const OUTCOMES = [
     title: '412 of 412 packages behave as recorded',
     body: [
       'Every package in this tree was observed, and none of them does anything it did not do before.',
-      'Behaviour is compared, not versions. A patch release that quietly starts reading an environment variable would fail this check with its version unchanged.',
     ],
+    foot: 'Behaviour is compared, not versions. A patch release that quietly starts reading an environment variable would fail this check with its version unchanged.',
   },
 ];
 
@@ -106,6 +108,15 @@ export default function Check() {
               {shown.body.map((line) => (
                 <p key={line}>{line}</p>
               ))}
+
+              {shown.finding && (
+                <p className="check__finding">
+                  <b>{shown.finding.pkg}</b>
+                  <span>{shown.finding.what}</span>
+                </p>
+              )}
+
+              {shown.foot && <p className="check__foot">{shown.foot}</p>}
             </div>
           </motion.div>
         </AnimatePresence>
