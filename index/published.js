@@ -33,7 +33,17 @@ class PublishedIndex {
     }
     if (!doc.packages || typeof doc.packages !== 'object') throw new Error(`${from} holds no packages`);
 
-    this.doc = doc;
+    /*
+     * The package map gets a null prototype, so a lookup cannot walk off the end of it.
+     *
+     * `doc.packages[name]?.[version]` reaches Object.prototype for a name like `constructor` or
+     * `hasOwnProperty`: `lookup('constructor', 'name')` came back as the string "Object", which is
+     * not an entry and is not null either, and every caller here is written against a contract of
+     * "an entry, or null". Nothing on npm is called `constructor` — but this index is a file
+     * fetched from a URL somebody typed, and a reader that can be handed a string where a
+     * transcript belongs is one bad file away from a confident wrong answer.
+     */
+    this.doc = { ...doc, packages: Object.assign(Object.create(null), doc.packages) };
     this.from = from;
     this.hits = 0;
     this.misses = 0;

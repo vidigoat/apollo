@@ -120,6 +120,35 @@ const doc = (over = {}) => ({
     assert.equal(new PublishedIndex(doc()).mismatch().length, 0, 'an index that agrees reported a disagreement');
   });
 
+  await it('a lookup cannot walk off the end of the package map', () => {
+    /*
+     * `doc.packages[name]?.[version]` reaches Object.prototype for a name like `constructor`:
+     * `lookup('constructor', 'name')` came back as the string "Object", which is not an entry and
+     * is not null either, while every caller here is written against "an entry, or null".
+     *
+     * Nothing on npm is called `constructor`. This index is a file fetched from a URL somebody
+     * typed, and a reader that can be handed a string where a transcript belongs is one bad file
+     * away from a confident wrong answer about somebody's dependencies.
+     */
+    const index = new PublishedIndex(doc());
+    for (const name of ['constructor', 'hasOwnProperty', 'toString', '__proto__', 'valueOf']) {
+      for (const version of ['name', 'prototype', 'call', '1.0.0']) {
+        const entry = index.lookup(name, version);
+        assert.ok(
+          entry === null || (typeof entry === 'object' && typeof entry.strategy === 'string'),
+          `lookup(${name}, ${version}) returned ${JSON.stringify(entry)}, which is neither an entry nor null`
+        );
+      }
+      assert.deepEqual(index.versions(name), []);
+    }
+
+    // And reading one does not pollute anything.
+    const hostile = doc();
+    hostile.packages.__proto__ = { '1.0.0': { polluted: true } };
+    new PublishedIndex(hostile).lookup('left-pad', '1.3.0');
+    assert.notEqual({}.polluted, true);
+  });
+
   await it('a schema it cannot read is refused, not guessed at', () => {
     assert.throws(() => new PublishedIndex(doc({ schema: SCHEMA + 1 })), /schema/);
     assert.throws(() => new PublishedIndex({ schema: SCHEMA }), /no packages/);
