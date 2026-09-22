@@ -276,11 +276,43 @@ it. One human press on GitHub's own page, and the App is registered, configured 
 `POST /apps` returns 404 — there is no endpoint, whatever the token. That press is the only thing
 in this project that cannot be done from a terminal.
 
+## The index is published, so the claim can be checked by somebody else
+
+The argument this project rests on is a ratio: a package's behaviour does not depend on who imported
+it, so it is observed **once** and looked up after that, and the hundredth repository that depends
+on it is free.
+
+That was unverifiable. The index was built locally and gitignored, so checking it meant installing
+two thousand packages first — which makes "run a package once, answer for every repository" a
+sentence about an artefact that existed on exactly one laptop.
+
+`npm run index:publish` writes it. **1,589 packages, 2,129 versions, 61 kB over the wire**, served
+from the demo URL at `/index.json`. Then, in a repository that has never heard of this project:
+
+```bash
+git clone https://github.com/vidigoat/cassandra ~/stakeout
+cd ~/your-project
+node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
+```
+
+On a real tree: **47 of 151 packages pinned from real observations, 104 recorded as unknown by
+name.** Most of anyone's tree comes back unknown, because most of npm has never been watched by
+anybody, and `check` reports that as its own outcome rather than as a pass. That is the point of
+publishing it — the claim is now a thing that can be wrong.
+
+**Every one of the 2,129 entries was overclaiming, and publishing them found it.** Each entry stores
+a copy of the `CAN_SEE` row it was observed under, and every one was written while `nodert` was
+recorded as `fs: true`. It is not — the probe hooks writes, so a package that only *reads* a file is
+invisible to it. The table was corrected months ago; the entries were not, and `quietness()` reads
+exactly that field to decide what a silence is worth. What a strategy can see is a property of the
+strategy, not of an observation, so the stored copy is now restated from the table on read, and a
+published index is read with the reader's table while any disagreement with the publisher's is
+printed rather than absorbed.
+
 ## What's next
 
-Kernel-level observation on real Sandboxes (the adapter is written and tested against a stub;
-`npm run preflight` will confirm it the moment access arrives), and a pre-populated index published
-as an artefact rather than built locally.
+Kernel-level observation on real Sandboxes — the adapter is written and tested against a stub, and
+`npm run preflight` will confirm it the moment access arrives.
 
 ---
 
