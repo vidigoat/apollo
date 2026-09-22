@@ -2,6 +2,7 @@ import { useState } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Accordion from '@radix-ui/react-accordion';
 import { motion, useReducedMotion } from 'motion/react';
+import Tree from '../components/Tree.jsx';
 import { run as runApi, usd, num, CHANNELS, describe } from '../lib/api.js';
 
 /**
@@ -18,7 +19,7 @@ import { run as runApi, usd, num, CHANNELS, describe } from '../lib/api.js';
 
 const SEVERITY_ORDER = { alarming: 0, notable: 1, minor: 2, none: 3 };
 
-export default function Run({ strategies = [] }) {
+export default function Run({ strategies = [], tree = null }) {
   const [state, setState] = useState({ status: 'idle' });
   const [strategy, setStrategy] = useState('');
   const still = useReducedMotion();
@@ -49,6 +50,39 @@ export default function Run({ strategies = [] }) {
         packages in this tree, only the ones whose version actually moved are re-run — re-running
         the rest would be theatre.
       </p>
+
+      {/*
+        The tree, drawn, and drawn BEFORE anything is pressed.
+        
+        One mark per package, with the fifteen that moved lit inside twelve hundred that did not.
+        The ratio stated as a number reads as a boast; drawn, it reads as the reason the arithmetic
+        works. It hung off the run at first, which left this section — the one the whole page is
+        built around — as a heading, a paragraph and a button above two hundred pixels of nothing
+        until somebody clicked. The tree is known before any of that; it is the tree.
+      */}
+      {tree && (
+        <div className="field">
+          <div>
+            <Tree total={tree.total} moved={tree.moved} />
+            <div className="legend" style={{ marginTop: 14 }}>
+              <span>
+                <i style={{ background: 'var(--rule)' }} />
+                {num(tree.total - tree.moved)} never moved, and are not re-run
+              </span>
+              <span>
+                <i style={{ background: 'var(--watched)' }} />
+                {num(tree.moved)} moved, and are
+              </span>
+            </div>
+          </div>
+          <p className="field__note">
+            Every mark is a package. The fifteen that are lit are the ones whose version actually
+            moved, and the red one is the only thing in this tree that behaves differently than it
+            used to. Running the other {num(tree.total - tree.moved)} would cost real money to
+            learn nothing.
+          </p>
+        </div>
+      )}
 
       {strategies.length > 1 && (
         <Tabs.Root

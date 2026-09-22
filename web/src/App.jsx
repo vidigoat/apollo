@@ -86,8 +86,16 @@ export default function App() {
       <main>
         <Hero />
 
+        {/*
+          The figures sit UNDER the first screen, as its floor.
+          
+          They used to be a separate band further down, which left the hero composition floating in
+          the middle of a tall dark rectangle with nothing beneath it — airy on a designer's screen
+          and unfinished on anybody else's. A first screen needs a base: mark, then the claim and
+          its evidence, then the numbers those rest on.
+        */}
         {meta && (
-          <div className="wrap" style={{ paddingBottom: 'clamp(40px, 7vh, 80px)' }}>
+          <div className="wrap slate-band">
             <dl className="slate">
               <div>
                 <dt>dependency tree</dt>
@@ -121,7 +129,7 @@ export default function App() {
           </div>
         )}
 
-        <Run strategies={meta?.strategies || []} />
+        <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />
         {scan && <Fleet data={scan} />}
         <How />

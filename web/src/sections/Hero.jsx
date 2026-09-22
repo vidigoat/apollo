@@ -40,60 +40,38 @@ export default function Hero() {
 
   return (
     <section className="hero wrap" id="top">
-      <div className="hero__said">
-        <motion.p
-          className="hero__mark"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          Stakeout
-        </motion.p>
+      {/*
+        The words are THERE. They do not fade in.
 
-        <motion.h1
-          initial={{ opacity: 0, y: still ? 0 : 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.7,
-            ease: [0.16, 1, 0.3, 1],
-            delay: at(0.1),
-          }}
-        >
+        The first version staggered the mark, the headline and the paragraph over about a second,
+        so the first thing anybody saw on the live URL was a blank dark screen. A page that
+        withholds its own headline to make an entrance has made the entrance the point. The
+        orchestrated moment is the evidence arriving underneath a version that did not move; the
+        sentence explaining it has no business being suspense.
+      */}
+      <div className="hero__said">
+        <p className="hero__mark">Stakeout</p>
+
+        <h1>
           Your lockfile pins versions.
           <span className="quiet">This pins behaviour.</span>
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          className="hero__sub"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: at(0.35) }}
-        >
-          Every dependency gets its own disposable copy of your machine. We
-          install it, import it, and write down what it actually did — then do
-          the same with the version you had before, from the identical starting
-          state, and show you what changed.
-        </motion.p>
+        <p className="hero__sub">
+          Every dependency gets its own disposable copy of your machine. We install it, import it,
+          and write down what it actually did — then do the same with the version you had before,
+          from the identical starting state, and show you what changed.
+        </p>
 
-        <motion.p
-          className="hero__scroll"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: at(2.7) }}
-        >
-          from the bundled corpus — planted, labelled as planted, reproducible
-          with <code>npm run demo</code>
-        </motion.p>
+        <p className="hero__scroll">
+          from the bundled corpus — planted, labelled as planted, reproducible with{' '}
+          <code>npm run demo</code>
+        </p>
       </div>
 
-      <motion.div
-        className="exhibit"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: at(0.55) }}
-      >
+      <div className="exhibit">
         {ROWS.map((r) => (
-          <div className="exhibit__row" key={r.text}>
+          <div className="exhibit__row exhibit__row--was" key={r.text}>
             <span className="exhibit__gutter">{r.gutter}</span>
             <span>{r.text}</span>
             <span className="exhibit__when">{r.when}</span>
@@ -106,7 +84,7 @@ export default function Hero() {
             className="exhibit__scan"
             initial={{ top: 0, opacity: 0 }}
             animate={{ top: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
-            transition={{ duration: 1.1, delay: 0.95, ease: "easeInOut" }}
+            transition={{ duration: 0.95, delay: 0.3, ease: "easeInOut" }}
           />
         )}
 
@@ -116,7 +94,7 @@ export default function Hero() {
             key={f.what}
             initial={{ opacity: 0, x: still ? 0 : -8 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: at(1.75 + i * 0.13) }}
+            transition={{ duration: 0.38, delay: at(1.05 + i * 0.11) }}
           >
             <span className="exhibit__gutter">+</span>
             <span>
@@ -134,14 +112,14 @@ export default function Hero() {
           className="exhibit__verdict"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: at(2.4) }}
+          transition={{ duration: 0.45, delay: at(1.62) }}
         >
           <span>
             a patch release that now reads three credentials and calls a host{" "}
             <b>nothing on the open web mentions</b>
           </span>
         </motion.div>
-      </motion.div>
+      </div>
     </section>
   );
 }
