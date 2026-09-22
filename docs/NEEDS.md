@@ -55,7 +55,8 @@ minute.
 You said you cannot do these right now. That is genuinely fine, and here is the honest accounting
 so it is not carried as guilt.
 
-**What they are for.** `npm run eval` scores the vision reader on nine *rendered* panels — images we
+**What they are for.** `npm run eval` — in `second-set-of-hands`, not here; this file is kept
+identical in both repositories — scores the vision reader on nine *rendered* panels — images we
 generated: a specular highlight across the digits, a crouching angle, an unlit utility room, a thumb
 across a corner. It gets **7/9 fault codes, 1/1 model numbers, 0 invented codes**, and the two
 misses return `null` rather than a guess, which is the failure mode this product needs.
