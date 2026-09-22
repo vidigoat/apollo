@@ -1,6 +1,6 @@
 # What is needed from Vidit — both projects, one list
 
-Written 21 Sep 2026. Ordered by **what blocks the most work**, not by effort.
+Written 21 Sep 2026, revised 23 Sep. Ordered by **what blocks the most work**, not by effort.
 
 Copy of this file lives in `~/second-set-of-hands/docs/NEEDS.md`; they are kept identical.
 
@@ -104,31 +104,42 @@ Credits arrive later. Not on the critical path now that sandboxes are free in be
 
 ## Tier 3 — needed before the relevant phase, not today
 
-### 7. A GitHub App, or permission for me to create one  ⏱ 10 minutes, needed by ~13 Oct
+### 7. ~~A GitHub App~~ ✅ DONE — registered, deployed, verified live
 
-The GitHub App is where Stakeout stops being a page and becomes a thing developers use: it comments
-on your Dependabot PR with what the upgrade actually *does*.
+Registered through the manifest flow, its key and secret pushed to the production environment, and
+the webhook answering on the demo URL. Checked against it since: an unsigned delivery, a wrong
+signature, a malformed one and a right-length-wrong-algorithm one all answer 401. Nothing gets
+through without the secret.
 
-Either create one yourself (Settings → Developer settings → GitHub Apps) and give me the App ID and
-private key, **or** say "go ahead" and I will walk you through the three clicks when we get there.
-It stays in development mode — no public listing, no review.
+`npm run check-run` prints all three check runs it posts, through the real handler, with no GitHub
+account needed.
 
-### 7b. Deploy the two demo URLs  ⏱ 2 minutes each, whenever you want them public
+### 7b. ~~Deploy the two demo URLs~~ ✅ DONE — both live and public
 
 Both are ready. `npx vercel --prod` in each repo — no build step, no framework config, no
 environment variables required. `DEPLOY.md` in each says what the hosted version deliberately cannot
 do and what it says instead.
 
-**I have not run it, and will not without you saying so.** A deploy publishes a URL, and that is
-your call rather than mine. Two things worth knowing before you do:
+Both are live:
 
-- Nebius *requires* a working demo URL, so `~/cassandra` needs this before submission. It carries a
-  real committed scan of a checkout of vercel/turborepo so the hosted fleet page has measured
-  numbers to show where there is no filesystem to read — and it says whose tree it is rather than
-  letting it read as yours.
-- `~/second-set-of-hands` will show an **empty review queue** when hosted, because reading a manual
-  needs `pdftotext` and the host has none. That is the honest state and the bench says so. The
-  library, the diagnosis loop and the trust gate all work there.
+- **<https://cassandra-nu.vercel.app>** — and it now serves the **published index** at
+  `/index.json`: 1,589 packages, 61 kB over the wire. A stranger can point `cli.js lock --index` at
+  it and get their own tree answered without building anything, which is the part of the argument
+  that used to be unverifiable.
+- **<https://second-set-of-hands.vercel.app>** — and `/review.html` now **reads a manual you drop
+  on it**. That used to need `pdftotext`, which the host does not have; the reader is written here
+  now with no dependencies, so the one capability the project is for is finally reachable from the
+  URL. Measured against poppler on 1,881 pages: identical page counts, 98.4–100% of its words,
+  87.5% of its parsed rows word for word.
+
+Two things that were true when this was written and still are:
+
+- `~/cassandra` carries a real committed scan of a checkout of vercel/turborepo, so the hosted fleet
+  page has measured numbers where there is no filesystem to read — and it says whose tree it is
+  rather than letting it read as yours.
+- `~/second-set-of-hands` still shows an **empty review queue** when hosted: the queue is the
+  manuals *you* fetched and it is gitignored on purpose. The drop target underneath it is the way
+  in now, and the bench says which of the two you are looking at.
 
 ### 8. Two decisions  ⏱ one reply each
 
@@ -169,15 +180,21 @@ right now — 6 minutes, and one of them is 30 seconds
   1b  re-try the $25 promo code (your balance reads $0.85)
 
 done ✅  Tavily key · Vercel login · Builders Program · manual-download permission
+        GitHub App (registered, deployed, live) · both demo URLs (live and public)
 
 not blocking — resolves during recording week
   2   appliance photographs
 
-when you want them public
-  7b  `npx vercel --prod` in each repo — ready, and I have not run it
 
-later, when I ask
-  7   GitHub App  ·  8  two public/private decisions  ·  9  rotate the AWS key
+
+still yours to decide
+  8   ~/cassandra goes PUBLIC at submission — Nebius requires it, and it is private today
+      ~/second-set-of-hands may stay private if shared with testing@devpost.com and @AmazonAppDev
+  9   rotate the AWS key
+
+  one thing worth knowing before 8: the git history of ~/cassandra contains an old screenshot of
+  a scan of YOUR home directory — repository names, from before that image was replaced. Private
+  today. Making the repo public makes that history public with it.
 ```
 
-Item 1 is the only thing left that changes what I build. Everything else I can start on today.
+Item 1 is still the only thing left that changes what I build.
