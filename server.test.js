@@ -420,6 +420,51 @@ const json = async (p) => (await get(p)).json();
     }
   });
 
+  await it('the drill-down the documents point at returns a channel strip, or says why not', async () => {
+    /*
+     * `docs/SUBMISSION.md` and `docs/DEEP-DIVE.md` both used to promise "clicking a project gives
+     * its packages with a six-slot channel strip". Nothing in the rebuilt site calls this endpoint,
+     * so the documents now name it directly — which makes it a thing a reader will type, and
+     * therefore a thing worth checking.
+     *
+     * Two honest answers, depending on where the scan came from. On a machine that took its own
+     * scan, the packages. On the hosted one, where the scan is portable and its paths are withheld,
+     * a plain refusal rather than an invented tree.
+     */
+    const res = await get('/api/project?at=0');
+    assert.ok([200, 404].includes(res.status), `it answered ${res.status}`);
+    const out = await res.json();
+
+    if (res.status === 404) {
+      assert.match(out.error, /somewhere else|no such project/i, 'it refused without saying why');
+      return;
+    }
+
+    assert.equal(typeof out.name, 'string');
+    assert.ok(Array.isArray(out.packages) && out.packages.length, 'a project with no packages in it');
+
+    const observed = out.packages.find((p) => p.observed);
+    if (!observed) return; // a project none of whose packages the index has seen; still honest
+
+    // The strip itself: six channels, and what the strategy could see in each of them.
+    const { CHANNELS } = require('./index/schema');
+    for (const channel of CHANNELS) {
+      assert.equal(typeof observed.counts[channel], 'number', `no count for ${channel}`);
+      assert.ok(channel in observed.canSee, `canSee says nothing about ${channel}`);
+    }
+
+    /*
+     * And the third state, which is the one the whole project is about: a channel nothing was
+     * watching is named, rather than counted as quiet. `nodert` hooks writes, so the filesystem is
+     * a blind spot and has to appear as one.
+     */
+    assert.ok(Array.isArray(observed.blindTo), 'an entry with no blind spots listed at all');
+    if (observed.strategy === 'nodert') {
+      assert.ok(observed.blindTo.includes('fs'), "nodert reported no blind spot on a channel it only half watches");
+      assert.equal(observed.canSee.fs, 'writes');
+    }
+  });
+
   await it('the hosted routes keep their own path', () => {
     /*
      * Also happened. A `{"source": "/(.*)", "destination": "/api"}` rewrite reaches the function
