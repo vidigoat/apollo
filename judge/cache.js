@@ -18,9 +18,11 @@
  * A verdict is a function of the EVIDENCE, the PROMPT and the MODELS. Change any of the three and
  * the cached answer is about a different question, so all three go into the hash:
  *
- *   evidence   the diff's own content — severity, reasons, and every channel that moved. Not the
- *              package name: two packages producing identical evidence deserve the same answer,
- *              and pretending otherwise would hide a real duplicate.
+ *   evidence   the diff's own content — severity, reasons, and every channel that moved.
+ *   package    the name. This line used to say the opposite — that two packages producing identical
+ *              evidence deserve the same answer — and it was wrong, because `judge/prompt.js` opens
+ *              with `Package: ${d.pkg}`. The name is IN the question, so they are two questions.
+ *              See `keyFor` for what that cost.
  *   prompt     PROMPT_VERSION below, bumped by hand when judge/prompt.js changes. The prompt was
  *              hardened once already after a live injection got through, and serving verdicts from
  *              the old one would have quietly undone that.
@@ -82,11 +84,31 @@ function evidenceOf(d) {
   });
 }
 
+/**
+ * The key is the QUESTION, and the whole question.
+ *
+ * ── The package name belongs in it, and used not to be ──────────────────────
+ *
+ * `judge/prompt.js` opens with `Package: ${d.pkg}`. The name is in the prompt, so two packages are
+ * two different questions and can have two different answers.
+ *
+ * Without the name in the key they shared one. `tiny-glob` and `lru-memo` both start writing to a
+ * cache file, and after normalisation their evidence is byte-identical — so the hosted demo served
+ * tiny-glob's verdict as lru-memo's, stamped `"pkg": "tiny-glob"` inside a row labelled lru-memo,
+ * with the model's own reasoning text discussing the other package. It was counted as a live,
+ * paid call in `modelCalls` and `modelUsd`, and it was an answer to a question nobody asked about
+ * that package.
+ *
+ * The saving was never worth it. This is a cache for re-running the same demo, not for collapsing
+ * distinct packages into one another.
+ */
 function keyFor({ diff, models, record }) {
   const material = [
     `v${SCHEMA}`,
     `p${PROMPT_VERSION}`,
     Object.values(models || {}).sort().join(','),
+    // In the prompt, therefore in the key.
+    diff?.pkg || 'no-package',
     // The public record is part of the question: "nothing on the web mentions this" and "a
     // changelog explains it" are different prompts and must not share an answer.
     record?.verdict || 'no-record',

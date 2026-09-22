@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T14:40:11.340Z",
+  "judgement": {
+    "pkg": "node-fetch-retry",
+    "severity": "notable",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version adds optional telemetry that sends retry statistics to api.node-fetch-retry.dev:443, as documented in the changelog.",
+      "explained": true,
+      "worthWaking": false,
+      "confidence": "high",
+      "note": "Telemetry is opt-out via NO_TELEMETRY=1 and the destination is documented."
+    },
+    "second": null,
+    "accused": false,
+    "reason": "the public record accounts for this behaviour",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000128,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note.\n\nWe must not invent behavior. Evidence shows now resolves and connects to api.node-fetch-retry.dev:443. That's new destination. It's optional telemetry for retry statistics, opt-out via env var. So it's adding telemetry endpoint. This is a new connection to a host. That's notable. Should we consider worthWaking? According to rules: worthWaking means get up tonight, not worth knowing for ordinary maintenance. This is connecting to a new host for telemetry. That's arguably not a security breach but could be considered telemetry.…"
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.001658,
+        "simulated": false,
+        "reasoning": ""
+      }
+    ],
+    "costUsd": 0.001786
+  }
+}

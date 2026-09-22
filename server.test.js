@@ -128,6 +128,44 @@ const json = async (p) => (await get(p)).json();
     assert.match(body.error, /adapters\/local\.js/, 'the refusal should say where to read first');
   });
 
+  await it('every verdict belongs to the package it is shown under', async () => {
+    /*
+     * This shipped, and it is the kind of wrong that looks right.
+     *
+     * The judgement cache keyed on the evidence and not on the package name, and `tiny-glob` and
+     * `lru-memo` both start writing to a cache file — identical evidence after normalisation. So
+     * the hosted demo served one verdict twice: the row said lru-memo, the object inside said
+     * `"pkg": "tiny-glob"`, and the model's own reasoning text discussed the other package. It was
+     * counted as a live, paid call in `modelCalls` and `modelUsd`.
+     *
+     * The prompt opens with `Package: ${d.pkg}`, so two packages are two questions. Checked here,
+     * over real HTTP, because the cache is the thing being trusted and a unit test of the key would
+     * not have noticed the entries that were already published under the old one.
+     */
+    for (const p of run.pairs) {
+      if (!p.judgement?.judged) continue;
+      assert.equal(
+        p.judgement.pkg,
+        p.pkg,
+        `${p.pkg} is showing a verdict that was produced about ${p.judgement.pkg}`
+      );
+    }
+  });
+
+  await it('no two findings share one verdict', () => {
+    // The same failure seen from the other side: if two rows carry byte-identical model reasoning,
+    // one of them is being answered with the other's homework.
+    const seen = new Map();
+    for (const p of run.pairs.filter((x) => x.diff.changed)) {
+      const reasoning = (p.judgement?.spend || []).map((s) => s.reasoning || '').join('|');
+      if (!reasoning.trim()) continue;
+      if (seen.has(reasoning)) {
+        assert.fail(`${seen.get(reasoning)} and ${p.pkg} were given the same model reasoning verbatim`);
+      }
+      seen.set(reasoning, p.pkg);
+    }
+  });
+
   await it('the fixture run says it is a fixture', () => {
     assert.equal(run.live, false, 'a fixture that does not declare itself is the thing this repo is against');
   });

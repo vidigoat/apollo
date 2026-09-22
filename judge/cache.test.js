@@ -164,4 +164,37 @@ it('the key is stable across processes', () => {
   assert.match(keyFor(job), /^[0-9a-f]{32}$/);
 });
 
+it('two packages with identical evidence do not share one verdict', () => {
+  /*
+   * This shipped. `tiny-glob` and `lru-memo` both start writing to a cache file, and after
+   * normalisation their evidence is byte-identical — so the hosted demo served tiny-glob's verdict
+   * as lru-memo's. The row said lru-memo, the object inside said `"pkg": "tiny-glob"`, the model's
+   * own reasoning text discussed the other package, and it was counted as a live paid call in
+   * `modelCalls` and `modelUsd`.
+   *
+   * The prompt opens with `Package: ${d.pkg}`. Two names, two questions, two answers.
+   */
+  const evidence = {
+    severity: 'minor',
+    reasons: ['writes somewhere it did not write before'],
+    strategy: 'nodert',
+    fs: { added: [{ op: 'write', path: '/app/·cache/·' }], removed: [] },
+    net: { added: [], removed: [] },
+    dns: { added: [], removed: [] },
+    env: { added: [], removed: [] },
+    proc: { added: [], removed: [] },
+    exec: { added: [], removed: [] },
+  };
+
+  const models = { triage: 'nano', judge: 'ultra', veto: 'super' };
+  const a = keyFor({ diff: { ...evidence, pkg: 'tiny-glob' }, models, record: null });
+  const b = keyFor({ diff: { ...evidence, pkg: 'lru-memo' }, models, record: null });
+
+  assert.notEqual(a, b, 'two packages with the same evidence still share one cached verdict');
+
+  // And the same package with the same evidence still hits, or the cache has stopped being one.
+  const again = keyFor({ diff: { ...evidence, pkg: 'tiny-glob' }, models, record: null });
+  assert.equal(a, again, 'the key is not stable for one package');
+});
+
 console.log(`\n${passed} passed`);
