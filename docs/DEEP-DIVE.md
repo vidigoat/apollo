@@ -21,7 +21,7 @@ dependency-versions that collapse to 8,623 distinct ones, and **2,120 observatio
 them.** Sixty-two per cent, from an index you could build in an afternoon. That is
 [further down too](#point-it-at-every-repo-you-own).
 
-![The behavioural diff wall — most packages identical, one is not](docs/images/hero-wall.png)
+![The behavioural diff wall — most packages identical, one is not](images/hero-wall.png)
 
 ---
 
@@ -244,7 +244,7 @@ The report carries `cannotSee` alongside the findings, because a machine reading
 caveat as much as a person does: otherwise an empty findings list reads as *clean* rather than as
 *not looked at*.
 
-A ready-to-copy workflow is in [`docs/ci/dependency-behaviour.yml`](docs/ci/dependency-behaviour.yml).
+A ready-to-copy workflow is in [`docs/ci/dependency-behaviour.yml`](ci/dependency-behaviour.yml).
 It runs on `pull_request` rather than `pull_request_target` on purpose — that trigger has no
 repository secrets and cannot write to the repo, which is the entire reason it is safe to execute a
 stranger's dependencies under it.
@@ -357,7 +357,7 @@ dependency-versions, 1,984 of them already answered — 64% of a public monorepo
 letting it read as yours, and clicking a project there says plainly that its lockfile is not on this
 machine instead of doing nothing. The hundredth repo is a lookup, not a hundredth sandbox run.
 
-![The fleet band — 76 projects, each a segment, the unwatched surface hatched under a ceiling hairline](docs/images/fleet.jpg)
+![The fleet band — 76 projects, each a segment, the unwatched surface hatched under a ceiling hairline](images/fleet.jpg)
 
 The page draws the fleet rather than summarising it. Every project is one segment, width
 proportional to its dependency count, and the part nobody has watched is drawn as hatching rather
@@ -366,7 +366,7 @@ than as a filled bar — because a filled bar reads as *present*, and a coverage
 Clicking a project gives you its packages, each with a six-slot strip: activity, watched-and-silent,
 and *nothing was watching*. Two of those three states get printed as "no findings" everywhere else.
 
-![One project's packages, each with a six-slot channel strip](docs/images/channels.jpg)
+![One project's packages, each with a six-slot channel strip](images/channels.jpg)
 
 The header line is the one that matters: *571 have been observed; 166 of those did something. 405
 were quiet under a strategy with no blind spots, which is the only state that supports saying a
@@ -378,7 +378,7 @@ command — the same answer the CLI gives for a missing index.
 
 ## What a run looks like
 
-![The whole argument in one screen: silence, one catch, three ways of watching, and the bill](docs/images/terminal.png)
+![The whole argument in one screen: silence, one catch, three ways of watching, and the bill](images/terminal.png)
 
 This is real output from `npm run demo`, not an illustration — the image above is that same command,
 screenshotted by `npm run terminal-shot` rather than by a person, so it cannot drift from what the
@@ -465,8 +465,8 @@ retouched, because none of them has been touched at all.
 
 | | |
 |---|---|
-| ![The wall of silence](docs/images/wall-silence.png) <br/> **The wall.** 1,200 rows of nothing. You scroll past emptiness for a long time, and that scroll is the argument. | ![The catch](docs/images/catch-panel.png) <br/> **The catch.** The transcript lines that differ, what the open web says, and which models agreed. |
-| ![The fork strip](docs/images/fork-strip.png) <br/> **The run.** One hairline per forked twin. Change *watched with* and the whole wall re-runs — the caveat underneath says what that strategy could not see. | ![The blind spot](docs/images/blind-spot.png) <br/> **The blind spot.** The change that watching behaviour cannot see, shown anyway. |
+| ![The wall of silence](images/wall-silence.png) <br/> **The wall.** 1,200 rows of nothing. You scroll past emptiness for a long time, and that scroll is the argument. | ![The catch](images/catch-panel.png) <br/> **The catch.** The transcript lines that differ, what the open web says, and which models agreed. |
+| ![The fork strip](images/fork-strip.png) <br/> **The run.** One hairline per forked twin. Change *watched with* and the whole wall re-runs — the caveat underneath says what that strategy could not see. | ![The blind spot](images/blind-spot.png) <br/> **The blind spot.** The change that watching behaviour cannot see, shown anyway. |
 
 ---
 
@@ -527,7 +527,7 @@ twins came from, and fails if there is more than one.
 
 ### 2. Rules escalate. Models explain and de-escalate. Never the reverse.
 
-Severity is decided by about thirty lines of arithmetic in [`differ/diff.js`](differ/diff.js) that
+Severity is decided by about thirty lines of arithmetic in [`differ/diff.js`](../differ/diff.js) that
 anyone can read and re-run. Nemotron's job is the part rules cannot do: saying what a change
 appears to be *doing*, and whether the public record accounts for it.
 
@@ -664,7 +664,7 @@ procurement. The tree is mostly boring and paying frontier prices to be told so 
 
 ### Deploying it
 
-Two commands, no build step, no environment variable required — see **[DEPLOY.md](DEPLOY.md)**. The
+Two commands, no build step, no environment variable required — see **[DEPLOY.md](../DEPLOY.md)**. The
 shipped verdicts mean a hosted visitor costs nothing, and `vercel.json` carries
 `includeFiles: judge/verdicts/**` because Vercel traces imports and would not otherwise upload files
 that are only read at runtime by path.
@@ -867,7 +867,7 @@ strategy that can see code being built.
 ## Architecture
 
 The long version, including the three boundaries that hold it up, is in
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+[`docs/ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ```
 transcript/schema.js     normalised behaviour record; strips temp dirs, pids, hashes so two
@@ -1100,15 +1100,15 @@ what would have to be true to change it. Written for whoever picks this up next,
 
 | | | |
 |---|---|---|
-| [001](docs/decisions/001-only-report-what-reproduced.md) | Only report what actually reproduced | predates the pivot, still holds |
-| [002](docs/decisions/002-the-demo-must-refuse-something-real.md) | The demo must refuse something real | predates the pivot, still holds |
-| [003](docs/decisions/003-behavioural-diffing-not-chaos.md) | Behavioural diffing, not chaos rehearsal | reverses the original direction |
-| [004](docs/decisions/004-rules-escalate-models-explain.md) | Rules escalate, models explain | |
-| [005](docs/decisions/005-missing-is-not-empty.md) | A missing observation is not an empty one | the most important invariant here |
-| [006](docs/decisions/006-triage-before-judgement.md) | Triage before judgement | |
-| [007](docs/decisions/007-plants-that-punish-paranoia.md) | The corpus contains packages we should miss | |
-| [008](docs/decisions/008-one-observer-must-be-real.md) | At least one observer has to actually run | why `nodert` exists |
-| [009](docs/decisions/009-watch-code-becoming-code.md) | Watch a string turning into a function | the one thing eBPF cannot see |
+| [001](decisions/001-only-report-what-reproduced.md) | Only report what actually reproduced | predates the pivot, still holds |
+| [002](decisions/002-the-demo-must-refuse-something-real.md) | The demo must refuse something real | predates the pivot, still holds |
+| [003](decisions/003-behavioural-diffing-not-chaos.md) | Behavioural diffing, not chaos rehearsal | reverses the original direction |
+| [004](decisions/004-rules-escalate-models-explain.md) | Rules escalate, models explain | |
+| [005](decisions/005-missing-is-not-empty.md) | A missing observation is not an empty one | the most important invariant here |
+| [006](decisions/006-triage-before-judgement.md) | Triage before judgement | |
+| [007](decisions/007-plants-that-punish-paranoia.md) | The corpus contains packages we should miss | |
+| [008](decisions/008-one-observer-must-be-real.md) | At least one observer has to actually run | why `nodert` exists |
+| [009](decisions/009-watch-code-becoming-code.md) | Watch a string turning into a function | the one thing eBPF cannot see |
 
 ---
 
@@ -1121,8 +1121,8 @@ That track asks for *"agents that write, run, and test code in Token Factory San
 this project exactly: it installs and runs code it has never seen, in disposable machines, and
 reports what happened.
 
-The recording script is [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md); the submission text is
-[`docs/SUBMISSION.md`](docs/SUBMISSION.md).
+The recording script is [`docs/DEMO-SCRIPT.md`](DEMO-SCRIPT.md); the submission text is
+[`docs/SUBMISSION.md`](SUBMISSION.md).
 
 - **Nebius Token Factory Sandboxes / ConTree** is not decoration here. Forking a live checkpoint is
   the only reason both twins can start from a provably identical state, and that identity is the

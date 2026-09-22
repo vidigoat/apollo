@@ -88,6 +88,39 @@ it('every file it points at is really there', () => {
   assert.deepEqual(missing, [], `README links to: ${missing.join(', ')}`);
 });
 
+it('every relative link in every document resolves FROM THE FILE IT IS IN', () => {
+  /*
+   * `docs/DEEP-DIVE.md` was the old README, moved into `docs/` when the README was cut down. Its
+   * paths came with it: twenty-three links written relative to the repository root, now one
+   * directory down, every one of them resolving to `docs/docs/…`. Nine images and the whole
+   * reference trail — the architecture, the demo script, the submission, all nine decision records —
+   * and on GitHub the page rendered as a column of broken-image icons and dead blue text. The
+   * sibling project had the identical fault in the identical file, from the identical edit.
+   *
+   * The check above reads README.md, so it saw none of it. A relative link is only correct relative
+   * to the file that holds it, which is what this checks, for every markdown file here.
+   */
+  const docs = [
+    'README.md',
+    ...fs.readdirSync(path.join(__dirname, 'docs'))
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => path.join('docs', f)),
+  ];
+
+  for (const doc of docs) {
+    const text = fs.readFileSync(path.join(__dirname, doc), 'utf8');
+    const links = [...text.matchAll(/\]\(([^)\s]+)\)/g)]
+      .map((m) => m[1].split('#')[0])
+      .filter((l) => l && !/^(https?:|mailto:)/.test(l));
+
+    const here = path.join(__dirname, path.dirname(doc));
+    const missing = [...new Set(links)].filter(
+      (l) => !fs.existsSync(path.join(here, decodeURIComponent(l)))
+    );
+    assert.deepEqual(missing, [], `${doc} links to, and does not reach: ${missing.join(', ')}`);
+  }
+});
+
 it('it still states the limitation it is easiest to quietly drop', () => {
   // The claim this project would be most tempted to soften: it compares you to your PREVIOUS
   // version, not to "good". A package malicious in both is invisible, and a README that stopped
