@@ -31,6 +31,7 @@ section is the same idea at the scale where it pays for itself.
 | Three Nemotron sizes, chosen per finding, with the reasoning tokens budgeted separately | `judge/nemotron.js` |
 | **Absence is not ignorance** — a strategy's blind spots travel with every claim | `transcript/schema.js` `quietness()`, `absence.test.js` |
 | **The GitHub App** — the answer on the pull request that bumps the dependency, not in a log nobody opens | `github/webhook.js`, `github/api.js`, `github/handle.js` |
+| **See what it posts, without a GitHub account** | `npm run check-run` — drives the real handler over a delivery shaped like GitHub's, with the real signature check, and prints all three check runs |
 | Two-hop App auth with no dependencies: RS256 JWT → installation token, scoped and hour-long, never a personal token | `github/api.js` `appJwt`; `github.test.js` verifies the signature against its own key |
 | The signature is checked against the **bytes**, before the body is believed, in constant time | `github.test.js` — a pretty-printed body with an odd key order is posted over real HTTP |
 | Every suite reported together | `npm test` |

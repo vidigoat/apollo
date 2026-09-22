@@ -75,6 +75,7 @@ No keys. No network. No build step. No dependencies.
 git clone https://github.com/vidigoat/cassandra.git stakeout
 cd stakeout
 npm run demo      # the whole argument, in a terminal, in about two seconds
+npm run check-run # what the GitHub App posts on a pull request — no GitHub account needed
 npm start         # the same run in a browser at http://localhost:8791
 npm test          # every suite, reported together
 ```
@@ -798,6 +799,25 @@ Same package, same bytes, three honest answers.
 syscall. A kernel tracer watches the process, not the thought, so eBPF sees a socket open and
 nothing that explains it. The `nodert` strategy watches Node's own API surface and catches the
 construction; it is weaker than eBPF nearly everywhere and stronger in exactly that one place.
+
+#### Seeing the App work without registering one
+
+The App is built, tested and deployed — the webhook answers on the demo URL — and it is **not
+registered**, because GitHub has no REST endpoint for creating one. That is a button a person
+presses, and it is the only thing in this project that cannot be done from a terminal.
+
+Which would leave a reviewer with a claim and no way to check it. So:
+
+```bash
+npm run check-run
+```
+
+drives the real handler over a delivery shaped exactly like GitHub's, with the real signature
+verification against the raw bytes, and prints all three check runs. Nothing is stubbed except the
+four calls that would reach github.com, and those are injected through the same parameter the tests
+use. `scripts/register-app.js` does the registration itself when somebody is at a keyboard: it
+opens GitHub's manifest page, captures the code it redirects back with, exchanges it, and writes
+the app id, private key and webhook secret to `.env`.
 
 #### The whole corpus, read four ways
 
