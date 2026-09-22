@@ -80,11 +80,15 @@ export default function Run({ strategies = [], tree = null }) {
               </span>
             </div>
           </div>
+          {/*
+            "The fifteen that are lit" was written out as a word, which slipped past the check for
+            typed figures because a word is not a digit — and would have gone stale the same way.
+          */}
           <p className="field__note">
-            Every mark is a package. The fifteen that are lit are the ones whose version actually
-            moved, and the red one is the only thing in this tree that behaves differently than it
-            used to. Running the other {num(tree.total - tree.moved)} would cost real money to
-            learn nothing.
+            Every mark is a package. The <b>{num(tree.moved)}</b> that are lit are the ones whose
+            version actually moved, and the red one is the only thing in this tree that behaves
+            differently than it used to. Running the other {num(tree.total - tree.moved)} would cost
+            real money to learn nothing.
           </p>
         </div>
       )}

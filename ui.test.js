@@ -122,11 +122,15 @@ const it = async (name, fn) => {
      * that describe this corpus appearing as literals anywhere in the site's source.
      */
     const { CHANGED, TOTAL } = require('./corpus');
+    // Digits AND the word, because "the fifteen that are lit" goes stale exactly as quietly as
+    // "15" does and is not caught by looking for numerals.
+    const SPELLED = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen'];
     const literals = [
       String(TOTAL),
       TOTAL.toLocaleString('en-US'),
       `${CHANGED.length} of`,
-    ];
+      SPELLED[CHANGED.length - 10],
+    ].filter(Boolean);
 
     for (const [name, src] of files) {
       const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
