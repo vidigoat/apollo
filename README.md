@@ -47,7 +47,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 28 suites · 372 checks
+npm test            # 28 suites · 374 checks
 ```
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
@@ -87,12 +87,16 @@ could not see, and silence in an unwatched channel is reported as worth nothing.
 ## Point it at every repo you own
 
 A package's behaviour does not depend on who imported it, so it is observed once and looked up after
-that. Across **76** real projects and **20,897** dependency-versions, 2,120 observations in the index
-answered 12,986 of them — **62%**, from an index you could build in an afternoon.
+that. Pointed at a whole machine — 76 projects and 20,897 dependency-versions — 2,120 observations in
+the index answered 12,986 of them, **62%**, from an index you could build in an afternoon.
 
-<img src="docs/images/fleet.jpg" alt="Every repository on one machine, drawn as a band; observed surface filled, unobserved hatched" width="100%">
+<img src="docs/images/fleet.jpg" alt="A scan of turborepo drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline" width="100%">
 
-Unobserved surface is **hatched, never filled**. A fill is a quantity; this is the absence of one.
+The scan above is the one bundled with this repository, so you can check it: turborepo: 3,107
+dependency-versions across 24 readable lockfiles, which are only 1,756 distinct package-versions.
+Four more lockfiles are written in a form the reader will not guess at, and are left out rather than
+counted as empty. Unobserved surface is **hatched, never filled** — a fill is a quantity, and this is
+the absence of one.
 
 ## What this cannot do
 

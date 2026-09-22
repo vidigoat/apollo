@@ -90,8 +90,20 @@ export default function How({ tree = null }) {
             className="step"
             key={s.who}
             data-model={s.model ? 'true' : 'false'}
-            initial={{ opacity: still ? 1 : 0, y: still ? 0 : 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            /*
+             * The step RISES into place. It does not fade in.
+             *
+             * It used to start at `opacity: 0`, and the six steps that name the three models — the
+             * whole pipeline — were found sitting at opacity 0 on the live URL. Chrome had stopped
+             * running requestAnimationFrame for that window, so the reveal began and froze: the
+             * inline style said 0, `once: true` meant the observer never fired again, and the
+             * section was blank to anyone looking at it in a background or occluded window.
+             *
+             * An animation is allowed to move something. It is not allowed to be the reason
+             * something is visible — if it never runs, the reader must still get the page.
+             */
+            initial={{ y: still ? 0 : 8 }}
+            whileInView={{ y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: still ? 0 : 0.4, delay: still ? 0 : Math.min(i * 0.05, 0.3) }}
           >

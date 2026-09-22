@@ -83,20 +83,51 @@ const from = (text, re, label) => {
  * has stopped mentioning the figure fails too, which is the point: these are the load-bearing
  * numbers, and quietly dropping one is its own kind of drift.
  */
-/** The fleet figures, if this machine has a scan. See the note beside where they are used. */
+/**
+ * The fleet figures.
+ *
+ * There are two fleets in these documents and they are not interchangeable. The BUNDLED one is
+ * `public/fleet-demo.json` — a scan of turborepo, committed, served by the live page, and the one a
+ * reader can check. The LOCAL one is a scan of the machine that built this; it is what the ordering
+ * experiment in docs/SUBMISSION.md was measured on, it is gitignored, and on a fresh clone there is
+ * nothing to check it against, so those claims are only made when the file is there.
+ *
+ * Each figure gets its own `where`, because a bare `([\d,]+) dependency-versions` now matches both
+ * sentences and would demand one number in two places that mean different things.
+ */
 function fleetClaims() {
-  let fleet;
+  const claims = [];
+
+  const bundled = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'public', 'fleet-demo.json'), 'utf8')
+  );
+  const b = bundled.totals;
+  claims.push(
+    { what: 'bundled fleet: dependency-versions', value: b.depVersions.toLocaleString(), where: /turborepo: ([\d,]+)\s*\n?dependency-versions/g },
+    { what: 'bundled fleet: readable lockfiles', value: String(b.repos), where: /across (\d+) readable lockfiles/g },
+    { what: 'bundled fleet: distinct package-versions', value: b.distinct.toLocaleString(), where: /only ([\d,]+) distinct package-versions/g },
+    /*
+     * The count of lockfiles the reader refused. This is the figure that broke the live page — the
+     * site summed the refused rows in with the rest and printed "NaN of NaN — 0%" — so it is now
+     * stated in the README and checked here rather than being a number nobody looks at.
+     */
+    { what: 'bundled fleet: refused lockfiles', value: String(bundled.repos.length - b.repos), where: /\n(\w+) more lockfiles are written/g, spell: true }
+  );
+
+  let local;
   try {
-    fleet = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'local', 'fleet.json'), 'utf8'));
+    local = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'local', 'fleet.json'), 'utf8'));
   } catch {
-    return [];
+    return claims;
   }
-  const t = fleet.totals;
-  return [
-    { what: 'fleet: dependency-versions', value: t.depVersions.toLocaleString(), where: /([\d,]+) dependency-versions/g },
-    { what: 'fleet: observations', value: fleet.index.versions.toLocaleString(), where: /([\d,]+) observations in the index/g },
-    { what: 'fleet: answered', value: t.known.toLocaleString(), where: /answered ([\d,]+) of them/g },
-  ];
+  const t = local.totals;
+  claims.push(
+    { what: 'local fleet: dependency-versions', value: t.depVersions.toLocaleString(), where: /projects and ([\d,]+) dependency-versions/g },
+    { what: 'local fleet: distinct', value: t.distinct.toLocaleString(), where: /collapsing to ([\d,]+) distinct ones/g },
+    { what: 'local fleet: observations', value: local.index.versions.toLocaleString(), where: /([\d,]+) observations in\s*\n?the index/g },
+    { what: 'local fleet: answered', value: t.known.toLocaleString(), where: /answered ([\d,]+) of them/g }
+  );
+  return claims;
 }
 
 const CLAIMS = [
@@ -142,6 +173,11 @@ const CLAIMS = [
 
 console.log('\n  README figures, against the commands that produce them\n');
 
+/** Small numbers as English, for the claims that are allowed to be written as words. */
+const spelled = (n) =>
+  ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+   'eleven', 'twelve'][n] ?? String(n);
+
 let stale = 0;
 for (const c of CLAIMS) {
   // A figure the README never mentions is fine. A figure it mentions WRONG is not, so look for the
@@ -151,7 +187,14 @@ for (const c of CLAIMS) {
 
   if (c.where) {
     const found = [...README.matchAll(c.where)].map((m) => m[1]);
-    const wrong = found.filter((v) => v !== c.value);
+    /*
+     * A small number at the start of a sentence gets spelled out, and "Four more lockfiles" goes
+     * stale exactly as quietly as "4" does — more quietly, because nothing in a diff highlights a
+     * word. `spell` accepts either form for the same value, so prose can read like prose and the
+     * figure is still pinned to the scan.
+     */
+    const accepted = c.spell ? [c.value, spelled(Number(c.value))] : [c.value];
+    const wrong = found.filter((v) => !accepted.includes(v.toLowerCase()));
     present = found.length > 0 && wrong.length === 0;
     detail = found.length === 0
       ? ' — the README no longer mentions it'

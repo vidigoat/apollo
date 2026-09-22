@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { num } from '../lib/api.js';
+import { num, fleetTotals } from '../lib/api.js';
 
 /**
  * Every repository on one machine, drawn rather than summarised.
@@ -15,6 +15,15 @@ import { num } from '../lib/api.js';
  * The first version filled it in a second colour and came out looking like an ordinary coverage
  * chart — which quietly says "we looked, and it was fine". We did not look. A fill is a quantity;
  * this is the absence of one, and the two must not share a visual language.
+ *
+ * ── And a repository that could not be read is neither ──────────────────────
+ *
+ * A scan reports refusals as rows with an `error` and no counts. Summing `deps` across every row
+ * therefore produced NaN, and this section shipped to the live URL reading "NaN of NaN — 0%" with a
+ * band that stopped drawing partway across. Every figure now comes from `fleetTotals`, which adds
+ * up the rows that carry numbers and hands back the count of the ones that do not — stated in the
+ * paragraph, because twenty-four repositories described as if they were twenty-eight is the same
+ * lie the hatching exists to prevent.
  */
 export default function Fleet({ data }) {
   const canvas = useRef(null);
@@ -40,12 +49,18 @@ export default function Fleet({ data }) {
       const drift = css.getPropertyValue('--drift').trim();
       const rule = css.getPropertyValue('--rule').trim();
 
-      const total = data.repos.reduce((n, r) => n + r.deps, 0);
+      /*
+       * Only the repositories that were read. A refused lockfile has no `deps`, and summing it in
+       * made `total` NaN — every segment after the first refusal was drawn at x = NaN, so the band
+       * simply stopped partway across and looked like a design choice.
+       */
+      const { readable } = fleetTotals(data);
+      const total = readable.reduce((n, r) => n + r.deps, 0);
       const gap = 2;
       let x = 0;
 
-      for (const repo of data.repos) {
-        const width = Math.max(2, (repo.deps / total) * (w - gap * data.repos.length));
+      for (const repo of readable) {
+        const width = Math.max(2, (repo.deps / total) * (w - gap * readable.length));
         const knownH = repo.deps ? (repo.known / repo.deps) * h : 0;
 
         // Observed, and unremarkable. The overwhelming majority of the picture.
@@ -106,11 +121,8 @@ export default function Fleet({ data }) {
 
   if (!data?.scanned) return null;
 
-  const deps = data.repos.reduce((n, r) => n + r.deps, 0);
-  const known = data.repos.reduce((n, r) => n + r.known, 0);
-  const pct = deps ? Math.round((known / deps) * 100) : 0;
+  const { readable, refused, depVersions, known, distinct, pct, reuse } = fleetTotals(data);
   const observations = data.index?.versions ?? data.indexNow?.versions;
-  const reuse = observations ? (known / observations).toFixed(1) : null;
 
   return (
     <section className="wrap" id="fleet">
@@ -124,31 +136,45 @@ export default function Fleet({ data }) {
           </>
         ) : (
           <>
-            This is a scan of this machine: <b>{num(data.repos.length)}</b> repositories, as they
+            This is a scan of this machine: <b>{num(readable.length)}</b> repositories, as they
             actually are.
           </>
         )}{' '}
-        <b>{num(observations)}</b> observations answered <b>{num(known)}</b> of{' '}
-        <b>{num(deps)}</b> dependency-versions — <b>{pct}%</b>
-        {reuse && (
+        <b>{num(observations)}</b> observations already answer <b>{num(known)}</b> of its{' '}
+        <b>{num(depVersions)}</b> dependency-versions — <b>{pct}%</b>
+        {reuse && distinct && (
           <>
-            , which is every observation doing the work of <b>{reuse}</b>
+            , and those {num(depVersions)} are only <b>{num(distinct)}</b> distinct
+            package-versions, so running one package settles the same question <b>{reuse}</b> times
           </>
         )}
         .
+        {refused > 0 && (
+          <>
+            {' '}
+            <b>{num(refused)}</b> more {refused === 1 ? 'lockfile was' : 'lockfiles were'} written
+            in a form this reader will not guess at, so {refused === 1 ? 'it is' : 'they are'} not
+            in the picture at all.
+          </>
+        )}
       </p>
 
       <motion.div
         className="band"
-        initial={{ opacity: still ? 1 : 0 }}
-        whileInView={{ opacity: 1 }}
+        /*
+         * Same rule as the pipeline: the band arrives from slightly below, and is never invisible
+         * on the way. A fade from zero left the fleet — the one picture this section exists for —
+         * as an empty box whenever the reveal did not get to run.
+         */
+        initial={{ y: still ? 0 : 10 }}
+        whileInView={{ y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: still ? 0 : 0.6 }}
       >
         <canvas
           ref={canvas}
           role="img"
-          aria-label={`${data.repos.length} repositories, ${pct}% of their dependency-versions already observed`}
+          aria-label={`${readable.length} repositories, ${pct}% of their dependency-versions already observed`}
         />
       </motion.div>
 

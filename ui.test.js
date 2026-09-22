@@ -112,6 +112,54 @@ const it = async (name, fn) => {
     assert.equal(usd(0), '$0');
   });
 
+  await it('a repository the scan refused to read does not turn the fleet into NaN', async () => {
+    /*
+     * This shipped. The bundled scan has twenty-eight lockfiles and four of them are in a format
+     * the reader declines to guess at, so those rows carry an `error` and no counts — which is the
+     * honest thing for a scan to do. The section summed `deps` over every row anyway, and the live
+     * page read:
+     *
+     *     2,120 observations answered NaN of NaN dependency-versions — 0%,
+     *     which is every observation doing the work of NaN.
+     *
+     * The band stopped drawing at the first refused repository too, because `x += NaN`. It looked
+     * deliberate. Nothing in the build, and none of the thirteen checks already in this file, had
+     * anything to say about it.
+     *
+     * So: the real bundled scan, through the real derivation, and every figure the paragraph
+     * prints has to be a finite number.
+     */
+    const { fleetTotals, num } = await import('./web/src/lib/api.js');
+    const scan = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'fleet-demo.json'), 'utf8'));
+
+    const t = fleetTotals(scan);
+    for (const key of ['depVersions', 'known', 'distinct', 'pct', 'reuse', 'refused']) {
+      assert.ok(Number.isFinite(t[key]), `fleetTotals().${key} is ${t[key]}, not a number`);
+      assert.ok(!String(num(t[key])).includes('NaN'), `the page would print "${num(t[key])}"`);
+    }
+
+    // The refusals are counted, not dropped: the page has to be able to say how many.
+    const refused = scan.repos.filter((r) => r.error).length;
+    assert.ok(refused > 0, 'the bundled scan no longer contains a refusal — this test proves nothing');
+    assert.equal(t.refused, refused);
+    assert.equal(t.readable.length, scan.repos.length - refused);
+
+    // And the two places that count the same thing still agree.
+    assert.equal(t.depVersions, t.readable.reduce((n, r) => n + r.deps, 0));
+    assert.equal(t.known, t.readable.reduce((n, r) => n + r.known, 0));
+
+    // One refusal is enough to break it, so one refusal is what a synthetic case gets.
+    const synthetic = fleetTotals({
+      repos: [{ deps: 10, known: 4 }, { name: 'x', error: 'unrecognised lockfile' }],
+    });
+    assert.equal(synthetic.depVersions, 10);
+    assert.equal(synthetic.pct, 40);
+    assert.equal(synthetic.refused, 1);
+
+    // NaN is a number by typeof, which is how it reached a page that renders unknowns as a dash.
+    assert.equal(num(NaN), '—');
+  });
+
   await it('no figure about the corpus is typed into the page', () => {
     /*
      * One was. The pipeline list carried "14 of 1,214" as a string, and the corpus has fifteen
@@ -198,6 +246,34 @@ const it = async (name, fn) => {
     }
     // And the CSS-driven panels turn off too.
     assert.match(css, /prefers-reduced-motion: reduce\)\s*\{[^}]*animation: none/s);
+  });
+
+  await it('nothing is invisible until an animation runs', () => {
+    /*
+     * Found on the live URL: the six pipeline steps that name Nano, Ultra and Super were sitting at
+     * `opacity: 0`, and so was the fleet band. Chrome had stopped running requestAnimationFrame for
+     * that window, so the scroll reveal began, froze partway, and — with `once: true` — the section
+     * stayed blank. The two most load-bearing exhibits on the page were an empty box and six empty
+     * boxes, and the HTML, the CSS and every other check in this file were entirely happy.
+     *
+     * The rule, which is narrow on purpose: a reveal triggered by SCROLLING may move a thing, and
+     * may not be the reason it is visible. `animate` on mount is left alone — the hero's diff
+     * arriving row by row IS the content, and it is not gated on an observer that fires once.
+     */
+    for (const [name, src] of files) {
+      if (!src.includes('whileInView')) continue;
+
+      const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+      // Every `initial={{ … }}` in a file that reveals on scroll.
+      for (const m of code.matchAll(/initial=\{\{([^}]*)\}\}/g)) {
+        const props = m[1];
+        if (!/\bopacity\b/.test(props)) continue;
+        assert.fail(
+          `${name} hides content until a scroll animation runs: initial={{${props.trim()}}}\n` +
+            '        A reveal may move something; it may not be why it is visible.'
+        );
+      }
+    }
   });
 
   await it('no fixed-column grid is wider than a phone without a fallback', () => {
