@@ -47,11 +47,28 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 28 suites · 375 checks
+npm test            # 29 suites · 388 checks
 ```
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
 dependency tree is telling on itself. Node 20+.
+
+### On your own repository, without building anything
+
+```bash
+cd ~/your-project
+node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
+```
+
+That reads a **published index** — 1,589 packages and 2,129 versions somebody has already run,
+about sixty kilobytes over the wire — and writes a `stakeout.lock` for *your* tree. Most of it will
+come back **unknown**, because most of npm has never been watched by anybody, and the lock says so
+by name rather than pretending to cover it.
+
+This is the part of the argument that used to be unverifiable. "Run a package once and answer for
+every repository that depends on it" was a sentence about an artefact that existed only on the
+machine that built it. `npm run index:publish` writes it; the demo URL serves it; the claim can now
+be wrong.
 
 ## How it stays affordable
 

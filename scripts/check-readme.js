@@ -166,6 +166,25 @@ const CLAIMS = [
    * clone this has nothing to check against and says so rather than failing.
    */
   ...fleetClaims(),
+
+  /*
+   * The published index — the artefact that makes the central claim checkable at all.
+   *
+   * It is committed, so unlike the fleet there is always something to check against, and the two
+   * figures the README quotes are the ones somebody would act on: how many packages they get for
+   * free by pointing `--index` at the URL.
+   */
+  ...(() => {
+    try {
+      const published = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'index.json'), 'utf8'));
+      return [
+        { what: 'published index: packages', value: published.counts.packages.toLocaleString(), where: /([\d,]+) packages (?:and|somebody)/g },
+        { what: 'published index: versions', value: published.counts.versions.toLocaleString(), where: /and ([\d,]+) versions somebody/g },
+      ];
+    } catch {
+      return [];
+    }
+  })(),
   // NOTE: the suite count is checked by the runner itself (scripts/test.js), not here. Re-running
   // the whole suite from this script to learn a number the suite already printed made this check
   // slow enough that somebody would stop running it, and a check nobody runs protects nothing.

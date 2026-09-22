@@ -41,6 +41,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { CAN_SEE } = require('../transcript/schema');
 
 /**
  * Bump when the shape of an entry changes in a way that would make an old one misread.
@@ -95,6 +96,34 @@ function entryFor(transcript) {
   return out;
 }
 
+/**
+ * What a strategy can see is a property of the STRATEGY, not of any one observation.
+ *
+ * ── Why this function exists ────────────────────────────────────────────────
+ *
+ * Every entry stores a copy of the CAN_SEE row it was observed under, which is convenient and makes
+ * the entry self-describing. It also means the copy is a snapshot of what we BELIEVED at the moment
+ * of observation — and when that belief turns out to be wrong, every entry written before the
+ * correction keeps asserting the old thing forever.
+ *
+ * That is not hypothetical. `nodert` was recorded as `fs: true` for months. It is not: the probe
+ * hooks writes, and a package that only READS a file is invisible to it. The table was corrected;
+ * the 2,129 entries already on disk were not, and every one of them still claimed the filesystem
+ * had been watched in full. `quietness()` reads `canSee` to decide what a silence is worth, so
+ * every claim derived from the index was quietly overstating what anybody had actually looked at —
+ * which is the one thing this project exists not to do.
+ *
+ * Re-observing 2,129 packages to correct a field that was never an observation would be absurd. So
+ * the stored copy is treated as what it is: a cache of a table, restated from the table on read.
+ * An entry whose strategy the table does not know is left exactly as written, because inventing a
+ * visibility for a strategy nobody here defines would be the same mistake wearing a fix's clothes.
+ */
+function restate(entry) {
+  const table = CAN_SEE[entry?.strategy];
+  if (table) entry.canSee = { ...table };
+  return entry;
+}
+
 class Index {
   constructor({ dir = DEFAULT_DIR } = {}) {
     this.dir = dir;
@@ -110,6 +139,7 @@ class Index {
     try {
       record = JSON.parse(fs.readFileSync(fileFor(this.dir, name), 'utf8'));
       if (record.schema !== SCHEMA) record = null;
+      if (record) for (const entry of Object.values(record.versions || {})) restate(entry);
     } catch {
       record = null;
     }

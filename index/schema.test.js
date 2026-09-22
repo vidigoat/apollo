@@ -19,6 +19,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { Index, entryFor, shardFor, fileFor, CHANNELS, SCHEMA } = require('./schema');
+const { CAN_SEE } = require('../transcript/schema');
 
 let passed = 0;
 const it = (name, fn) => {
@@ -53,6 +54,59 @@ it('a cold index answers null, and counts the miss', () => {
   assert.equal(idx.misses, 1);
   assert.equal(idx.has('nothing', '1.0.0'), false);
 });
+
+  it('an entry restates what its strategy can see, rather than what we used to think it could', () => {
+    /*
+     * This was live, on 2,129 entries.
+     *
+     * Every entry stores a copy of the CAN_SEE row it was observed under. `nodert` was recorded as
+     * `fs: true` for months and it is not — the probe hooks WRITES, and a package that only reads a
+     * file is invisible to it. The table was corrected. The entries on disk were not, so every one
+     * of them went on claiming the filesystem had been watched in full, and `quietness()` reads
+     * exactly that field to decide what a silence is worth.
+     *
+     * The stored copy is a cache of a table. It is restated from the table on read.
+     */
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'restate-'));
+    const index = new Index({ dir });
+    index.put('p', {
+      pkg: 'p',
+      version: '1.0.0',
+      strategy: 'nodert',
+      canSee: { fs: true, net: true, dns: true, env: true, proc: true, exec: true },
+      net: [], dns: [], fs: [], env: [], proc: [], exec: [],
+    });
+
+    // Written to disk exactly as it was handed over — the overclaim and all.
+    const onDisk = JSON.parse(fs.readFileSync(fileFor(dir, 'p'), 'utf8'));
+    assert.equal(onDisk.versions['1.0.0'].canSee.fs, true);
+
+    // Read back through a fresh Index, so nothing is coming from a cache in this process.
+    const entry = new Index({ dir }).lookup('p', '1.0.0');
+    assert.equal(entry.canSee.fs, CAN_SEE.nodert.fs);
+    assert.notEqual(entry.canSee.fs, true, 'the entry still claims the whole filesystem was watched');
+
+    // And the rest of the row comes from the table too, not from the entry.
+    assert.deepEqual(entry.canSee, CAN_SEE.nodert);
+
+    /*
+     * A strategy the table does not define is left alone. Inventing a visibility for it would be
+     * the same mistake wearing a fix's clothes.
+     */
+    const other = new Index({ dir });
+    other.put('q', {
+      pkg: 'q',
+      version: '2.0.0',
+      strategy: 'something-nobody-here-defines',
+      canSee: { fs: 'writes', net: false, dns: false, env: false, proc: false, exec: false },
+      net: [], dns: [], fs: [], env: [], proc: [], exec: [],
+    });
+    const kept = new Index({ dir }).lookup('q', '2.0.0');
+    assert.equal(kept.canSee.fs, 'writes');
+    assert.equal(kept.canSee.net, false);
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
 
 it('what goes in comes out', () => {
   const idx = fresh();

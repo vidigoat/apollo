@@ -33,6 +33,7 @@ require('./env').loadEnv();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Index } = require('./index/schema');
+const { open } = require('./index/published');
 const { lockfileOnDisk } = require('./lockfile');
 const { buildLock, checkLock, writeLock, readLock, DEFAULT_FILE } = require('./lock');
 const { CHANNELS } = require('./index/schema');
@@ -77,11 +78,8 @@ function renderItem(channel, item) {
 
 /* ── stakeout lock ──────────────────────────────────────────────────────── */
 
-function cmdLock({ flags }) {
-  const index = new Index();
-  if (!index.manifest()) {
-    die('No index found.', 'Build one with `npm run index:build`, or set STAKEOUT_INDEX to point at one.');
-  }
+async function cmdLock({ flags }) {
+  const index = await openIndex(flags);
 
   let tree;
   try {
@@ -118,11 +116,64 @@ function cmdLock({ flags }) {
   return EXIT.clean;
 }
 
+
+/**
+ * The index this run will use: the one on this machine, or one somebody published.
+ *
+ * ── Why `--index <url>` exists ──────────────────────────────────────────────
+ *
+ * Until it did, using this tool meant building an index first — installing a couple of thousand
+ * packages in sandboxes before the first question could be answered. That is a fine thing to be
+ * able to do and a terrible thing to require, and it made the project's central claim unverifiable
+ * by anyone who had not already spent an afternoon on it: run a package once, answer for every
+ * repository that depends on it. Once is the point. Once, by somebody.
+ *
+ *     stakeout check --index https://cassandra-nu.vercel.app/index.json
+ *
+ * reads a published index — 1,589 packages, sixty kilobytes over the wire — and answers about YOUR
+ * tree. Most of it will come back unknown, because most of npm has not been watched by anybody.
+ * That is the honest state of the world and `check` reports it as its own outcome rather than as a
+ * pass.
+ */
+async function openIndex(flags) {
+  const where = flags.index === true ? null : flags.index;
+  if (!where) {
+    const index = new Index();
+    if (!index.manifest()) {
+      die(
+        'No index found.',
+        'Build one with `npm run index:build`, point STAKEOUT_INDEX at one,\n' +
+          '  or use a published one:\n\n' +
+          '    stakeout check --index https://cassandra-nu.vercel.app/index.json'
+      );
+    }
+    return index;
+  }
+
+  try {
+    const index = await open(where);
+    /*
+     * A published index carries the table it was written with. If this build disagrees about what a
+     * strategy can see, the reader is told — silently applying the local interpretation to somebody
+     * else's recording is how an overclaim travels between machines.
+     */
+    const differs = index.mismatch();
+    if (differs.length) {
+      console.error(`\n  ${C.amber}That index was published by a build that describes its strategies differently:${C.off}`);
+      for (const line of differs) console.error(`    ${C.dim}${line}${C.off}`);
+      console.error(`  ${C.dim}Entries are read with THIS build's table, because that is what interprets them.${C.off}`);
+    }
+    return index;
+  } catch (e) {
+    die(`Could not read the index at ${where}.`, e.message);
+  }
+  return null;
+}
+
 /* ── stakeout check ─────────────────────────────────────────────────────── */
 
-function cmdCheck({ flags }) {
-  const index = new Index();
-  if (!index.manifest()) die('No index found.', 'Build one with `npm run index:build`.');
+async function cmdCheck({ flags }) {
+  const index = await openIndex(flags);
 
   let lock;
   try {
@@ -185,7 +236,7 @@ function cmdCheck({ flags }) {
 
 /* ── stakeout explain ───────────────────────────────────────────────────── */
 
-function cmdExplain({ rest }) {
+async function cmdExplain({ flags, rest }) {
   const spec = rest[0];
   if (!spec) die('Which package?', 'stakeout explain lodash            — every version the index holds\nstakeout explain lodash@4.17.21   — one version');
 
@@ -193,8 +244,7 @@ function cmdExplain({ rest }) {
   const name = at > 0 ? spec.slice(0, at) : spec;
   const version = at > 0 ? spec.slice(at + 1) : null;
 
-  const index = new Index();
-  if (!index.manifest()) die('No index found.', 'Build one with `npm run index:build`.');
+  const index = await openIndex(flags);
 
   const entries = version
     ? [index.lookup(name, version)].filter(Boolean).map((e) => ({ version, ...e }))
@@ -230,8 +280,8 @@ function cmdExplain({ rest }) {
 
 /* ── stakeout index ─────────────────────────────────────────────────────── */
 
-function cmdIndex() {
-  const index = new Index();
+async function cmdIndex({ flags } = {}) {
+  const index = await openIndex(flags || {});
   const m = index.manifest();
   if (!m) {
     console.log(`\n  ${C.amber}No index built yet.${C.off}`);
@@ -265,13 +315,19 @@ const USAGE = `
     --out <path>                 where \`lock\` writes
     --dry-run                    \`lock\` prints what it would do
     --fail-on-unknown            \`check\` exits 2 when the index has gaps
+    --index <url|path>           read a published index instead of a local one
+
+  ${C.dim}with no index of your own${C.off}
+    stakeout lock --index https://cassandra-nu.vercel.app/index.json
+    ${C.dim}1,589 packages somebody already ran. Most of your tree will come back${C.off}
+    ${C.dim}unknown, because most of npm has never been watched. That is the answer.${C.off}
 
   ${C.dim}exit codes: 0 clean · 1 drift · 2 unknown · 3 usage${C.off}
 `;
 
 const COMMANDS = { lock: cmdLock, check: cmdCheck, explain: cmdExplain, index: cmdIndex };
 
-function main(argv) {
+async function main(argv) {
   const { flags, rest } = parseArgs(argv);
   const command = rest.shift();
 
@@ -289,7 +345,15 @@ function main(argv) {
 }
 
 if (require.main === module) {
-  process.exit(main(process.argv.slice(2)));
+  main(process.argv.slice(2)).then(
+    (code) => process.exit(code),
+    (e) => {
+      // An unexpected failure is an environment error, never a finding. A pipeline that cannot tell
+      // the difference learns to ignore both.
+      console.error(`\n  ${C.red}${e.message}${C.off}\n`);
+      process.exit(EXIT.usage);
+    }
+  );
 }
 
 module.exports = { main, parseArgs, EXIT, renderItem };

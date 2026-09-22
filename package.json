@@ -26,7 +26,8 @@
     "validate-prompt": "node scripts/validate-prompt.js",
     "terminal-shot": "node scripts/terminal-shot.js",
     "check-readme": "node scripts/check-readme.js",
-    "check-run": "node scripts/check-run.js"
+    "check-run": "node scripts/check-run.js",
+    "index:publish": "node scripts/publish-index.js"
   },
   "keywords": [
     "supply-chain",
