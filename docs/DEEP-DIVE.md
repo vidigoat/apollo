@@ -357,6 +357,22 @@ dependency-versions, 1,984 of them already answered — 64% of a public monorepo
 letting it read as yours, and `GET /api/project?at=<n>` there says plainly that the lockfile is not
 on this machine instead of doing nothing. The hundredth repo is a lookup, not a hundredth sandbox run.
 
+**And the index is a file now, which is what makes that claim checkable by somebody else.** It was
+built locally and gitignored, so verifying "run a package once, answer for every repository" meant
+installing two thousand packages first — which makes it a sentence about an artefact that existed on
+exactly one laptop. `npm run index:publish` writes `public/index.json`: 1,589 packages, 2,129
+versions, 61 kB over the wire, served from the demo URL. In a repository that has never heard of
+this project, `cli.js lock --index <url>` pinned 47 of 151 packages from real observations and
+recorded the other 104 as unknown by name. Most of anyone's tree comes back unknown, because most of
+npm has never been watched by anybody, and that is reported as its own outcome rather than as a pass.
+
+Preparing it for publication is what found that **every one of the 2,129 entries was overclaiming**:
+each stores the `CAN_SEE` row it was observed under, and all of them said `fs: true` for a strategy
+that only hooks writes. The table was corrected months ago; the data never was. What a strategy can
+see is a property of the strategy, not of an observation, so the stored copy is restated from the
+table on read — and a correction to code is not a correction to data, which is the more general and
+more uncomfortable version of the lesson.
+
 ![The fleet band — every project a segment, the unwatched surface hatched under a ceiling hairline](images/fleet.jpg)
 
 The page draws the fleet rather than summarising it. Every project is one segment, width
