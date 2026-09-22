@@ -138,6 +138,19 @@ async function realRun() {
 function handler(req, res) {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
 
+    /*
+     * The GitHub App's front door.
+     *
+     * Anybody on the internet can POST here, so this route is the one place in the server that
+     * reads its body as bytes and checks a signature before it believes a word of it. See
+     * github/webhook.js — the verification and the verdict live there, away from anything that
+     * touches the network, so what this says about somebody's pull request can be tested offline.
+     */
+    if (url.pathname === '/api/github/webhook') {
+      if (req.method !== 'POST') return send(res, 405, 'post only', 'text/plain');
+      return githubWebhook(req, res);
+    }
+
     if (url.pathname === '/api/tree') {
       return send(
         res,
@@ -365,6 +378,86 @@ function handler(req, res) {
       if (err) return send(res, 404, 'not found', 'text/plain');
       send(res, 200, buf, TYPES[path.extname(file)] || 'application/octet-stream');
     });
+}
+
+/**
+ * The body as GitHub sent it.
+ *
+ * Bytes, not an object. An HMAC is over the exact bytes signed, and a parsed body re-serialised
+ * comes back with different whitespace and key order — the signature then fails for a delivery
+ * that was perfectly genuine, which is a whole afternoon if you have not met it before.
+ *
+ * Some hosts read the body before the handler sees it. If the stream is already spent we take what
+ * they kept, and refuse rather than re-serialise if all that survived was an object.
+ */
+function rawBody(req, limit = 2 * 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    if (req.readableEnded || req.readableAborted) {
+      const kept = req.rawBody ?? req.body;
+      if (Buffer.isBuffer(kept) || typeof kept === 'string') return resolve(Buffer.from(kept));
+      return reject(new Error('the body was consumed before it could be verified'));
+    }
+
+    const parts = [];
+    let size = 0;
+    req.on('data', (c) => {
+      size += c.length;
+      // A signature check on an unbounded body is a way to be knocked over by one request.
+      if (size > limit) {
+        req.destroy();
+        return reject(new Error('body too large'));
+      }
+      parts.push(c);
+    });
+    req.on('end', () => resolve(Buffer.concat(parts)));
+    req.on('error', reject);
+  });
+}
+
+/**
+ * The private key as an environment variable.
+ *
+ * A PEM is multi-line and most places that hold secrets are not, so the newlines usually arrive
+ * escaped. Accepting both spellings costs one line and saves an error that reads like a corrupt
+ * key rather than a formatting one.
+ */
+const pem = (s) => (s || '').includes('\\n') ? s.replace(/\\n/g, '\n') : s;
+
+async function githubWebhook(req, res) {
+  let raw;
+  try {
+    raw = await rawBody(req);
+  } catch (e) {
+    return send(res, 400, JSON.stringify({ ok: false, reason: e.message }), 'application/json');
+  }
+
+  const { handle } = require('./github/handle');
+  const { Index } = require('./index/schema');
+
+  try {
+    const out = await handle(
+      {
+        raw,
+        signature: req.headers['x-hub-signature-256'],
+        event: req.headers['x-github-event'],
+        delivery: req.headers['x-github-delivery'],
+      },
+      {
+        appId: process.env.GITHUB_APP_ID,
+        privateKey: pem(process.env.GITHUB_PRIVATE_KEY),
+        secret: process.env.GITHUB_WEBHOOK_SECRET,
+        index: new Index(),
+      }
+    );
+    return send(res, out.status, JSON.stringify(out.body), 'application/json');
+  } catch (e) {
+    /*
+     * 500, and GitHub will retry the delivery. The alternative — 200 on a failure — makes a broken
+     * app look healthy in its own deliveries page, which is the worst place to be lied to.
+     */
+    console.error('webhook', e);
+    return send(res, 500, JSON.stringify({ ok: false, reason: e.message }), 'application/json');
+  }
 }
 
 module.exports = handler;
