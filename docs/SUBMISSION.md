@@ -240,8 +240,14 @@ economics a central index has and a per-repo sandbox run does not.
 proportional to its dependency count, and the part nobody has watched is drawn as *hatching under a
 ceiling hairline* rather than as a filled bar — because a filled rectangle reads as PRESENT, and a
 coverage chart that renders 9,655 unobserved dependencies as the dark half of a bar is quietly
-telling you they are fine. Clicking a project gives its packages with a six-slot channel strip
-whose third state is **nothing was watching**. Two of those three states get printed as "no
+telling you they are fine.
+
+The per-project drill-down — every package with a six-slot channel strip whose third state is
+**nothing was watching** — is `GET /api/project?at=<n>`, and it needs the lockfiles on the machine
+serving it. The hosted scan deliberately does not carry them: it is a portable scan of turborepo
+with the paths withheld, so that page answers *"this scan was taken somewhere else; its counts are
+real and there is nothing here to open"* rather than inventing a tree. Run `npm run fleet:scan -- ~`
+and the same endpoint opens your own projects. Two of that strip's three states get printed as "no
 findings" everywhere else.
 
 ## The GitHub App

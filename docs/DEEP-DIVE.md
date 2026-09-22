@@ -354,17 +354,21 @@ from real installs, and came out at exactly 11,242. The 2,120 row is where the b
 The hosted demo has no filesystem to read, so a real scan of a checkout of
 [vercel/turborepo](https://github.com/vercel/turborepo) is committed — 24 projects, 3,107
 dependency-versions, 1,984 of them already answered — 64% of a public monorepo. The page says whose tree it is rather than
-letting it read as yours, and clicking a project there says plainly that its lockfile is not on this
-machine instead of doing nothing. The hundredth repo is a lookup, not a hundredth sandbox run.
+letting it read as yours, and `GET /api/project?at=<n>` there says plainly that the lockfile is not
+on this machine instead of doing nothing. The hundredth repo is a lookup, not a hundredth sandbox run.
 
-![The fleet band — 76 projects, each a segment, the unwatched surface hatched under a ceiling hairline](images/fleet.jpg)
+![The fleet band — every project a segment, the unwatched surface hatched under a ceiling hairline](images/fleet.jpg)
 
 The page draws the fleet rather than summarising it. Every project is one segment, width
 proportional to its dependency count, and the part nobody has watched is drawn as hatching rather
 than as a filled bar — because a filled bar reads as *present*, and a coverage chart that renders
 17,650 unobserved dependencies as the dark half of a bar is quietly telling you they are fine.
-Clicking a project gives you its packages, each with a six-slot strip: activity, watched-and-silent,
-and *nothing was watching*. Two of those three states get printed as "no findings" everywhere else.
+The per-project drill-down — each package with a six-slot strip: activity, watched-and-silent, and
+*nothing was watching* — is `GET /api/project?at=<n>`, and it needs the lockfiles on the machine
+serving it. The hosted scan is portable and withholds its paths, so there it answers *"this scan was
+taken somewhere else; its counts are real and there is nothing here to open"* rather than inventing
+a tree; `npm run fleet:scan -- ~` and it opens your own projects. Two of that strip's three states
+get printed as "no findings" everywhere else.
 
 ![One project's packages, each with a six-slot channel strip](images/channels.jpg)
 

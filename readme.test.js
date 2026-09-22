@@ -129,6 +129,59 @@ it('it still states the limitation it is easiest to quietly drop', () => {
   assert.match(README, /not a clean-room audit/i);
 });
 
+it('a claim about an interaction says where the interaction lives', () => {
+  /*
+   * `docs/SUBMISSION.md` — the document a judge reads — said "Clicking a project gives its packages
+   * with a six-slot channel strip". Nothing in the rebuilt site calls `/api/project` at all: the
+   * drill-down was lost in a redesign and the sentence describing it was not. A promise about an
+   * interaction is the easiest kind to leave behind, because nothing about the code changes shape
+   * when it goes, and no test anywhere had a reason to notice.
+   *
+   * The first version of this check asked whether the site handled ANY click. It does — there are
+   * tabs — so reverting the fix sailed through it. The rule that actually holds is narrower and
+   * more useful: a sentence describing something you do by clicking has to say WHERE it lives — an
+   * endpoint, or a command — so a reader can go and check rather than taking it on trust. That is
+   * what the corrected sentence does, and it is what the old one did not.
+   */
+  const docs = ['README.md', ...fs.readdirSync(path.join(__dirname, 'docs'))
+    .filter((f) => f.endsWith('.md')).map((f) => path.join('docs', f))];
+
+  /*
+   * "Where it lives" is an endpoint, a command, a local address, or — for a click on somebody
+   * else's website, which `docs/NEEDS.md` is full of — a URL. All four let a reader go and look.
+   */
+  const SAYS_WHERE = /`\/api\/|npm run |node scripts\/|`GET |`POST |localhost:|https?:\/\//;
+
+  for (const doc of docs) {
+    const text = fs.readFileSync(path.join(__dirname, doc), 'utf8');
+
+    /*
+     * Paragraphs, with a heading glued to the one beneath it.
+     *
+     * A sentence may say what the thing is and the next one where it lives, and a markdown heading
+     * is its own paragraph — so `### Click "Request beta access"` was judged alone, with the URL
+     * that answers it sitting one blank line away.
+     */
+    const paras = [];
+    for (const raw of text.split(/\n\s*\n/)) {
+      if (paras.length && /^#{1,6}\s/.test(paras[paras.length - 1].trim())) {
+        paras[paras.length - 1] += `\n${raw}`;
+      } else {
+        paras.push(raw);
+      }
+    }
+
+    for (const para of paras) {
+      if (!/\bclick(ing|s)?\b/i.test(para)) continue;
+      assert.ok(
+        SAYS_WHERE.test(para),
+        `${doc} describes something you do by clicking and never says where it lives:\n` +
+          `        "${para.replace(/\s+/g, ' ').trim().slice(0, 120)}…"`
+      );
+    }
+  }
+});
+
 it('every file the judging map points at is really there', () => {
   /*
    * This one rotted silently and badly. `docs/JUDGING.md` is the first thing a reviewer opens, and
