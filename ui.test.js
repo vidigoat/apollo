@@ -169,6 +169,65 @@ const it = async (name, fn) => {
     assert.match(css, /prefers-reduced-motion: reduce\)\s*\{[^}]*animation: none/s);
   });
 
+  await it('no fixed-column grid is wider than a phone without a fallback', () => {
+    /*
+     * A check that exists because the manual one could not be done.
+     *
+     * `.exhibit__row` was `20px | 1fr | auto` with a nowrap caption in the third column, which
+     * leaves about 250px for a twenty-four-character monospace package name on a 400px screen. It
+     * does not fit — and `overflow-x: hidden` on the body means the overflow is not scrolled to,
+     * it is quietly cut off, which is the worst of both.
+     *
+     * So: any rule whose grid columns add up to more than a phone's width has to be answered by a
+     * `max-width` media query somewhere in this file. It does not check that the fallback is GOOD,
+     * only that somebody thought about the case — which is exactly the thing that gets forgotten.
+     */
+    const PHONE = 380;
+
+    /*
+     * The contents of every `max-width` block, brace-matched.
+     *
+     * The first version of this split the file on `@media (max-width` and kept everything after
+     * the first one — which is most of the stylesheet, so every selector below that point counted
+     * as "answered" and the check passed on a deliberately broken rule. A test that cannot fail is
+     * worse than no test, because it is also a claim.
+     */
+    const narrow = (() => {
+      let out = '';
+      const re = /@media[^{]*\(max-width[^{]*\{/g;
+      let m;
+      while ((m = re.exec(css))) {
+        let depth = 1;
+        let i = m.index + m[0].length;
+        const from = i;
+        while (i < css.length && depth > 0) {
+          if (css[i] === '{') depth++;
+          else if (css[i] === '}') depth--;
+          i++;
+        }
+        out += `${css.slice(from, i)}\n`;
+      }
+      return out;
+    })();
+    assert.ok(narrow.length > 200, 'found no max-width blocks at all — the scan is broken');
+    const rules = [...css.matchAll(/([^{}]+)\{([^}]*grid-template-columns[^}]*)\}/g)];
+    assert.ok(rules.length >= 5, `found ${rules.length} grid rules — the scan is broken`);
+
+    for (const [, selector, body] of rules) {
+      const cols = body.match(/grid-template-columns:\s*([^;]+);/)?.[1] ?? '';
+      const fixed = [...cols.matchAll(/(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
+      const total = fixed.reduce((a, b) => a + b, 0);
+      if (total <= PHONE) continue;
+
+      const name = selector.trim().split(/[\s,]+/).find((t) => t.startsWith('.'));
+      if (!name) continue;
+      assert.ok(
+        narrow.includes(name),
+        `${name} lays out ${total}px of fixed columns and nothing answers it at phone width`
+      );
+    }
+  });
+
   await it('focus is visible and the page never scrolls sideways', () => {
     assert.match(css, /:focus-visible\s*\{[^}]*outline:/s, 'keyboard focus is invisible');
     assert.match(css, /overflow-x: hidden/, 'nothing stops a wide child scrolling the page');

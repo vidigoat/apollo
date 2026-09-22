@@ -277,6 +277,21 @@ section { padding-block: clamp(72px, 11vh, 132px); }
 .exhibit__gutter { color: var(--dimmer); }
 .exhibit__when { color: var(--dimmer); font-size: 0.78em; white-space: nowrap; letter-spacing: 0.01em; }
 
+/*
+ * On a phone the third column has nowhere to go.
+ *
+ * `20px | 1fr | auto` with a nowrap caption in the auto column leaves about 250px for a
+ * twenty-four-character monospace package name, which does not fit — and `overflow-x: hidden` on
+ * the body means the overflow is not scrolled to, it is simply cut off. The caption drops under
+ * the line it captions instead.
+ */
+@media (max-width: 560px) {
+  .exhibit__row { grid-template-columns: 20px minmax(0, 1fr); row-gap: 2px; }
+  .exhibit__when { grid-column: 2; white-space: normal; }
+  .exhibit__when:empty { display: none; }
+  .exhibit__row > span:nth-child(2) { overflow-wrap: anywhere; }
+}
+
 /* The control: what the lockfile already said. Quiet on purpose. */
 .exhibit__row--was { color: var(--dim); }
 .exhibit__row--was:first-child { padding-top: 15px; }
