@@ -14,7 +14,7 @@ Checklist against the stated requirements:
 | uses at least one NVIDIA open source model | **LIVE, three of them.** `NVIDIA-Nemotron-3-Nano-30B-A3B` triages, `Nemotron-3-Ultra-550b-a55b` judges, `nemotron-3-super-120b-a12b` vetoes. Preflight shows a parsed verdict and a real cost for each. |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |
-| **a working demo URL** — hosted app or test build | ready — `npx vercel --prod`, two commands, no env var needed. See [DEPLOY.md](../DEPLOY.md). Verdicts ship committed, so a visitor costs nothing. |
+| **a working demo URL** — hosted app or test build | **LIVE: <https://cassandra-nu.vercel.app>** — no login, no key. The verdicts ship committed, so a visitor costs nothing and sees the same five findings every time. |
 | 3-min public YouTube video, audio covering Nebius + Nemotron use | `docs/DEMO-SCRIPT.md` |
 | feedback on Token Factory / AI Cloud / NVIDIA tools | `docs/FEEDBACK-NOTES.md` |
 | what changed during the submission window | this project was built in it |
@@ -244,19 +244,48 @@ telling you they are fine. Clicking a project gives its packages with a six-slot
 whose third state is **nothing was watching**. Two of those three states get printed as "no
 findings" everywhere else.
 
+## The GitHub App
+
+Built, tested and deployed — the webhook is live at `/api/github/webhook` on the demo URL and
+answers 405 to a GET, which is the correct thing for a signed POST endpoint to do.
+
+It authenticates as an app rather than as somebody's personal token: an RS256 JWT, signed with no
+dependencies, exchanged for an installation token that is scoped to one repository and expires in
+an hour. A pull request that does not touch a lockfile costs one API call and posts nothing. One
+that does gets a single check run, and **none of its three outcomes is a plain pass**:
+
+| what happened | what the check says |
+|---|---|
+| a version that did not move now behaves differently | `failure`, naming the package and the channel |
+| packages the index has never observed | `neutral` — never a failure |
+| every package observed, none of them drifted | `success`, with the count, so the number can be argued with |
+
+The middle row is the one the adoption story rests on. On any real tree most packages start
+unknown, and a check that goes red on the day it is installed is switched off in week one — and
+then the day it has something real to say, nobody is listening.
+
+It installs nothing and executes nobody's code. For a supply-chain tool that is not a detail.
+
+**Not registered yet**, and that is the one thing in this project that cannot be done from a
+terminal: GitHub has no REST endpoint for creating an App, only the web form or a browser manifest
+flow. `node scripts/register-app.js` drives the manifest flow end to end — it opens the page,
+captures the code GitHub redirects back with, exchanges it, and writes the app id, private key and
+webhook secret straight to `.env`. It needs one human press on GitHub's own page.
+
 ## What's next
 
 Kernel-level observation on real Sandboxes (the adapter is written and tested against a stub;
-`npm run preflight` will confirm it the moment access arrives), a pre-populated cache for the most
-depended-on packages on npm, and a GitHub App so a Dependabot PR gets its behavioural diff as a
-comment rather than a log.
+`npm run preflight` will confirm it the moment access arrives), and a pre-populated index published
+as an artefact rather than built locally.
 
 ---
 
 ## Built with
 
 `Nebius Token Factory Sandboxes` · `NVIDIA Nemotron 3 (Nano 30B / Ultra 550B / Super 120B)` ·
-`Tavily` · `Node 22` · zero runtime dependencies, no build step
+`Tavily` · `Node 22` · `React` + `Motion` for the website only — `stakeout` itself has zero runtime
+dependencies and no build step, and there is a test that fails if the root package.json ever grows
+one
 
 ---
 
