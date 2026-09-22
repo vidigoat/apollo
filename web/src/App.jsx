@@ -119,7 +119,7 @@ export default function App() {
               )}
               <div className="wide">
                 <dt>judged by</dt>
-                <dd>Nemotron 3 — Nano 30B, then Ultra 550B, then Super 120B as a veto</dd>
+                <dd>Nemotron 3 — Nano 30B → Ultra 550B → Super 120B as veto</dd>
               </div>
               <div className="wide">
                 <dt>running on</dt>

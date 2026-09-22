@@ -78,13 +78,23 @@ export default function Hero() {
           </div>
         ))}
 
+        {/* What the space says while it is being looked at, rather than nothing. */}
+        {!still && <motion.span
+          className="exhibit__watching"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 1, 0] }}
+          transition={{ duration: 1.1, delay: 0.2, times: [0, 0.2, 0.7, 1] }}
+        >
+          watching
+        </motion.span>}
+
         {/* The look. One pass, top to bottom, and then it is gone. */}
         {!still && (
           <motion.span
             className="exhibit__scan"
             initial={{ top: 0, opacity: 0 }}
             animate={{ top: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
-            transition={{ duration: 0.95, delay: 0.3, ease: "easeInOut" }}
+            transition={{ duration: 0.8, delay: 0.15, ease: "easeInOut" }}
           />
         )}
 
@@ -94,7 +104,7 @@ export default function Hero() {
             key={f.what}
             initial={{ opacity: 0, x: still ? 0 : -8 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.38, delay: at(1.05 + i * 0.11) }}
+            transition={{ duration: 0.34, delay: at(0.62 + i * 0.09) }}
           >
             <span className="exhibit__gutter">+</span>
             <span>
@@ -112,7 +122,7 @@ export default function Hero() {
           className="exhibit__verdict"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, delay: at(1.62) }}
+          transition={{ duration: 0.4, delay: at(1.02) }}
         >
           <span>
             a patch release that now reads three credentials and calls a host{" "}

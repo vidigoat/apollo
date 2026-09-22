@@ -96,9 +96,16 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
  * is no room for a margin on a phone, and a horizontal pill bar would be a different design
  * wearing this one's clothes.
  */
+/*
+ * Hung off the text column, not off the window.
+ *
+ * At `left: 22px` the rail sat in the outer third of the gutter — a hundred and fifty pixels from
+ * the words it indexes — and read as debris at the edge of the screen rather than as the margin of
+ * a document. It tracks the column now, and falls back to the screen edge when there is no room.
+ */
 .spine {
   position: fixed;
-  left: 22px;
+  left: max(16px, calc((100vw - 1120px) / 2 - 64px));
   top: 50%;
   transform: translateY(-50%);
   z-index: 40;
@@ -314,6 +321,27 @@ section { padding-block: clamp(72px, 11vh, 132px); }
   right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--watched), transparent);
+  pointer-events: none;
+}
+
+/*
+ * What the empty half of the exhibit says while the scan runs.
+ *
+ * The rows that are about to arrive reserve their space, which is right — nothing should reflow
+ * under the reader. But for the first second that reserved space is a large empty bordered
+ * rectangle sitting in the middle of the first screen, and an empty box reads as something that
+ * failed to load, not as something about to happen. One line, in the space being scanned, gone the
+ * moment the first finding lands.
+ */
+.exhibit__watching {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 38%;
+  text-align: center;
+  font: 400 var(--t-mono)/1 var(--mono);
+  color: var(--dimmer);
+  letter-spacing: 0.08em;
   pointer-events: none;
 }
 
