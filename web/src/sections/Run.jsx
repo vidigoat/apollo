@@ -120,13 +120,24 @@ export default function Run({ strategies = [] }) {
             <span><i style={{ background: 'var(--drift)' }} />worth waking somebody</span>
           </div>
 
+          {/*
+            `=== true`, not truthy. A channel can be watched in PART — nodert records filesystem
+            writes and no reads — and printing that as "can see fs" is how a page ends up telling
+            somebody the filesystem was watched when half of it was. A partial channel is named
+            with the half it saw and counted as a blind spot, because silence in it proves nothing.
+          */}
           <p className="lede lede--small" style={{ marginTop: 18 }}>
             Watched with <b>{data.strategy}</b>, which can see{' '}
-            {CHANNELS.filter((c) => data.canSee[c]).join(', ')}
-            {CHANNELS.some((c) => !data.canSee[c]) && (
+            {CHANNELS.filter((c) => data.canSee[c] === true).join(', ')}
+            {CHANNELS.some((c) => data.canSee[c] !== true) && (
               <>
-                {' '}and is blind to <b>{CHANNELS.filter((c) => !data.canSee[c]).join(', ')}</b> — so
-                nothing here claims anything about {CHANNELS.filter((c) => !data.canSee[c]).join(' or ')}
+                {' '}and is blind to{' '}
+                <b>
+                  {CHANNELS.filter((c) => data.canSee[c] !== true)
+                    .map((c) => (data.canSee[c] ? `${c} (${data.canSee[c]} only)` : c))
+                    .join(', ')}
+                </b>{' '}
+                — so nothing here claims anything about what happened there
               </>
             )}
             . {num(data.modelCalls)} model calls for a {num(data.tree.total)}-package tree.

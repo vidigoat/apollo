@@ -21,15 +21,33 @@ const STRATEGIES = ['fsdiff', 'proxy', 'nodert', 'ebpf'];
 const CAN_SEE = {
   fsdiff: { fs: true, net: false, dns: false, env: false, proc: false, exec: false },
   proxy: { fs: true, net: true, dns: true, env: false, proc: false, exec: false },
-  // Node runtime instrumentation reaches every channel, but only through Node's own API surface —
-  // a native addon or a captured reference goes underneath it. It is the only strategy that runs
-  // without special infrastructure, and the only one that has actually run. See observe/probe.js.
-  //
-  // `exec` is the one thing it sees that eBPF cannot. Code built at runtime and handed to Function
-  // or vm never becomes a syscall — it is a string turning into behaviour inside one process, and a
-  // kernel tracer watches the process, not the thought. Being weaker almost everywhere and stronger
-  // in exactly one place is why the strategy is worth keeping rather than replacing.
-  nodert: { fs: true, net: true, dns: true, env: true, proc: true, exec: true },
+  /*
+   * Node runtime instrumentation reaches every channel, but only through Node's own API surface —
+   * a native addon or a captured reference goes underneath it. It is the only strategy that runs
+   * without special infrastructure, and the only one that has actually run. See observe/probe.js.
+   *
+   * `exec` is the one thing it sees that eBPF cannot. Code built at runtime and handed to Function
+   * or vm never becomes a syscall — it is a string turning into behaviour inside one process, and a
+   * kernel tracer watches the process, not the thought. Being weaker almost everywhere and stronger
+   * in exactly one place is why the strategy is worth keeping rather than replacing.
+   *
+   * ── `fs: 'writes'`, and why this entry used to say `true` ─────────────────
+   *
+   * The probe hooks writes and deletes only, deliberately: reads inside node_modules are what
+   * `require` does all day and mean nothing. That is a good decision about what to RECORD and it
+   * was being reported as though it were a decision about what could be SEEN.
+   *
+   * With `fs: true` here, every nodert transcript claimed the filesystem was watched — so a package
+   * that read `~/.aws/credentials` at import time came back `quiet: true, blindTo: [],
+   * trustworthy: true`. Reading a credential is the first step of the exact attack this project
+   * exists to catch, and the index says 2,129 observations, 1,368 of them quiet, with not one
+   * filesystem event among them. Some of that is packages genuinely writing nothing. None of it is
+   * evidence that they read nothing, and the transcript was letting it read that way.
+   *
+   * So the value is what it is: writes, not reads. Anything other than `true` is a blind spot that
+   * travels with the claim, which is what the rest of this file is for.
+   */
+  nodert: { fs: 'writes', net: true, dns: true, env: true, proc: true, exec: true },
   ebpf: { fs: true, net: true, dns: true, env: true, proc: true, exec: false },
 };
 
@@ -145,15 +163,23 @@ function observedNothing(t) {
 /**
  * Quiet, and what that claim is worth.
  *
- * @returns {{quiet: boolean, blindTo: string[], trustworthy: boolean}}
+ * A channel is either fully seen (`true`) or it is not, and "not" has two shapes: never watched at
+ * all (`false`), and watched in part — `nodert` records filesystem WRITES and no reads. Both are
+ * blind spots, because silence in either one supports nothing, and both have to travel with the
+ * claim. `partial` names the second kind so a reader can tell them apart.
+ *
+ * @returns {{quiet: boolean, blindTo: string[], partial: string[], trustworthy: boolean}}
  *   quiet        nothing appeared in any channel we could see
- *   blindTo      channels this strategy cannot see at all — silence there means nothing
+ *   blindTo      channels where silence means nothing — unwatched, or only partly watched
+ *   partial      the subset of those that were watched in part, and how
  *   trustworthy  quiet AND nothing was invisible. The only state that supports "it did nothing".
  */
 function quietness(t) {
-  const blindTo = Object.entries(CAN_SEE[t.strategy] || {}).filter(([, v]) => !v).map(([k]) => k);
+  const table = Object.entries(CAN_SEE[t.strategy] || {});
+  const blindTo = table.filter(([, v]) => v !== true).map(([k]) => k);
+  const partial = table.filter(([, v]) => v !== true && v !== false).map(([k, v]) => `${k} (${v} only)`);
   const quiet = observedNothing(t);
-  return { quiet, blindTo, trustworthy: quiet && blindTo.length === 0 };
+  return { quiet, blindTo, partial, trustworthy: quiet && blindTo.length === 0 };
 }
 
 module.exports = { transcript, observedNothing, quietness, normalisePath, STRATEGIES, STRENGTH, CAN_SEE, empty };

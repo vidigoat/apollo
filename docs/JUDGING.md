@@ -11,7 +11,7 @@ and a test asserts that every file named here exists.
 ```bash
 npm run demo      # the whole argument, in a terminal, in about two seconds
 npm start         # http://localhost:8791 — the site, the run, the fleet, the check run
-npm test          # 28 suites, 362 checks
+npm test          # 28 suites, 366 checks
 ```
 
 The demo is the primitive: a version that did not move, behaving differently, caught. The fleet

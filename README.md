@@ -267,15 +267,16 @@ STAKEOUT_ALLOW_LOCAL=1 npm run real -- chalk 5.3.0 5.4.1
 
 ```
 STAKEOUT — real packages, real registry, this machine
-Watching with "nodert". Node's API surface only — a native addon goes underneath it.
+Watching with "nodert". Node's API surface only — a native addon goes underneath it,
+and the filesystem hook records writes, not reads.
 
   left-pad 1.2.0 → 1.3.0  none
-      left-pad 1.2.0 → 1.3.0: no behavioural change
+      left-pad 1.2.0 → 1.3.0: no change in what nodert can see
       1.2.0   nothing observed
       1.3.0   nothing observed
 
   debug 4.3.4 → 4.4.0  none
-      debug 4.3.4 → 4.4.0: no behavioural change
+      debug 4.3.4 → 4.4.0: no change in what nodert can see
       4.3.4   env DEBUG
       4.4.0   env DEBUG
 
@@ -559,13 +560,41 @@ has to come from `quietness()`, which returns the caveat in the same object:
 
 ```js
 quietness(fsdiffRun)   // { quiet: true, blindTo: ['net','dns','env','proc','exec'], trustworthy: false }
-quietness(nodertRun)   // { quiet: true, blindTo: [],                                trustworthy: true  }
+quietness(nodertRun)   // { quiet: true, blindTo: ['fs'], partial: ['fs (writes only)'], trustworthy: false }
 ```
 
 `trustworthy` is the only one of the three that supports the sentence *"it did nothing"*, and every
 diff now carries `quietTrustworthy` and `blindTo` alongside `bothQuiet`, so nothing can pick up the
 claim without the caveat travelling with it. A test derives each strategy's blind list from
 `CAN_SEE` rather than restating it, so a new strategy cannot arrive without one.
+
+#### The same bug, found a second time, inside the fix
+
+That second line used to read `blindTo: [], trustworthy: true`, and it was wrong in exactly the way
+the paragraph above is about.
+
+`observe/probe.js` hooks filesystem **writes** and deletes. It hooks no reads — deliberately, and
+the comment saying why is a good one: reads inside `node_modules` are what `require` does all day
+and mean nothing. That is a sound decision about what to *record*, and `CAN_SEE` was reporting it
+as a decision about what could be *seen*: `nodert: { fs: true, … }`.
+
+So every `nodert` transcript claimed the filesystem had been watched. A package that read
+`~/.aws/credentials` at import time — the first move of the attack this project exists to catch —
+came back `quiet: true, blindTo: [], trustworthy: true`. The index holds 2,129 observations, 1,368
+of them quiet, and **not one filesystem event among them**. Some of that is packages genuinely
+writing nothing. None of it was ever evidence that they read nothing, and the transcript was
+letting it read that way.
+
+A channel is now `true`, `false`, or the part of it that was watched — `fs: 'writes'` — and
+anything that is not `true` is a blind spot that travels with the claim. Four places were treating
+truthy as seen: `quietness()`, the diff's summary, the prompt's caveat to the model, and the line
+the site prints under a run.
+
+Which leaves one honest and slightly uncomfortable consequence: **no strategy that ships here can
+see every channel.** eBPF cannot watch code built at runtime, the proxy sees no environment reads,
+`fsdiff` sees almost nothing, and `nodert` sees writes and not reads. `trustworthy` is therefore a
+state this system can describe and cannot currently reach — which is a truer thing to publish than
+the alternative, and there is a test asserting it out loud so it cannot quietly stop being said.
 
 ### 4. Absence of a public record raises priority and proves nothing
 
@@ -911,7 +940,7 @@ npm test
 ```
 
 ```
-28 suites · 362 checks
+28 suites · 366 checks
 all green
 ```
 

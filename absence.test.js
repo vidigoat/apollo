@@ -31,7 +31,7 @@
  */
 
 const assert = require('node:assert');
-const { transcript, quietness, observedNothing, CAN_SEE } = require('./transcript/schema');
+const { transcript, quietness, observedNothing, STRATEGIES, CAN_SEE } = require('./transcript/schema');
 const { diff, summarise } = require('./differ/diff');
 const { buildPrompt } = require('./judge/prompt');
 
@@ -60,14 +60,64 @@ const NOISY = {
 const run = (strategy, version, raw = {}) => transcript({ pkg: 'p', version, strategy, raw });
 const pairOf = (strategy, raw = {}) => diff(run(strategy, '1.0.0', raw), run(strategy, '1.0.1', raw));
 
-const BLIND = Object.keys(CAN_SEE).filter((s) => Object.values(CAN_SEE[s]).some((v) => !v));
-const SIGHTED = Object.keys(CAN_SEE).filter((s) => Object.values(CAN_SEE[s]).every(Boolean));
+/*
+ * Fully sighted means every channel reads exactly `true`.
+ *
+ * It used to mean "every value is truthy", which stopped being the same thing the day a channel
+ * could be watched in PART: `nodert` records filesystem writes and no reads, so its entry is
+ * `fs: 'writes'`. Truthy, and not the same as seen. Under the old filter nodert still counted as
+ * fully sighted while `quietness()` — correctly — treated its filesystem silence as worth nothing,
+ * and the two disagreed about the only thing this file is about.
+ */
+const BLIND = Object.keys(CAN_SEE).filter((s) => Object.values(CAN_SEE[s]).some((v) => v !== true));
+const SIGHTED = Object.keys(CAN_SEE).filter((s) => Object.values(CAN_SEE[s]).every((v) => v === true));
+
+/*
+ * A strategy that really does see everything, for the tests that have to prove the strong claim is
+ * still REACHABLE rather than architecturally impossible.
+ *
+ * It is hypothetical on purpose. None of the four that ship can see every channel — eBPF cannot
+ * watch code built at runtime, the proxy sees no environment reads, nodert only sees filesystem
+ * writes — and pretending otherwise in the table is what this change was fixing. The machinery has
+ * to keep working for a strategy that could, or "nothing is ever trustworthy" becomes the answer by
+ * accident rather than by measurement.
+ */
+const PERFECT = 'perfect-for-the-test';
+CAN_SEE[PERFECT] = { fs: true, net: true, dns: true, env: true, proc: true, exec: true };
+// `transcript()` refuses a strategy it does not know — a transcript has to say how it was made —
+// so the hypothetical one is registered here too, for the length of this file.
+STRATEGIES.push(PERFECT);
 
 console.log('absence of evidence is not evidence of absence');
 
 it('the fixtures still exercise the distinction', () => {
   assert.ok(BLIND.length >= 2, 'no strategy has a blind spot — this whole file tests nothing');
-  assert.ok(SIGHTED.length >= 1, 'no strategy sees everything — the strong claim can never be made');
+});
+
+it('no strategy that ships can see everything, and the table says so', () => {
+  /*
+   * Worth asserting rather than assuming, because it is the strongest honest statement this project
+   * can make about itself: there is no observer here whose silence is proof. Every one of the four
+   * has a named gap, and every claim carries it.
+   *
+   * If a strategy ever genuinely does see every channel, this test fails and should — at which
+   * point the right thing is to delete it and say so in the README, not to widen it.
+   */
+  assert.deepEqual(SIGHTED, [], `${SIGHTED.join(', ')} claims to see every channel — is that true?`);
+
+  for (const s of ['nodert', 'ebpf', 'proxy', 'fsdiff']) {
+    const gaps = Object.entries(CAN_SEE[s]).filter(([, v]) => v !== true);
+    assert.ok(gaps.length, `${s} has no gap recorded, which no observer of a live process earns`);
+  }
+});
+
+it('the strong claim is still reachable, for a strategy that earns it', () => {
+  // Against a hypothetical fully-sighted observer, so the property is not satisfied by a system
+  // that has quietly made "trustworthy" impossible.
+  const q = quietness(run(PERFECT, '1.0.0'));
+  assert.equal(q.quiet, true);
+  assert.deepEqual(q.blindTo, []);
+  assert.equal(q.trustworthy, true, 'a strategy seeing every channel and nothing happening is still discounted');
 });
 
 /* ── 1. the data ───────────────────────────────────────────────────────────── */
@@ -82,12 +132,17 @@ it('a blind strategy never produces a trustworthy silence, whatever it saw', () 
   }
 });
 
-it('a sighted strategy seeing nothing is trustworthy — the claim is still available', () => {
-  // The property must not be satisfied by refusing to ever conclude anything.
-  for (const strategy of SIGHTED) {
-    assert.equal(quietness(run(strategy, '1.0.0')).trustworthy, true,
-      `${strategy} sees every channel and its silence was still discounted`);
-  }
+it('a partly-sighted channel is a blind spot, and says which part it saw', () => {
+  /*
+   * `nodert` hooks filesystem writes and no reads. With `fs: true` in the table every nodert
+   * transcript claimed the filesystem was watched — so a package that read `~/.aws/credentials` at
+   * import came back quiet, blindTo [], trustworthy. Reading a credential is the first move of the
+   * attack this project exists to catch.
+   */
+  const q = quietness(run('nodert', '1.0.0'));
+  assert.ok(q.blindTo.includes('fs'), 'nodert offers its filesystem silence as evidence again');
+  assert.equal(q.trustworthy, false);
+  assert.deepEqual(q.partial, ['fs (writes only)'], `partial said: ${q.partial.join(', ')}`);
 });
 
 it('a package hidden entirely by the strategy still reports an empty observation', () => {
@@ -105,7 +160,7 @@ it('every diff carries what its silence cannot speak for', () => {
     const d = pairOf(strategy);
     assert.ok(Array.isArray(d.blindTo), `${strategy}: a diff without a blind list`);
     assert.equal(typeof d.quietTrustworthy, 'boolean', `${strategy}: no trustworthiness on the diff`);
-    const expected = Object.entries(CAN_SEE[strategy]).filter(([, v]) => !v).map(([k]) => k).sort();
+    const expected = Object.entries(CAN_SEE[strategy]).filter(([, v]) => v !== true).map(([k]) => k).sort();
     assert.deepEqual([...d.blindTo].sort(), expected, `${strategy} misreports its blind spots on the diff`);
   }
 });
@@ -132,11 +187,11 @@ it('the wall never states "no behavioural change" after a partial view', () => {
   }
 });
 
-it('and does state it when the run earns it', () => {
-  for (const strategy of SIGHTED) {
-    assert.match(summarise(pairOf(strategy)), /no behavioural change$/,
-      `${strategy} sees everything and still hedged — the qualification has become a reflex`);
-  }
+it('and does state it plainly when the run earns it', () => {
+  // The qualification must not become a reflex: an observer that saw everything, and saw nothing
+  // happen, says so without hedging.
+  assert.match(summarise(pairOf(PERFECT)), /no behavioural change$/,
+    'a fully-sighted run still hedged — the qualification has become a reflex');
 });
 
 it('a finding is reported the same way whoever was watching', () => {
@@ -167,10 +222,8 @@ it('the model is told what was not watched, before it is asked to judge', () => 
 });
 
 it('a sighted strategy is not made to apologise to the model either', () => {
-  for (const strategy of SIGHTED) {
-    assert.doesNotMatch(buildPrompt(pairOf(strategy), null).user, /CANNOT observe/,
-      `${strategy} sees every channel and the prompt told the model otherwise`);
-  }
+  assert.doesNotMatch(buildPrompt(pairOf(PERFECT), null).user, /CANNOT observe/,
+    'a fully-sighted run and the prompt told the model otherwise');
 });
 
 console.log(`\n${passed} passed  ·  ${Object.keys(CAN_SEE).length} strategies, ${BLIND.length} of them partial`);

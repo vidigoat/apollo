@@ -118,10 +118,19 @@ What is this change doing?`;
   return { system: SYSTEM, user, fence: f };
 }
 
-/** If the strategy was blind to something, the model must not read silence as absence. */
+/**
+ * If the strategy was blind to something, the model must not read silence as absence.
+ *
+ * `!== true`, not `!v`. A channel can be watched in part — `nodert` records filesystem writes and
+ * no reads — and a partly-watched channel is one the model must not draw a conclusion from either.
+ * Under `!v` the qualifier is truthy and the caveat quietly disappeared, so the prompt told the
+ * model the filesystem had been watched when only half of it had.
+ */
 function canSeeCaveat(d) {
-  const blind = Object.entries(d.canSee || {}).filter(([, v]) => !v).map(([k]) => k);
-  return blind.length ? ` (this strategy CANNOT observe: ${blind.join(', ')} — silence there means nothing)` : '';
+  const gaps = Object.entries(d.canSee || {}).filter(([, v]) => v !== true);
+  if (!gaps.length) return '';
+  const named = gaps.map(([k, v]) => (v === false ? k : `${k} (${v} only)`));
+  return ` (this strategy CANNOT observe: ${named.join(', ')} — silence there means nothing)`;
 }
 
 module.exports = { buildPrompt, evidenceLines, SYSTEM };

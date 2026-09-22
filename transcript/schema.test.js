@@ -47,10 +47,21 @@ it('carries what its strategy could not see', () => {
   assert.equal(t({}, 'fsdiff').canSee.net, false, 'fsdiff cannot see the network and must admit it');
   assert.equal(t({}, 'ebpf').canSee.env, true);
   assert.equal(t({}, 'proxy').canSee.proc, false);
-  // Every strategy must answer for every field, or a caveat silently goes missing.
+  /*
+   * Every strategy must answer for every field, or a caveat silently goes missing.
+   *
+   * `true`, `false`, or a word saying which part it watches — `nodert` is `fs: 'writes'`, because
+   * the probe hooks writes and deletes and no reads. A boolean could not say that, and while it
+   * said `true` every nodert transcript claimed the whole filesystem had been watched.
+   */
   const fields = ['fs', 'net', 'dns', 'env', 'proc'];
-  STRATEGIES.forEach((s) => fields.forEach((f) =>
-    assert.equal(typeof CAN_SEE[s][f], 'boolean', `${s} does not say whether it can see ${f}`)));
+  STRATEGIES.forEach((s) => fields.forEach((f) => {
+    const v = CAN_SEE[s][f];
+    assert.ok(
+      v === true || v === false || (typeof v === 'string' && v.length),
+      `${s} does not say whether it can see ${f}`
+    );
+  }));
 });
 
 /* ── identical runs must compare equal ────────────────────────────────── */
@@ -165,17 +176,33 @@ it('"we did not watch" is never reported as "nothing happened"', () => {
   assert.deepEqual(q.blindTo.sort(), ['dns', 'env', 'exec', 'net', 'proc']);
 });
 
-it('a strategy that can see everything, seeing nothing, is worth believing', () => {
+it('a channel watched only in part is a blind spot, and names the part', () => {
+  /*
+   * This assertion used to name `nodert` as the full-visibility strategy, and it was wrong about
+   * it. The probe hooks filesystem writes and deletes; it hooks no reads. So a package that read
+   * `~/.aws/credentials` at import came back quiet, with an empty blind list, and trustworthy —
+   * which is the exact shape of claim this whole file exists to prevent.
+   */
   const q = quietness(transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }));
-  assert.equal(q.trustworthy, true, 'a full-visibility strategy observing nothing must support the claim');
-  assert.deepEqual(q.blindTo, []);
+  assert.equal(q.quiet, true);
+  assert.ok(q.blindTo.includes('fs'), 'nodert offers its filesystem silence as evidence again');
+  assert.equal(q.trustworthy, false, 'a partly-watched channel was counted as watched');
+  assert.deepEqual(q.partial, ['fs (writes only)']);
+});
+
+it('no strategy that ships can see every channel, and that is said out loud', () => {
+  // The strongest honest thing this project can say about itself. If one ever can, delete this.
+  for (const s of STRATEGIES) {
+    const gaps = Object.entries(CAN_SEE[s]).filter(([, v]) => v !== true);
+    assert.ok(gaps.length, `${s} claims to see every channel — is that true?`);
+  }
 });
 
 it('every strategy reports exactly the channels its table says it cannot see', () => {
   // Derived from CAN_SEE rather than restated, so a new strategy cannot arrive without a blind list.
   for (const strategy of Object.keys(CAN_SEE)) {
     const q = quietness(transcript({ pkg: 'p', version: '1.0.0', strategy, raw: {} }));
-    const expected = Object.entries(CAN_SEE[strategy]).filter(([, v]) => !v).map(([k]) => k).sort();
+    const expected = Object.entries(CAN_SEE[strategy]).filter(([, v]) => v !== true).map(([k]) => k).sort();
     assert.deepEqual(q.blindTo.sort(), expected, `${strategy} misreports what it cannot see`);
     assert.equal(q.trustworthy, expected.length === 0, `${strategy}'s silence is being weighted wrongly`);
   }

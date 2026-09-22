@@ -9,8 +9,22 @@
  */
 
 const assert = require('node:assert');
-const { transcript } = require('../transcript/schema');
+const { transcript, STRATEGIES, CAN_SEE } = require('../transcript/schema');
 const { diff, summarise, severityOf } = require('./diff');
+
+/*
+ * A strategy that really does see everything, for the two assertions that have to prove the strong
+ * sentence is still reachable.
+ *
+ * None of the four that ship can. eBPF cannot watch code built at runtime; the proxy sees no
+ * environment reads; `nodert` records filesystem writes and no reads, which is why its table entry
+ * is `fs: 'writes'` and not `true`. Both of these assertions used to name nodert as the fully
+ * sighted one, on the strength of a table that overstated it — so "no behavioural change" was
+ * being printed after a run that had not watched a single file being read.
+ */
+const PERFECT = 'perfect-for-the-test';
+CAN_SEE[PERFECT] = { fs: true, net: true, dns: true, env: true, proc: true, exec: true };
+STRATEGIES.push(PERFECT);
 
 let passed = 0;
 const it = (name, fn) => {
@@ -40,12 +54,19 @@ it('says nothing changed when nothing changed — and only claims what it watche
   // pedantry — it is most of what the wall says.
   assert.match(summarise(d), /no change in what ebpf can see/);
 
-  // The strong sentence still exists, for the strategy that earns it.
+  // The strong sentence still exists, for a strategy that would earn it.
   const full = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: PERFECT, raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: PERFECT, raw: {} })
+  );
+  assert.match(summarise(full), /no behavioural change$/);
+
+  // And nodert does not get it, because it never watched a file being read.
+  const nodert = diff(
     transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }),
     transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', raw: {} })
   );
-  assert.match(summarise(full), /no behavioural change$/);
+  assert.match(summarise(nodert), /no change in what nodert can see/);
 });
 
 it('is stable across identical runs, despite temp paths and pids', () => {
@@ -171,11 +192,20 @@ it('a blind strategy seeing nothing never reads as a quiet package', () => {
 
 it('a full-visibility run seeing nothing is evidence, and says so', () => {
   const d = diff(
-    transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }),
-    transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', raw: {} })
+    transcript({ pkg: 'p', version: '1.0.0', strategy: PERFECT, raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: PERFECT, raw: {} })
   );
   assert.equal(d.quietTrustworthy, true, 'the one case that supports "it did nothing" was refused');
   assert.deepEqual(d.blindTo, []);
+});
+
+it('and nodert does not get that sentence, because it never watched a read', () => {
+  const d = diff(
+    transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {} }),
+    transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', raw: {} })
+  );
+  assert.equal(d.quietTrustworthy, false, 'a run that watched no file reads offered its silence as proof');
+  assert.ok(d.blindTo.includes('fs'));
 });
 
 it('a payload that does not fire while we watch is not observed', () => {
