@@ -168,6 +168,41 @@ const doc = (over = {}) => ({
     await assert.rejects(() => open('https://example.invalid/index.json', { fetchImpl: notFound }), /answered 404/);
   });
 
+  await it('an index too large to read is refused before it is read', async () => {
+    /*
+     * The one this repository publishes is 0.58 MB. The limit is not a security boundary — the user
+     * chose the URL — it is the difference between an error message and a laptop swapping, and it
+     * is the same class of bug as the decompression bomb the sibling project shipped tonight: a
+     * reader that will allocate whatever it is handed.
+     *
+     * Checked twice, because a server may decline to say how big it is, or lie.
+     */
+    const declared = {
+      ok: true, status: 200,
+      headers: { get: () => String(500 * 1024 * 1024) },
+      text: async () => '{}',
+    };
+    await assert.rejects(
+      () => open('https://example.invalid/index.json', { fetchImpl: async () => declared }),
+      /500 MB and this reads at most/
+    );
+
+    const silent = {
+      ok: true, status: 200,
+      headers: { get: () => null },
+      text: async () => JSON.stringify(doc()).padEnd(4096, ' '),
+    };
+    await assert.rejects(
+      () => open('https://example.invalid/index.json', { maxBytes: 1024, fetchImpl: async () => silent }),
+      /and this reads at most/
+    );
+
+    // And a normal one still opens.
+    const fine = { ok: true, status: 200, headers: { get: () => null }, text: async () => JSON.stringify(doc()) };
+    const index = await open('https://example.invalid/index.json', { fetchImpl: async () => fine });
+    assert.equal(index.manifest().versions, 1);
+  });
+
   await it('it reads from a URL and from a file, and they agree', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'published-'));
     const file = path.join(dir, 'index.json');

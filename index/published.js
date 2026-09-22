@@ -131,12 +131,38 @@ class PublishedIndex {
  * browser and a file fetched by `fetch` do not arrive the same way and a reader should not have to
  * know which one they have.
  */
-async function open(where, { fetchImpl = globalThis.fetch, timeoutMs = 20000 } = {}) {
+/**
+ * The largest index this will read.
+ *
+ * The one this repository publishes is 0.58 MB. A hundred and twenty-eight leaves room for an index
+ * two hundred times larger — which is a different project, not a rounding error — and still refuses
+ * a URL that answers with a stream that never ends. The user chose the URL, so this is not a
+ * security boundary; it is the difference between an error message and a laptop swapping.
+ */
+const MAX_INDEX = 128 * 1024 * 1024;
+
+async function open(where, { fetchImpl = globalThis.fetch, timeoutMs = 20000, maxBytes = MAX_INDEX } = {}) {
   if (/^https?:\/\//.test(where)) {
     const stop = AbortSignal.timeout ? AbortSignal.timeout(timeoutMs) : undefined;
     const res = await fetchImpl(where, { signal: stop, headers: { accept: 'application/json' } });
     if (!res.ok) throw new Error(`${where} answered ${res.status}`);
+
+    const declared = Number(res.headers?.get?.('content-length'));
+    if (Number.isFinite(declared) && declared > maxBytes) {
+      throw new Error(
+        `${where} is ${(declared / 1048576).toFixed(0)} MB and this reads at most ` +
+          `${(maxBytes / 1048576).toFixed(0)} MB. Download it and pass the path instead.`
+      );
+    }
+
     const text = await res.text();
+    // A server may decline to say how big it is, or lie. The text is measured either way.
+    if (text.length > maxBytes) {
+      throw new Error(
+        `${where} sent ${(text.length / 1048576).toFixed(0)} MB and this reads at most ` +
+          `${(maxBytes / 1048576).toFixed(0)} MB.`
+      );
+    }
     return new PublishedIndex(parse(text, where), { from: where });
   }
 
@@ -159,4 +185,4 @@ function parse(text, where) {
   }
 }
 
-module.exports = { PublishedIndex, open };
+module.exports = { PublishedIndex, open, MAX_INDEX };
