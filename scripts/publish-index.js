@@ -18,7 +18,9 @@
  * This writes the artefact. `public/index.json`, about half a megabyte, sixty kilobytes over the
  * wire, and after that:
  *
- *     npx . check --index https://cassandra-nu.vercel.app/index.json
+ *     git clone https://github.com/vidigoat/cassandra ~/stakeout
+ *     cd ~/your-project
+ *     node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
  *
  * runs in somebody else's repository against real observations, and either their tree is answered
  * or it is not. The claim becomes a thing that can be wrong.
@@ -166,8 +168,18 @@ function main() {
     console.log();
   }
 
+  /*
+   * The whole command, including the clone.
+   *
+   * It printed `npx github:vidigoat/cassandra`, which is a command that does not work: the
+   * repository is private until submission, and npx on a private repo fails with a git error that
+   * says nothing about why. A printed command is a promise, and one that only works after something
+   * else has happened is a promise broken the first time somebody tries it.
+   */
   console.log(`  ${C.dim}Anybody, in their own repository:${C.off}`);
-  console.log('    npx github:vidigoat/cassandra check --index https://cassandra-nu.vercel.app/index.json\n');
+  console.log('    git clone https://github.com/vidigoat/cassandra ~/stakeout');
+  console.log('    cd ~/your-project');
+  console.log('    node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json\n');
 }
 
 if (require.main === module) main();
