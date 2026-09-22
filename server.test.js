@@ -199,6 +199,35 @@ const json = async (p) => (await get(p)).json();
 
   /* ── the fleet ────────────────────────────────────────────────────────── */
 
+  await it('a strategy nobody defines is refused, not silently upgraded to the strongest one', async () => {
+    /*
+     * `?strategy=typo` used to fall through to whatever the adapter defaults to, which is `ebpf` —
+     * the STRONGEST strategy and the one that has never actually run. The response came back
+     * stamped `"strategy": "ebpf"`, so every claim in it carried a watcher that had not watched it.
+     *
+     * A silent fallback to the weakest strategy would be a smaller version of the same bug. The
+     * only honest answer to a name nobody defines is to say so.
+     */
+    const { STRATEGIES } = require('./transcript/schema');
+
+    for (const bad of ['typo', '../../etc', '', 'EBPF', 'nodert '] ) {
+      const res = await get(`/api/run?strategy=${encodeURIComponent(bad)}`);
+      assert.equal(res.status, 400, `?strategy=${bad} answered ${res.status}`);
+      const out = await res.json();
+      assert.match(out.error, /No strategy called/);
+      assert.deepEqual(out.strategies, STRATEGIES, 'it does not say which names exist');
+    }
+
+    // Every real one still runs, and reports itself.
+    for (const good of STRATEGIES) {
+      const out = await json(`/api/run?strategy=${good}`);
+      assert.equal(out.strategy, good, `asked for ${good} and got ${out.strategy}`);
+    }
+
+    // And asking for nothing is still allowed — it is a different thing from asking for nonsense.
+    assert.equal((await get('/api/run')).status, 200);
+  });
+
   await it('/api/index describes the published index, and the file it describes is really there', async () => {
     /*
      * The page makes an offer on the strength of this: point `--index` at this URL and get these

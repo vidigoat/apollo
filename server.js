@@ -187,11 +187,28 @@ function handler(req, res) {
     /* A real run: fork the same checkpoint twice per package, install and import both, diff. */
     if (url.pathname === '/api/run') {
       const adapter = new SimulatedSandboxes();
-      // ?strategy= lets the page read the same corpus three ways. Anything it does not recognise
-      // falls through to the strongest the adapter supports, rather than failing the run.
-      const want = STRATEGIES.includes(url.searchParams.get('strategy'))
-        ? url.searchParams.get('strategy')
-        : undefined;
+
+      /*
+       * ?strategy= lets the page read the same corpus four ways.
+       *
+       * An unrecognised one used to fall through to whatever the adapter defaults to, which is
+       * `ebpf` — the STRONGEST strategy, and the one that has never actually run. So
+       * `?strategy=typo` came back stamped `"strategy": "ebpf"`, and every claim in that response
+       * carried a watcher that had not watched it. A silent fallback to the weakest thing would be
+       * a smaller version of the same bug; the only honest answer to a name nobody defines is to
+       * say so.
+       */
+      const asked = url.searchParams.get('strategy');
+      if (asked !== null && !STRATEGIES.includes(asked)) {
+        return send(res, 400, JSON.stringify({
+          error: `No strategy called ${JSON.stringify(asked).slice(0, 60)}.`,
+          strategies: STRATEGIES,
+          why: 'Every claim in a run carries the strategy that made it, so a run cannot be labelled '
+            + 'with one that does not exist — and guessing which you meant would label it with one '
+            + 'you did not ask for.',
+        }), 'application/json');
+      }
+      const want = asked ?? undefined;
       return runAll({ adapter, changed: CHANGED, strategy: want })
         .then(async (r) => {
           const pairs = r.results.map((p) => ({
