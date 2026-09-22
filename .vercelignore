@@ -1,0 +1,21 @@
+# What must not ride along to a public URL.
+#
+# The Vercel CLI does not read .gitignore, and the first production deploy of this project
+# published `local/fleet.json` — a scan of one laptop's home directory, 76 repository names and
+# their paths — on a URL anyone could open. The pages looked right, which is why nobody would have
+# checked. This file is the reason that cannot happen again.
+
+.env
+.env.local
+
+# One machine's scan. The hosted fleet page uses the bundled portable one instead.
+local/
+
+# Built locally, rebuildable with `npm run index:build`, and large.
+index/data/
+
+node_modules/
+.git/
+.vercel
+*.log
+.DS_Store

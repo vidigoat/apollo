@@ -908,7 +908,7 @@ npm test
 ```
 
 ```
-28 suites · 367 checks
+28 suites · 369 checks
 all green
 ```
 

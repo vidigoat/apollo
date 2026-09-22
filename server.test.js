@@ -266,6 +266,48 @@ const json = async (p) => (await get(p)).json();
     assert.match(src, /require\.main === module/, 'server.js listens unconditionally on import');
   });
 
+  await it('a deploy cannot carry this machine off the machine', () => {
+    /*
+     * This happened. The first production deploy published `local/fleet.json` — one laptop's home
+     * directory, 76 repository names and the paths they sit at — on a URL anyone could open, and
+     * the pages all looked correct, because the only thing that changed was whose fleet it was.
+     *
+     * The cause is worth stating plainly: the Vercel CLI does not read `.gitignore`. Everything
+     * this repository is careful never to commit was uploaded anyway.
+     */
+    const ignore = path.join(__dirname, '.vercelignore');
+    assert.ok(fs.existsSync(ignore), 'there is no .vercelignore, so .gitignore is the only guard — and a deploy ignores it');
+
+    const lines = fs.readFileSync(ignore, 'utf8')
+      .split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+
+    for (const kept of ['.env', 'local/', 'index/data/']) {
+      assert.ok(lines.includes(kept), `${kept} is gitignored but would still be uploaded to a public URL`);
+    }
+  });
+
+  await it('the hosted routes keep their own path', () => {
+    /*
+     * Also happened. A `{"source": "/(.*)", "destination": "/api"}` rewrite reaches the function
+     * having replaced the path with `/api`, so every route inside the server saw one pathname and
+     * fell through to "not found". `public/` is served from the filesystem before rewrites are
+     * considered, so the pages were fine and only the data was missing.
+     */
+    const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, 'vercel.json'), 'utf8'));
+    for (const r of cfg.rewrites || []) {
+      assert.ok(
+        !/^\/api\/?$/.test(r.destination),
+        `the rewrite ${r.source} -> ${r.destination} throws the pathname away before the server sees it`
+      );
+    }
+    const catchAll = path.join(__dirname, 'api', '[...path].js');
+    assert.ok(fs.existsSync(catchAll), 'nothing serves /api/<anything> on the deployment');
+    assert.ok(
+      cfg.functions?.['api/[...path].js']?.includeFiles,
+      'the catch-all is deployed without the files it reads'
+    );
+  });
+
   stop();
   console.log(`\n${passed} passed`);
 })();

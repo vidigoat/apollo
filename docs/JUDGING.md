@@ -10,7 +10,7 @@ and a test asserts that every file named here exists.
 npm run demo      # the whole argument, in a terminal, in about two seconds
 npm start         # http://localhost:8791 — one dependency tree
                   # http://localhost:8791/fleet.html — every repo on a machine
-npm test          # 28 suites, 367 checks
+npm test          # 28 suites, 369 checks
 ```
 
 The demo is the primitive: a version that did not move, behaving differently, caught. The fleet page
