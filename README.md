@@ -799,6 +799,34 @@ syscall. A kernel tracer watches the process, not the thought, so eBPF sees a so
 nothing that explains it. The `nodert` strategy watches Node's own API surface and catches the
 construction; it is weaker than eBPF nearly everywhere and stronger in exactly that one place.
 
+#### The whole corpus, read four ways
+
+The same argument at the scale of the tree rather than one package. Every number below is from the
+live demo, and you can get them yourself:
+
+```bash
+for s in fsdiff proxy nodert ebpf; do curl -s "https://cassandra-nu.vercel.app/api/run?strategy=$s"; done
+```
+
+| watching with | findings | alarming | model calls |
+|---|---|---|---|
+| `fsdiff` — files only | 2 | 0 | 2 |
+| `proxy` — files, network, DNS | 5 | 0 | 8 |
+| `ebpf` — everything but code built at runtime | 5 | 1 | 9 |
+| `nodert` — Node's API surface, including `exec` | 5 | **2** | 10 |
+
+Two things worth sitting with.
+
+**`nodert` finds two alarming packages where eBPF finds one.** That is not a better tool beating a
+worse one — eBPF is stronger in every other respect. It is the one blind spot in a kernel tracer,
+measured: a string becoming a function never becomes a syscall.
+
+**The weakest observer is also the cheapest.** `fsdiff` costs a fifth of the model calls, because
+it finds a fifth of the changes, because it can see one channel out of six. Nothing is hidden by
+that — every one of its transcripts carries what it could not see, and its silence is reported as
+worth nothing. A tool that got cheaper by looking less and did not say so would be the thing this
+project exists to warn about.
+
 Which is why a transcript is worthless without the strategy that produced it, and why a transcript
 now physically **cannot contain a channel its own strategy declared it could not see** — that used
 to be advisory, and the data and the caveat could disagree.
