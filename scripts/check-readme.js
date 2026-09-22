@@ -28,7 +28,15 @@ const path = require('node:path');
  * README is embarrassing; the same number in the document a judge reads, beside a command that
  * disagrees with it, is what this project spends whole test files trying to prevent.
  */
-const DOCS = ['README.md', path.join('docs', 'SUBMISSION.md')];
+/*
+ * The three documents a reviewer actually reads.
+ *
+ * `docs/JUDGING.md` was not on this list and went stale in exactly the way the list exists to
+ * prevent: "28 suites, 372 checks", against a suite that had grown to 29 and 398. It is the FIRST
+ * thing a reviewer opens, and the suite count is the first number they can check in one command.
+ * A wrong one there costs more than a wrong one anywhere else in the repository.
+ */
+const DOCS = ['README.md', path.join('docs', 'SUBMISSION.md'), path.join('docs', 'JUDGING.md')];
 const README = DOCS.map((f) => {
   try {
     return fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
@@ -178,8 +186,17 @@ const CLAIMS = [
     try {
       const published = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'index.json'), 'utf8'));
       return [
-        { what: 'published index: packages', value: published.counts.packages.toLocaleString(), where: /([\d,]+) packages (?:and|somebody)/g },
-        { what: 'published index: versions', value: published.counts.versions.toLocaleString(), where: /and ([\d,]+) versions somebody/g },
+        /*
+         * Every phrasing the three documents use, not just the README's.
+         *
+         * The first pattern was `([\d,]+) packages (?:and|somebody)`, which matched the README —
+         * "1,589 packages and 2,129 versions somebody has already run" — and neither of the other
+         * two, which write it with commas. A contextual check only checks the occurrences it
+         * matches, so the map and the submission could say anything at all. Proved by changing the
+         * map's figure and watching this pass.
+         */
+        { what: 'published index: packages', value: published.counts.packages.toLocaleString(), where: /(?:published index\*{0,2} — |writes it\. \*\*)([\d,]+) packages/g },
+        { what: 'published index: versions', value: published.counts.versions.toLocaleString(), where: /([\d,]+) versions(?:,| somebody)/g },
       ];
     } catch {
       return [];
