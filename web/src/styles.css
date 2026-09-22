@@ -56,6 +56,26 @@
 
   --gut: clamp(20px, 5vw, 56px);
   --col: 68ch;
+
+  /*
+   * ── Surface, depth, light ─────────────────────────────────────────────────
+   *
+   * The first version was flat: one dark grey, hairline borders, nothing above anything else. It
+   * read as a wireframe of a page rather than a page. Real instruments have a housing — a panel
+   * catches light at its top edge, sits slightly proud of its ground, and throws a little shadow.
+   * That is what these are for, and they are the only decoration in the file: every one of them
+   * describes a physical relationship rather than adding an effect.
+   */
+  --lift-1: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+  --lift-2: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  --edge: 1px solid rgba(255, 255, 255, 0.085);
+  --edge-soft: 1px solid rgba(255, 255, 255, 0.055);
+  /* Light along the top edge, then the panel's own weight beneath it. */
+  --cast: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 18px 40px -24px rgba(0, 0, 0, 0.75);
+  --cast-lg: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 34px 70px -34px rgba(0, 0, 0, 0.85);
+
+  --r: 10px;
+  --r-sm: 6px;
 }
 
 * { box-sizing: border-box; }
@@ -67,7 +87,15 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  background: var(--ink);
+  /*
+   * Two very slight pools of light, one under the first screen and one further down, so the page
+   * has a direction to it. Flat, it read as a switched-off monitor.
+   */
+  background:
+    radial-gradient(1200px 620px at 78% -8%, color-mix(in oklab, var(--watched) 9%, transparent), transparent 62%),
+    radial-gradient(900px 500px at 8% 34%, color-mix(in oklab, var(--watched) 4%, transparent), transparent 60%),
+    var(--ink);
+  background-attachment: fixed;
   color: var(--bone);
   font: 400 var(--t-body)/1.6 var(--sans);
   -webkit-font-smoothing: antialiased;
@@ -85,7 +113,9 @@ a:hover { text-decoration-color: var(--watched); }
   outline-offset: 3px;
 }
 
-h1, h2, h3 { font-family: var(--cond); font-weight: 600; letter-spacing: -0.012em; margin: 0; }
+h1, h2, h3 { font-family: var(--cond); font-weight: 600; letter-spacing: -0.015em; margin: 0; }
+h2 { font-size: var(--t-head); line-height: 1.08; max-width: 24ch; }
+h3 { letter-spacing: -0.008em; }
 
 code, .mono { font-family: var(--mono); font-size: 0.92em; }
 
@@ -105,7 +135,9 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
  */
 .spine {
   position: fixed;
-  left: max(16px, calc((100vw - 1120px) / 2 - 64px));
+  /* Far enough left that the label clears the column: the rail is about 92px wide with its
+     label showing, and it must not crowd text that starts at the column edge. */
+  left: max(16px, calc((100vw - 1120px) / 2 - 124px));
   top: 50%;
   transform: translateY(-50%);
   z-index: 40;
@@ -156,10 +188,24 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 section { padding-block: clamp(72px, 11vh, 132px); }
 
 .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   font: 500 var(--t-mono)/1 var(--mono);
   color: var(--dim);
   letter-spacing: 0.02em;
-  margin: 0 0 14px;
+  margin: 0 0 16px;
+  padding: 6px 12px 6px 10px;
+  border: var(--edge-soft);
+  border-radius: 999px;
+  background: var(--lift-1), transparent;
+}
+.eyebrow::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--watched);
 }
 
 .lede {
@@ -216,12 +262,34 @@ section { padding-block: clamp(72px, 11vh, 132px); }
   .hero .exhibit { margin-top: 0; }
 }
 
+/*
+ * The mark. It was the product's name set in letterspaced monospace, which is what a page uses
+ * when it has not decided what it is called. A mark should read as a name: a lit dot, the word at
+ * a weight it can carry, and a hairline carrying it off to the left of the column.
+ */
 .hero__mark {
-  font: 600 var(--t-mono)/1 var(--mono);
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  color: var(--watched);
-  margin: 0 0 clamp(26px, 5vh, 46px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 0.9375rem/1 var(--cond);
+  letter-spacing: 0.02em;
+  color: var(--bone);
+  margin: 0 0 clamp(24px, 4.5vh, 40px);
+}
+.hero__mark::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--watched);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--watched) 18%, transparent),
+              0 0 16px color-mix(in oklab, var(--watched) 70%, transparent);
+}
+.hero__mark::after {
+  content: '';
+  width: clamp(24px, 6vw, 72px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--rule), transparent);
 }
 
 .hero h1 {
@@ -234,7 +302,7 @@ section { padding-block: clamp(72px, 11vh, 132px); }
  * The second line is the payoff, so the second line is the bright one. It read the other way round
  * at first — the setup in white and the point in grey — which is backwards.
  */
-.hero h1 { color: var(--dim); }
+.hero h1 { color: color-mix(in oklab, var(--bone) 62%, var(--dim)); }
 .hero h1 .quiet { color: var(--bone); display: block; }
 
 .hero__sub {
@@ -266,8 +334,13 @@ section { padding-block: clamp(72px, 11vh, 132px); }
  */
 .exhibit {
   margin-top: clamp(30px, 5vh, 52px);
-  border: 1px solid var(--rule);
-  background: var(--ink-2);
+  border: var(--edge);
+  /* The object the whole first screen is about. It gets the light. */
+  outline: 1px solid color-mix(in oklab, var(--watched) 10%, transparent);
+  outline-offset: 6px;
+  border-radius: var(--r);
+  background: var(--lift-1), var(--ink-2);
+  box-shadow: var(--cast-lg), 0 0 80px -30px color-mix(in oklab, var(--watched) 55%, transparent);
   position: relative;
   overflow: hidden;
   max-width: 760px;
@@ -308,8 +381,10 @@ section { padding-block: clamp(72px, 11vh, 132px); }
 .exhibit__row--found:first-of-type { border-top: 1px solid var(--rule); }
 
 .exhibit__row--found {
-  background: color-mix(in oklab, var(--drift) 8%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in oklab, var(--drift) 15%, transparent), color-mix(in oklab, var(--drift) 5%, transparent));
   color: var(--drift);
+  box-shadow: inset 2px 0 0 var(--drift);
 }
 .exhibit__row--found + .exhibit__row--found { box-shadow: inset 0 1px 0 color-mix(in oklab, var(--drift) 14%, transparent); }
 .exhibit__row--found .exhibit__gutter { color: var(--drift); }
@@ -351,8 +426,8 @@ section { padding-block: clamp(72px, 11vh, 132px); }
   gap: 10px 18px;
   align-items: baseline;
   padding: 14px 18px;
-  border-top: 1px solid var(--rule);
-  background: var(--ink);
+  border-top: var(--edge-soft);
+  background: rgba(0, 0, 0, 0.28);
   font: 400 var(--t-mono)/1.55 var(--mono);
   color: var(--dim);
 }
@@ -369,14 +444,17 @@ section { padding-block: clamp(72px, 11vh, 132px); }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  background: var(--rule-soft);
-  border: 1px solid var(--rule-soft);
+  background: rgba(255, 255, 255, 0.07);
+  border: var(--edge);
+  border-radius: var(--r);
+  box-shadow: var(--cast);
+  overflow: hidden;
   margin: 0;
 }
 @media (min-width: 760px) { .slate { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .slate > div {
-  background: var(--ink);
-  padding: 16px 18px;
+  background: var(--lift-1), var(--ink-2);
+  padding: 18px 20px;
   display: grid;
   gap: 6px;
 }
@@ -386,7 +464,8 @@ section { padding-block: clamp(72px, 11vh, 132px); }
 }
 .slate dd {
   margin: 0;
-  font: 500 1.45rem/1 var(--mono);
+  font: 500 1.6rem/1 var(--mono);
+  letter-spacing: -0.02em;
   color: var(--bone);
   font-variant-numeric: tabular-nums;
 }
@@ -399,20 +478,31 @@ section { padding-block: clamp(72px, 11vh, 132px); }
 
 .btn {
   appearance: none;
-  border: 1px solid var(--bone);
-  background: var(--bone);
+  border: 0;
+  background: linear-gradient(180deg, #fff, var(--bone));
   color: var(--ink);
-  font: 500 var(--t-small)/1 var(--sans);
-  letter-spacing: 0.01em;
-  padding: 12px 20px;
-  border-radius: 2px;
+  font: 600 var(--t-small)/1 var(--sans);
+  letter-spacing: 0.005em;
+  padding: 13px 22px;
+  border-radius: var(--r-sm);
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 10px 24px -14px rgba(0, 0, 0, 0.9);
+  transition: transform 140ms ease, box-shadow 140ms ease, background 160ms ease;
 }
-.btn:hover { background: var(--watched); border-color: var(--watched); }
+.btn:hover {
+  background: linear-gradient(180deg, #fff, var(--watched));
+  transform: translateY(-1px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 16px 30px -16px color-mix(in oklab, var(--watched) 70%, transparent);
+}
+.btn:active { transform: translateY(0); }
 .btn:disabled { opacity: 0.45; cursor: default; }
-.btn--ghost { background: none; color: var(--bone); border-color: var(--rule); }
-.btn--ghost:hover { background: none; border-color: var(--watched); color: var(--watched); }
+.btn--ghost {
+  background: var(--lift-1), transparent;
+  color: var(--bone);
+  border: var(--edge);
+  box-shadow: none;
+}
+.btn--ghost:hover { background: var(--lift-2), transparent; color: var(--watched); transform: translateY(-1px); }
 
 .status {
   font: 400 var(--t-mono)/1 var(--mono);
@@ -462,7 +552,11 @@ section { padding-block: clamp(72px, 11vh, 132px); }
 
 /* ── findings ─────────────────────────────────────────────────────────────── */
 
-.findings { margin-top: 34px; border-top: 1px solid var(--rule-soft); }
+.findings {
+  margin-top: 34px;
+  display: grid;
+  gap: 10px;
+}
 
 .finding {
   display: grid;
@@ -470,10 +564,12 @@ section { padding-block: clamp(72px, 11vh, 132px); }
   gap: 4px;
   padding: 16px 18px;
   /* `border: 0` first: without it a <button> keeps its user-agent border on the three sides this
-     rule does not name, and every row comes out in a box. */
+     rule does not name. */
   border: 0;
-  border-bottom: 1px solid var(--rule-soft);
-  border-left: 2px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--lift-1), var(--ink-2);
+  box-shadow: var(--cast);
   cursor: pointer;
   text-align: left;
   background: none;
@@ -481,10 +577,13 @@ section { padding-block: clamp(72px, 11vh, 132px); }
   color: inherit;
   font: inherit;
 }
-.finding:hover { background: var(--ink-2); }
+.finding:hover { background: var(--lift-2), var(--ink-2); }
 .finding[data-severity='alarming'] { border-left-color: var(--drift); }
 .finding[data-severity='notable'] { border-left-color: var(--watched); }
-.finding[data-open='true'] { background: var(--ink-2); }
+.finding[data-open='true'] { background: var(--lift-2), var(--ink-2); }
+.finding[data-severity='alarming'] {
+  box-shadow: var(--cast), inset 0 0 0 1px color-mix(in oklab, var(--drift) 22%, transparent);
+}
 
 .finding__head {
   display: flex;
@@ -532,8 +631,12 @@ section { padding-block: clamp(72px, 11vh, 132px); }
 
 .band {
   margin-top: 30px;
-  border: 1px solid var(--rule-soft);
-  background: var(--ink-2);
+  border: var(--edge);
+  border-radius: var(--r);
+  background: var(--lift-1), var(--ink-2);
+  box-shadow: var(--cast);
+  overflow: hidden;
+  padding: 10px;
 }
 .band canvas { display: block; width: 100%; height: 132px; }
 
@@ -680,9 +783,11 @@ footer a { color: var(--dim); }
  */
 .check {
   margin-top: 0;
-  border: 1px solid var(--rule);
+  border: var(--edge);
   border-top: 0;
-  background: var(--ink-2);
+  border-radius: 0 0 var(--r) var(--r);
+  background: var(--lift-1), var(--ink-2);
+  box-shadow: var(--cast);
 }
 .check__head {
   display: flex;
