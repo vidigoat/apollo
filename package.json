@@ -27,7 +27,8 @@
     "terminal-shot": "node scripts/terminal-shot.js",
     "check-readme": "node scripts/check-readme.js",
     "check-run": "node scripts/check-run.js",
-    "index:publish": "node scripts/publish-index.js"
+    "index:publish": "node scripts/publish-index.js",
+    "crossval": "node scripts/cross-validate.js"
   },
   "keywords": [
     "supply-chain",

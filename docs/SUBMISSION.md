@@ -10,7 +10,7 @@ Checklist against the stated requirements:
 
 | required | state |
 |---|---|
-| runs on Token Factory or Nebius AI Cloud | **LIVE.** Every judgement is a real chat-completions call to Token Factory — `judge/nemotron.js`. Verified 2026-09-20 by `npm run preflight`. (Sandboxes, a separate product: the adapter is written against the real ConTree API and authenticates — the week of 404s was our own guessed URL and a missing `Project` header — but every permission is still off pending beta access, so the hosted twins run on the simulated adapter and say so.) |
+| runs on Token Factory or Nebius AI Cloud | **LIVE.** Every judgement is a real chat-completions call to Token Factory — `judge/nemotron.js`. Verified 2026-09-20 by `npm run preflight`. **And the twins run on Nebius too:** Token Factory Sandboxes, live since beta access on 23 Sep — `npm run real -- --nebius` forks real package pairs into microVMs from one checkpoint image, and `index-build --nebius --concurrency 40` observes the index there. **300 of 300** re-observations on Nebius matched the local ones on every channel (`npm run crossval`, `docs/crossval.json`). The hosted demo's corpus is planted packages, so it still runs on the simulated adapter and says so. |
 | uses at least one NVIDIA open source model | **LIVE, three of them.** `NVIDIA-Nemotron-3-Nano-30B-A3B` triages, `Nemotron-3-Ultra-550b-a55b` judges, `nemotron-3-super-120b-a12b` vetoes. Preflight shows a parsed verdict and a real cost for each. |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |

@@ -82,10 +82,22 @@ const page = (body, rows) => `<!doctype html><meta charset="utf-8">
 <div class="bar"><i style="background:#e0574a"></i><i style="background:#d9a441"></i><i style="background:#6fbf73"></i></div>
 <pre>${body}</pre>`;
 
-const OUT = path.join(__dirname, '..', 'docs', 'images', 'terminal.png');
+/*
+ * Any script, not only the demo:
+ *
+ *   node scripts/terminal-shot.js --out docs/images/nebius-real.png -- scripts/real.js --nebius
+ *
+ * A live run is not deterministic the way the demo is, so a shot of one is a record of one run —
+ * which is what the file name and the README caption have to say.
+ */
+const argv = process.argv.slice(2);
+const sep = argv.indexOf('--');
+const outAt = argv.indexOf('--out');
+const OUT = outAt > -1 ? path.resolve(argv[outAt + 1]) : path.join(__dirname, '..', 'docs', 'images', 'terminal.png');
+const cmd = sep > -1 ? argv.slice(sep + 1) : [path.join(__dirname, '..', 'scripts', 'demo.js')];
 
 // Colour forced on, because a piped child process is not a TTY and would print no colour at all.
-const raw = execFileSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'demo.js')], {
+const raw = execFileSync(process.execPath, cmd, {
   encoding: 'utf8',
   env: { ...process.env, FORCE_COLOR: '1' },
   maxBuffer: 8 * 1024 * 1024,
@@ -107,5 +119,5 @@ execFileSync(CHROME, [
 ], { stdio: 'ignore' });
 
 fs.rmSync(tmp, { force: true });
-console.log(`  docs/images/terminal.png  ${Math.round(fs.statSync(OUT).size / 1024)} kB · ${lines.length} lines, ${widest} cols`);
+console.log(`  ${path.relative(process.cwd(), OUT)}  ${Math.round(fs.statSync(OUT).size / 1024)} kB · ${lines.length} lines, ${widest} cols`);
 console.log('  The real output of the real command. Nothing retyped, nothing arranged.');

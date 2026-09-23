@@ -154,7 +154,8 @@ const adapter = (svc, o = {}) =>
     const checkpoint = await a.boot();
 
     const imp = svc.seen.find((s) => s.route === '/v1/images/import');
-    assert.equal(imp.body.registry.url, 'docker.io/library/node:22-slim');
+    // Absolute, as the live endpoint requires: the bare form was refused ("Image URL must be absolute").
+    assert.equal(imp.body.registry.url, 'docker://docker.io/library/node:22-slim');
 
     const setup = svc.seen.find((s) => s.route === '/v1/instances');
     assert.equal(setup.body.image, 'img-node22', 'setup did not start from the imported image');
@@ -279,6 +280,15 @@ const adapter = (svc, o = {}) =>
     assert.equal(decodeStream({ value: b64('é ok'), encoding: 'base64' }), 'é ok');
     assert.equal(decodeStream({ value: 'plain', encoding: 'ascii' }), 'plain');
     assert.equal(decodeStream(null), '');
+  });
+
+  await it('an image reference is normalised the way the SDK does it', () => {
+    const { ociUrl } = require('./contree');
+    assert.equal(ociUrl('node:22-slim'), 'docker://docker.io/library/node:22-slim');
+    assert.equal(ociUrl('python:3.12-slim'), 'docker://docker.io/library/python:3.12-slim');
+    assert.equal(ociUrl('bitnami/node:20'), 'docker://docker.io/bitnami/node:20');
+    assert.equal(ociUrl('ghcr.io/x/y:1'), 'docker://ghcr.io/x/y:1');
+    assert.equal(ociUrl('docker://docker.io/library/node:22'), 'docker://docker.io/library/node:22');
   });
 
   console.log(`\n${passed} passed`);

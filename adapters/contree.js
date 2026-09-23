@@ -68,6 +68,27 @@ const STRATEGY_REQUIREMENTS = {
   fsdiff: 'nothing special — filesystem snapshots before and after',
 };
 
+/*
+ * An image reference as the import endpoint wants it: an absolute `docker://` URL.
+ *
+ * `docker.io/library/node:22-slim` was refused with "Image URL must be absolute" the first time a
+ * permitted key reached the endpoint. The SDK normalises every reference to
+ * `docker://<host>/<path>` — a bare name gets docker.io and, for docker.io, the `library/`
+ * namespace — so this does the same (contree_sdk/utils/oci.py, OCIReference.from_oci).
+ */
+function ociUrl(ref) {
+  let r = String(ref);
+  if (!r.includes('://')) r = `docker://${r}`;
+  const m = /^docker:\/\/(.*)$/.exec(r);
+  if (!m) throw new Error(`not a docker image reference: ${ref}`);
+  let [host, ...rest] = m[1].split('/');
+  let pathPart = rest.join('/');
+  // No path at all means the whole thing is the path ("python:3.12-slim" has a dot, not a host).
+  if (!rest.length || !host.includes('.')) { pathPart = rest.length ? `${host}/${pathPart}` : host; host = 'docker.io'; }
+  if (host === 'docker.io' && !pathPart.includes('/')) pathPart = `library/${pathPart}`;
+  return `docker://${host}/${pathPart}`;
+}
+
 class ConTreeSandboxes {
   /**
    * @param {object} opts
@@ -250,7 +271,7 @@ class ConTreeSandboxes {
   async boot(ref = this.image) {
     const imported = await this.api('/v1/images/import', {
       method: 'POST',
-      json: { registry: { url: ref }, tag: null, timeout: this.timeoutSec },
+      json: { registry: { url: ociUrl(ref) }, tag: null, timeout: this.timeoutSec },
     });
     const op = await this.operation(imported.uuid);
     if (String(op.status).toUpperCase() !== 'SUCCESS') {
@@ -368,4 +389,4 @@ function decodeStream(s) {
   }
 }
 
-module.exports = { ConTreeSandboxes, STRATEGY_REQUIREMENTS, BASE, IN_VM, decodeStream };
+module.exports = { ConTreeSandboxes, STRATEGY_REQUIREMENTS, BASE, IN_VM, decodeStream, ociUrl };

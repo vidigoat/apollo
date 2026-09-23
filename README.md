@@ -47,11 +47,28 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 30 suites · 410 checks
+npm test            # 31 suites · 414 checks
 ```
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
 dependency tree is telling on itself. Node 20+.
+
+### In Nebius Token Factory Sandboxes
+
+```bash
+npm run real -- --nebius                     # real package pairs, each twin a microVM on Nebius
+npm run crossval -- --fleet <fleet.json>     # re-observe on Nebius, compare with the index
+```
+
+The twins fork from one checkpoint image — a non-disposable run's output image *is* the checkpoint —
+and nothing runs on your machine at all, which is the version of this you can point at a package you
+suspect. `index-build --nebius --concurrency 40` grows the index there. And the index does not
+depend on who built it: **300 of 300** re-observations on Nebius matched the ones made elsewhere on
+every channel it records (`docs/crossval.json`).
+
+<img src="docs/images/nebius-real.png" alt="npm run real -- --nebius: left-pad and debug unchanged, picocolors 1.1.1 newly reading CI, FORCE_COLOR and NO_COLOR, explained by Nemotron; machines left open: 0" width="720">
+
+<sub>One real run, 23 Sep — live output, so a later run may differ.</sub>
 
 ### On your own repository, without building anything
 

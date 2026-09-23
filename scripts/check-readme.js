@@ -144,7 +144,19 @@ function fleetClaims() {
   return claims;
 }
 
+/** The cross-validation, from its recording — it needs Nebius access, so it is not re-run here. */
+function crossvalClaims() {
+  let m;
+  try {
+    m = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'crossval.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+  return [{ what: 'cross-validation: identical of compared', value: `${m.identical} of ${m.compared}`, where: /\*\*(\d+ of \d+)\*\* re-observations/g }];
+}
+
 const CLAIMS = [
+  ...crossvalClaims(),
   // No `where` here: "N packages" is a phrase this README uses for several different counts — the
   // tree, the ones that moved, the ones in a survey — so matching it in context would be matching
   // the wrong things. A contextual pattern is only an improvement where the phrase means one thing.

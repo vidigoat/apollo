@@ -11,6 +11,12 @@
  * Read adapters/local.js before running this. The packages execute as you, with your network and
  * your files. It is for proving the pipeline on packages you already trust, never for triaging
  * something you suspect.
+ *
+ *   npm run real -- --nebius                        # the same, in Nebius Token Factory Sandboxes
+ *   npm run real -- --nebius chalk 5.3.0 5.4.1
+ *
+ * With --nebius the twins are microVMs on Nebius, forked from one checkpoint image, and nothing
+ * runs on this machine at all — which is the version of this you can point at a suspect package.
  */
 
 const { LocalMachines } = require('../adapters/local');
@@ -32,18 +38,26 @@ const C = process.stdout.isTTY
 const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
 
 (async () => {
-  const argv = process.argv.slice(2);
+  const all = process.argv.slice(2);
+  const onNebius = all.includes('--nebius');
+  const argv = all.filter((a) => a !== '--nebius');
   const jobs = argv.length >= 3 ? [[argv[0], argv[1], argv[2]]] : DEFAULT;
 
   let machines;
   try {
-    machines = new LocalMachines();
+    if (onNebius) {
+      require('../env').loadEnv();
+      const { ConTreeSandboxes } = require('../adapters/contree');
+      machines = new ConTreeSandboxes({ image: 'docker.io/library/node:22-slim' });
+    } else {
+      machines = new LocalMachines();
+    }
   } catch (e) {
     console.error(`\n${C.red}${e.message}${C.off}\n`);
     process.exit(1);
   }
 
-  console.log(`${C.bold}STAKEOUT — real packages, real registry, this machine${C.off}`);
+  console.log(`${C.bold}STAKEOUT — real packages, real registry, ${onNebius ? 'Nebius Token Factory Sandboxes' : 'this machine'}${C.off}`);
   const strategy = bestStrategy(machines);
   console.log(`${C.dim}Watching with "${strategy}". Node's API surface only — a native addon goes underneath it.${C.off}\n`);
 
@@ -87,5 +101,5 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
   }
 
   console.log(`${C.dim}Machines left open: ${machines.open}${machines.open === 0 ? ` ${C.green}✓${C.off}` : ` ${C.red}← leak${C.off}`}`);
-  machines.cleanup();
+  machines.cleanup?.(); // the local adapter owns temp dirs; a sandbox owns nothing on this machine
 })();

@@ -171,9 +171,23 @@ if (require.main !== module) return;
   const index = new Index({ dir: flags.out || undefined });
 
   const simulated = Boolean(flags.simulated);
-  const adapter = simulated ? new SimulatedSandboxes() : new LocalMachines();
+  /*
+   * `--nebius` observes in Nebius Token Factory Sandboxes: every twin a microVM forked from one
+   * checkpoint image, nothing run on this machine — so the refusal below does not apply. Where an
+   * entry was observed is recorded on the entry (`observedOn`), because "watched in a disposable
+   * microVM" and "watched on somebody's laptop" are different claims about the same transcript.
+   */
+  const onNebius = Boolean(flags.nebius);
+  let adapter;
+  if (simulated) adapter = new SimulatedSandboxes();
+  else if (onNebius) {
+    const { ConTreeSandboxes } = require('../adapters/contree');
+    adapter = new ConTreeSandboxes({ image: 'docker.io/library/node:22-slim' });
+  } else adapter = new LocalMachines();
+  const observedOn = simulated ? null : onNebius ? 'nebius-token-factory-sandboxes' : (process.env.STAKEOUT_OBSERVED_ON || 'local');
+  const concurrency = Math.max(1, Math.min(48, Number(flags.concurrency) || (onNebius ? 16 : 1)));
 
-  if (!simulated && process.env.STAKEOUT_ALLOW_LOCAL !== '1') {
+  if (!simulated && !onNebius && process.env.STAKEOUT_ALLOW_LOCAL !== '1') {
     console.error(`\n  ${C.red}Refusing to run.${C.off}`);
     console.error(`  ${C.dim}Building the index installs and imports real packages from the real registry,`);
     console.error(`  as you, with your network and your files. Set STAKEOUT_ALLOW_LOCAL=1 if that is`);
@@ -183,20 +197,15 @@ if (require.main !== module) return;
   }
 
   /*
-
    * `--from N` starts at job N of the ranked list. For a second builder working the far end of the
-
    * same list into its own `--out` — two processes writing one directory would race on the same
-
    * package file — and for resuming at a known place.
-
    */
-
   const jobs = (work(flags)).slice(Number(flags.from) || 0);
   const strategy = bestStrategy(adapter);
 
   console.log(`\n  ${C.bold}building the behavioural index${C.off}`);
-  console.log(`  ${C.dim}${jobs.length} package-pairs · strategy "${strategy}"${simulated ? ' · SIMULATED' : ''}${C.off}`);
+  console.log(`  ${C.dim}${jobs.length} package-pairs · strategy "${strategy}"${simulated ? ' · SIMULATED' : ''}${onNebius ? ` · Nebius Sandboxes × ${concurrency}` : ''}${C.off}`);
   console.log(`  ${C.dim}${index.summary()}${C.off}\n`);
 
   // `boot` prepares one healthy machine; every pair forks from that same instant, which is what
@@ -207,7 +216,8 @@ if (require.main !== module) return;
   let failed = 0;
   const started = Date.now();
 
-  for (const [i, job] of jobs.entries()) {
+  let done = 0;
+  const one = async (job) => {
     const label = job.single ? `${job.pkg}@${job.version}` : `${job.pkg} ${job.from} → ${job.to}`;
     const have = job.single
       ? index.has(job.pkg, job.version)
@@ -216,7 +226,7 @@ if (require.main !== module) return;
     if (have && !flags.force) {
       skipped++;
       console.log(`  ${C.dim}skip  ${label}${C.off}`);
-      continue;
+      return;
     }
 
     try {
@@ -225,15 +235,15 @@ if (require.main !== module) return;
         // that took it, and architecture.test.js enforces that.
         const t = await runOne({ adapter, checkpoint, pkg: job.pkg, version: job.version, strategy });
         // The mark travels with the entry, not with the run. See index/schema.js.
-        index.put(job.pkg, { ...t, simulated });
+        index.put(job.pkg, { ...t, simulated, observedOn });
         indexed++;
         const quiet = CHANNELS.every((c) => !Array.isArray(t[c]) || t[c].length === 0);
         console.log(`  ${quiet ? C.green + 'quiet' : C.amber + 'acts '}${C.off} ${label}`);
       } else {
         const { before, after } = await runPair({ adapter, checkpoint, ...job, strategy });
         // Written immediately. An index that only persists at the end loses everything to one hang.
-        index.put(job.pkg, { ...before, simulated });
-        index.put(job.pkg, { ...after, simulated });
+        index.put(job.pkg, { ...before, simulated, observedOn });
+        index.put(job.pkg, { ...after, simulated, observedOn });
         indexed += 2;
         const moved = JSON.stringify(stripVolatile(before)) !== JSON.stringify(stripVolatile(after));
         console.log(`  ${moved ? C.amber + 'moved' : C.green + 'same '}${C.off} ${label}`);
@@ -245,11 +255,19 @@ if (require.main !== module) return;
       console.log(`  ${C.red}fail ${C.off} ${label} ${C.dim}${String(e.message).split('\n')[0].slice(0, 70)}${C.off}`);
     }
 
-    if ((i + 1) % 10 === 0) index.writeManifest({ note: 'build in progress' });
-  }
+    if (++done % 10 === 0) index.writeManifest({ note: 'build in progress' });
+  };
+
+  // A pool, not a loop: one package at a time is right for a laptop and wasteful for a service
+  // that forks 50 microVMs at once. Workers share one Index, and `put` is synchronous per package,
+  // so two versions of one package landing together cannot overwrite each other in this process.
+  let next = 0;
+  await Promise.all(Array.from({ length: concurrency }, async () => {
+    while (next < jobs.length) await one(jobs[next++]);
+  }));
 
   const manifest = index.writeManifest({
-    note: simulated ? 'SIMULATED — not a real observation' : `built locally with ${strategy}`,
+    note: simulated ? 'SIMULATED — not a real observation' : `built ${onNebius ? 'in Nebius Token Factory Sandboxes' : 'locally'} with ${strategy}`,
   });
 
   const secs = Math.round((Date.now() - started) / 1000);

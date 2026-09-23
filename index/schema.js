@@ -88,6 +88,9 @@ function entryFor(transcript) {
    * writing, and `put` refuses to mix the two.
    */
   if (transcript.simulated) out.simulated = true;
+  // Where it was watched, when that is known. Absent means not recorded — entries built before this
+  // field existed — never "nowhere".
+  if (transcript.observedOn) out.observedOn = String(transcript.observedOn).slice(0, 60);
   for (const c of CHANNELS) {
     // Absent means the strategy could not see it. Empty means it saw nothing. Those are different
     // facts and the index has to be able to express both.
