@@ -150,7 +150,7 @@ packages the index holds against the release before it, in Nebius Sandboxes, imp
 change this project exists to surface: **jiti 2.7.0, 130 million downloads a week, now checks at
 import whether it is running inside an AI coding agent** — `CLAUDECODE`, `CODEX_SANDBOX`,
 `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more — through the `std-env` it bundles. 2.6.1 read none of
-them; confirmed in both published tarballs. Benign, and in no changelog. The watch also turned up a
+them; confirmed in both published tarballs. Benign — and not something the version number tells you. The watch also turned up a
 false positive in the tool itself (below), which is why a hit is read by hand before it is claimed.
 
 ## Challenges we ran into

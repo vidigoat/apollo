@@ -6,12 +6,14 @@ import Fleet from './sections/Fleet.jsx';
 import How from './sections/How.jsx';
 import Check from './sections/Check.jsx';
 import Yours from './sections/Yours.jsx';
+import Releases from './sections/Releases.jsx';
 import Limits from './sections/Limits.jsx';
 import { tree, fleet, published, run, num } from './lib/api.js';
 
 const SECTIONS = [
   ['top', 'stakeout'],
   ['yours', 'try it on yours'],
+  ['releases', 'this week\'s releases'],
   ['run', 'the run'],
   ['check', 'on the pull request'],
   ['fleet', 'the fleet'],
@@ -138,6 +140,7 @@ export default function App() {
         )}
 
         <Yours />
+        <Releases />
         <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />
         {scan && <Fleet data={scan} published={index} />}

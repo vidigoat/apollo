@@ -3349,5 +3349,11 @@
   "tally": {
     "none": 292,
     "minor": 4
+  },
+  "notes": {
+    "jiti@2.6.1→2.7.0": "Checked by hand in both published tarballs: 2.7.0 bundles std-env 4, whose table of AI coding agents (claude: CLAUDECODE, CLAUDE_CODE; gemini: GEMINI_CLI; codex; cursor; replit; opencode…) is read at import. 2.6.1 has none of it.",
+    "picocolors@1.1.0→1.1.1": "Colour detection: NO_COLOR, FORCE_COLOR, CI.",
+    "body-parser@2.2.2→2.3.0": "Reads DEBUG, NO_DEPRECATION and TRACE_DEPRECATION at import; 2.2.2 did not. Both releases depend on debug; which import moved has not been traced.",
+    "ci-info@4.3.1→4.4.0": "Reads one more environment variable, ALPIC_HOST — ci-info detects CI vendors by their variables, and its list grew."
   }
 }

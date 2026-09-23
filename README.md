@@ -71,8 +71,8 @@ import and install. On 23 September, **292 of 296** latest releases behaved exac
 before on every channel. The other four read new environment variables, and one is worth knowing:
 **jiti 2.7.0** — 130 million downloads a week — now checks at import whether it is running inside
 an AI coding agent (`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more),
-from the `std-env` it bundles; 2.6.1 did not. Nothing malicious, and nothing a changelog said —
-which is the kind of change this exists to put in front of somebody. Recorded in
+from the `std-env` it bundles; 2.6.1 did not. Nothing malicious, and nothing a version number would
+tell you — which is the kind of change this exists to put in front of somebody. Recorded in
 `docs/release-watch.json`; no model is called.
 
 ### In Nebius Token Factory Sandboxes

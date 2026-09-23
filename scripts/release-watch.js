@@ -108,6 +108,8 @@ if (require.main === module) {
       record.ranking = 'weekly npm downloads, unscoped packages the published index holds';
       record.tally = all.reduce((t, r) => ((t[r.severity] = (t[r.severity] || 0) + 1), t), {});
       fs.writeFileSync(OUT, `${JSON.stringify(record, null, 2)}\n`);
+      // The site reads the same record; one file, written twice, so the two cannot disagree.
+      fs.writeFileSync(path.join(ROOT, 'public', 'release-watch.json'), `${JSON.stringify(record)}\n`);
     };
 
     let next = 0;
