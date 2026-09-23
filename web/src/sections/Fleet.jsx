@@ -143,9 +143,9 @@ export default function Fleet({ data, published }) {
       <p className="lede">
         {data.demo ? (
           <>
-            This is a scan of <b>{data.describes}</b>{data.describesNote ? `, ${data.describesNote}` : ''}
-            — public projects, because a scan of the machine that built this would be somebody's
-            home directory on a public URL.
+            This is a scan of <b>{data.describes}</b>
+            {data.describesNote ? <>, {data.describesNote}</> : null}. Public projects, because a
+            scan of the machine that built this would be somebody's home directory on a public URL.
           </>
         ) : (
           <>
