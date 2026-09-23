@@ -291,5 +291,13 @@ const adapter = (svc, o = {}) =>
     assert.equal(ociUrl('docker://docker.io/library/node:22'), 'docker://docker.io/library/node:22');
   });
 
+  await it('the probe that ships to a deployment is byte-for-byte the probe in observe/', () => {
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const a = fs.readFileSync(path.join(__dirname, '..', 'observe', 'probe.js'), 'utf8');
+    const b = fs.readFileSync(path.join(__dirname, '..', 'public', 'probe.source.txt'), 'utf8');
+    assert.equal(b, a, 'public/probe.source.txt has drifted from observe/probe.js — copy it again: cp observe/probe.js public/probe.source.txt');
+  });
+
   console.log(`\n${passed} passed`);
 })();

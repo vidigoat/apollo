@@ -69,6 +69,20 @@ const STRATEGY_REQUIREMENTS = {
 };
 
 /*
+ * The probe's own source, exactly as written — it is what runs inside the sandbox.
+ *
+ * On a deployment the function is compiled: observe/probe.js ships as probe.cjs, rewritten to need a
+ * bundler runtime that does not exist inside a microVM, and the hosted watch failed twice on it
+ * (ENOENT, then "Cannot find module"). So a verbatim copy ships as public/probe.source.txt, which
+ * is not compiled, and a test fails if it ever differs from observe/probe.js.
+ */
+function probeSource() {
+  const original = path.join(__dirname, '..', 'observe', 'probe.js');
+  if (fs.existsSync(original)) return fs.readFileSync(original);
+  return fs.readFileSync(path.join(__dirname, '..', 'public', 'probe.source.txt'));
+}
+
+/*
  * An image reference as the import endpoint wants it: an absolute `docker://` URL.
  *
  * `docker.io/library/node:22-slim` was refused with "Image URL must be absolute" the first time a
@@ -280,9 +294,7 @@ class ConTreeSandboxes {
     const base = op.result?.image;
     if (!base) throw new Error(`importing ${ref} returned no image`);
 
-    // require.resolve, not path.join: the deployment bundler traces a resolved module and cannot
-    // trace a joined string, and the hosted watch failed with ENOENT on exactly this file.
-    this.probeFile = await this.upload(fs.readFileSync(require.resolve('../observe/probe.js')));
+    this.probeFile = await this.upload(probeSource());
 
     const setup = await this.spawn({
       image: base,
@@ -391,4 +403,4 @@ function decodeStream(s) {
   }
 }
 
-module.exports = { ConTreeSandboxes, STRATEGY_REQUIREMENTS, BASE, IN_VM, decodeStream, ociUrl };
+module.exports = { ConTreeSandboxes, STRATEGY_REQUIREMENTS, BASE, IN_VM, decodeStream, ociUrl, probeSource };
