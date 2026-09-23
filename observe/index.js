@@ -81,7 +81,10 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
       if (out.code) {
         const m = /npm (?:ERR!|error) code (\w+)/.exec(`${out.stderr || ''}\n${out.stdout || ''}`);
         const gyp = /gyp ERR! (?:find Python|stack Error: `?make`? failed|build error)/.test(`${out.stderr || ''}`);
-        result.installError = m ? m[1] : gyp ? 'native build failed' : null;
+        // A lifecycle script that exits non-zero shows up as `code 1` — a number, not a reason.
+        result.installError = gyp ? 'native build failed'
+          : m && !/^\d+$/.test(m[1]) ? m[1]
+            : m ? 'its install script failed' : null;
       }
     }
     if (step.label === 'import') {

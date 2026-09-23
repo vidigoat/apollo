@@ -101,6 +101,11 @@ const labels = (strategy) => commandsFor({ pkg: 'p', version: '1', strategy }).m
       branch: { id: 'b' }, pkg: '@esbuild/darwin-arm64', version: '0.28.1', strategy: 'nodert',
     });
     assert.match(unobserved(platform), /npm exited 1, EBADPLATFORM/);
+    const script = await observePackage({
+      adapter: { run: async (_b, _c, ctx) => (ctx.step === 'install' ? { code: 1, stderr: 'npm error code 1\nnpm error command sh -c node-install.js' } : { code: 0, observed: null }) },
+      branch: { id: 'b' }, pkg: 'p', version: '1.0.0', strategy: 'nodert',
+    });
+    assert.match(unobserved(script), /its install script failed/);
   });
 
   await it('the transcript records the strategy that ran, and what it could not see', async () => {
