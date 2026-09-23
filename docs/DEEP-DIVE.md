@@ -353,7 +353,7 @@ from real installs, and came out at exactly 11,242. The 2,120 row is where the b
 
 The hosted demo has no filesystem to read, so a real scan is committed: six **held-out** public
 projects — undici, bootstrap, ionic-framework, highlight.js, shelljs, cheerio — 3,548
-dependency-versions, 2,775 of them already answered (78%). Held out means none of them was used to
+dependency-versions, 2,825 of them already answered (80%). Held out means none of them was used to
 choose what went into the index, which was grown from nineteen other public projects' lockfiles, so
 the figure is generalisation rather than recall; it was 56% before the index was grown. The page says whose tree it is rather than
 letting it read as yours, and `GET /api/project?at=<n>` there says plainly that the lockfile is not
@@ -362,8 +362,8 @@ on this machine instead of doing nothing. The hundredth repo is a lookup, not a 
 **And the index is a file now, which is what makes that claim checkable by somebody else.** It was
 built locally and gitignored, so verifying "run a package once, answer for every repository" meant
 installing two thousand packages first — which makes it a sentence about an artefact that existed on
-exactly one laptop. `npm run index:publish` writes `public/index.json`: 5,691 packages, 11,267
-versions, about 340 kB over the wire, served from the demo URL. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,775 of their 3,548 dependency-versions are answered (78%)**, up from 56% before the index was grown today; the other 773 come back unknown by name. Most of anyone's tree comes back unknown, because most of
+exactly one laptop. `npm run index:publish` writes `public/index.json`: 5,691 packages, 12,281
+versions, about 370 kB over the wire, served from the demo URL. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,825 of their 3,548 dependency-versions are answered (80%)**, up from 56% before the index was grown today; the other 723 come back unknown by name. Most of anyone's tree comes back unknown, because most of
 npm has never been watched by anybody, and that is reported as its own outcome rather than as a pass.
 
 Preparing it for publication is what found that **every one of the 2,129 entries was overclaiming**:

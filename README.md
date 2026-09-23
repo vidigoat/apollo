@@ -104,7 +104,7 @@ cd ~/your-project
 node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
 ```
 
-That reads a **published index** — 5,691 packages and 11,267 versions somebody has already run,
+That reads a **published index** — 5,691 packages and 12,281 versions somebody has already run,
 about 390 kB over the wire — and writes a `stakeout.lock` for *your* tree. Some of it will come
 back **unknown**, because most of npm has never been watched by anybody, and the lock says so by
 name rather than pretending to cover it.
@@ -151,16 +151,17 @@ A package's behaviour does not depend on who imported it, so it is observed once
 that. Pointed at a whole machine — 76 projects and 20,897 dependency-versions — 2,120 observations in
 the index answered 12,986 of them, **62%**, from an index you could build in an afternoon.
 
-<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,775 of 3,548 dependency-versions answered" width="100%">
+<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,825 of 3,548 dependency-versions answered" width="100%">
 
 The scan bundled with this repository is of six **held-out** public projects — undici, bootstrap,
 ionic-framework, highlight.js, shelljs and cheerio — none of which was used to choose what went into
 the index, so it measures how well the index generalises rather than how well it remembers: 3,548
 dependency-versions across 6 readable lockfiles, which are only 2,527 distinct package-versions, and
-2,775 of them answered. The index itself was grown to 11,267 versions from the lockfiles of
+2,825 of them answered. The index itself was grown to 12,281 versions from the lockfiles of
 forty-one widely used projects (vscode, TypeScript, nest, puppeteer, axios, npm, playwright, lodash,
-three.js, rollup and apollo among them) — watched in containers that could see nothing of the machine
-running them, and 11,244 of them in Nebius Token Factory Sandboxes, which each entry records.
+three.js, rollup and apollo among them) — first in containers that could see nothing of the machine
+running them, and now every one of the 12,281 in Nebius Token Factory Sandboxes, which each entry
+records.
 Unobserved surface is **hatched, never filled** — a fill is a quantity, and this is the absence of
 one.
 

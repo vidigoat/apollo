@@ -2,10 +2,10 @@
   "root": null,
   "describes": "six public projects — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio",
   "describesNote": "none of which was used to choose what went into the index",
-  "scannedAt": "2026-09-23T15:43:33.343Z",
+  "scannedAt": "2026-09-23T18:34:15.569Z",
   "index": {
     "packages": 5691,
-    "versions": 11267,
+    "versions": 12281,
     "revision": "2026-09-23"
   },
   "repos": [
@@ -13,8 +13,8 @@
       "name": "twbs/bootstrap",
       "dir": "twbs_bootstrap",
       "deps": 1205,
-      "known": 896,
-      "unknown": 309,
+      "known": 908,
+      "unknown": 297,
       "otherPlatform": 70,
       "state": "unpinned",
       "drift": []
@@ -23,8 +23,8 @@
       "name": "nodejs/undici",
       "dir": "nodejs_undici",
       "deps": 602,
-      "known": 507,
-      "unknown": 95,
+      "known": 532,
+      "unknown": 70,
       "otherPlatform": 57,
       "state": "unpinned",
       "drift": []
@@ -43,8 +43,8 @@
       "name": "highlightjs/highlight.js",
       "dir": "highlightjs_highlight.js",
       "deps": 422,
-      "known": 359,
-      "unknown": 63,
+      "known": 362,
+      "unknown": 60,
       "otherPlatform": 25,
       "state": "unpinned",
       "drift": []
@@ -53,8 +53,8 @@
       "name": "cheeriojs/cheerio",
       "dir": "cheeriojs_cheerio",
       "deps": 414,
-      "known": 289,
-      "unknown": 125,
+      "known": 299,
+      "unknown": 115,
       "otherPlatform": 62,
       "state": "unpinned",
       "drift": []
@@ -74,7 +74,7 @@
     "repos": 6,
     "depVersions": 3548,
     "distinct": 2527,
-    "known": 2775,
+    "known": 2825,
     "otherPlatform": 215,
     "drifting": 0,
     "pinned": 0

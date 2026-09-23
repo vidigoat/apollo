@@ -131,7 +131,7 @@ do and what it says instead.
 Both are live:
 
 - **<https://cassandra-nu.vercel.app>** — and it now serves the **published index** at
-  `/index.json`: 5,691 packages, about 340 kB over the wire. A stranger can point `cli.js lock --index` at
+  `/index.json`: 5,691 packages, about 370 kB over the wire. A stranger can point `cli.js lock --index` at
   it and get their own tree answered without building anything, which is the part of the argument
   that used to be unverifiable.
 - **<https://second-set-of-hands.vercel.app>** — and `/review.html` now **reads a manual you drop
@@ -176,8 +176,8 @@ Not urgent for the build. It is a real exposure and it should not go into Decemb
   IAM user that can only call Nova 2 Lite and touch that one table, a free-tier table, keys piped
   into Vercel unprinted, $5 ceiling for everything together. `--undo` takes it all away.
 - **Grow Stakeout's index on your Mac?** Done — in Colima containers that see only
-  `~/stakeout-index-work`, then on Nebius once Sandboxes opened: 11,267 versions, 11,244 of them
-  observed on Nebius.
+  `~/stakeout-index-work`, then on Nebius once Sandboxes opened: 12,281 versions, every one of
+  them observed on Nebius by now.
 - **A Tavily key on Vercel?** Optional. The hosted run's corpus is planted packages, so a live search
   would only confirm they are unmentioned; and the Tavily prize cannot be won alongside the Overall.
 
