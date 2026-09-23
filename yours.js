@@ -263,7 +263,11 @@ async function onRegistry(pkg, versions, fetchImpl = globalThis.fetch) {
   return missing.length ? { ok: false, why: `${pkg} has no published version ${missing.join(' or ')}.` } : { ok: true };
 }
 
-const channelsOf = (entry) => Object.fromEntries(CHANNELS.map((c) => [c, entry?.[c]]));
+const channelsOf = (entry) => ({
+  ...Object.fromEntries(CHANNELS.map((c) => [c, entry?.[c]])),
+  // What its install scripts did, when that phase was watched.
+  ...(entry?.install ? { install: Object.fromEntries(CHANNELS.map((c) => [c, entry.install[c] || []])) } : {}),
+});
 
 async function watch(req, res, deps = {}) {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST { pkg, from, to }.' });

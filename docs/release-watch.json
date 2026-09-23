@@ -1,0 +1,690 @@
+{
+  "results": {
+    "semver@7.8.4→7.8.5": {
+      "pkg": "semver",
+      "from": "7.8.4",
+      "to": "7.8.5",
+      "weeklyDownloads": 660682950,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "semver 7.8.4 → 7.8.5: no change in what nodert can see",
+      "seconds": 15
+    },
+    "minimatch@10.2.5→10.2.6": {
+      "pkg": "minimatch",
+      "from": "10.2.5",
+      "to": "10.2.6",
+      "weeklyDownloads": 519665999,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "minimatch 10.2.5 → 10.2.6: no change in what nodert can see",
+      "seconds": 20
+    },
+    "supports-color@10.2.2→11.0.0": {
+      "pkg": "supports-color",
+      "from": "10.2.2",
+      "to": "11.0.0",
+      "weeklyDownloads": 424986385,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "supports-color 10.2.2 → 11.0.0: no change in what nodert can see",
+      "seconds": 20
+    },
+    "emoji-regex@10.6.0→11.0.0": {
+      "pkg": "emoji-regex",
+      "from": "10.6.0",
+      "to": "11.0.0",
+      "weeklyDownloads": 312718384,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "emoji-regex 10.6.0 → 11.0.0: no change in what nodert can see",
+      "seconds": 20
+    },
+    "lru-cache@11.5.2→11.5.3": {
+      "pkg": "lru-cache",
+      "from": "11.5.2",
+      "to": "11.5.3",
+      "weeklyDownloads": 415300995,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "lru-cache 11.5.2 → 11.5.3: no change in what nodert can see",
+      "seconds": 20
+    },
+    "commander@14.0.3→15.0.0": {
+      "pkg": "commander",
+      "from": "14.0.3",
+      "to": "15.0.0",
+      "weeklyDownloads": 375212080,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "commander 14.0.3 → 15.0.0: no change in what nodert can see",
+      "seconds": 20
+    },
+    "picomatch@4.0.6→4.0.7": {
+      "pkg": "picomatch",
+      "from": "4.0.6",
+      "to": "4.0.7",
+      "weeklyDownloads": 361062120,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "picomatch 4.0.6 → 4.0.7: no change in what nodert can see",
+      "seconds": 20
+    },
+    "debug@4.4.1→4.4.3": {
+      "pkg": "debug",
+      "from": "4.4.1",
+      "to": "4.4.3",
+      "weeklyDownloads": 557076954,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "debug 4.4.1 → 4.4.3: no change in what nodert can see",
+      "seconds": 20
+    },
+    "ansi-regex@6.2.2→6.3.0": {
+      "pkg": "ansi-regex",
+      "from": "6.2.2",
+      "to": "6.3.0",
+      "weeklyDownloads": 377284029,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "ansi-regex 6.2.2 → 6.3.0: no change in what nodert can see",
+      "seconds": 20
+    },
+    "ms@2.1.2→2.1.3": {
+      "pkg": "ms",
+      "from": "2.1.2",
+      "to": "2.1.3",
+      "weeklyDownloads": 433482606,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "ms 2.1.2 → 2.1.3: no change in what nodert can see",
+      "seconds": 22
+    },
+    "brace-expansion@5.0.11→5.0.12": {
+      "pkg": "brace-expansion",
+      "from": "5.0.11",
+      "to": "5.0.12",
+      "weeklyDownloads": 452495305,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "brace-expansion 5.0.11 → 5.0.12: no change in what nodert can see",
+      "seconds": 23
+    },
+    "ansi-styles@6.2.3→7.0.0": {
+      "pkg": "ansi-styles",
+      "from": "6.2.3",
+      "to": "7.0.0",
+      "weeklyDownloads": 539250076,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "ansi-styles 6.2.3 → 7.0.0: no change in what nodert can see",
+      "seconds": 23
+    },
+    "tslib@2.8.0→2.8.1": {
+      "pkg": "tslib",
+      "from": "2.8.0",
+      "to": "2.8.1",
+      "weeklyDownloads": 316086217,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "tslib 2.8.0 → 2.8.1: no change in what nodert can see",
+      "seconds": 23
+    },
+    "wrap-ansi@10.0.1→10.0.2": {
+      "pkg": "wrap-ansi",
+      "from": "10.0.1",
+      "to": "10.0.2",
+      "weeklyDownloads": 316818085,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "wrap-ansi 10.0.1 → 10.0.2: no change in what nodert can see",
+      "seconds": 23
+    },
+    "chalk@5.6.2→6.0.0": {
+      "pkg": "chalk",
+      "from": "5.6.2",
+      "to": "6.0.0",
+      "weeklyDownloads": 415606081,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "chalk 5.6.2 → 6.0.0: no change in what nodert can see",
+      "seconds": 23
+    },
+    "strip-ansi@7.1.2→7.2.0": {
+      "pkg": "strip-ansi",
+      "from": "7.1.2",
+      "to": "7.2.0",
+      "weeklyDownloads": 397007896,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "strip-ansi 7.1.2 → 7.2.0: no change in what nodert can see",
+      "seconds": 23
+    },
+    "string-width@8.2.1→8.2.2": {
+      "pkg": "string-width",
+      "from": "8.2.1",
+      "to": "8.2.2",
+      "weeklyDownloads": 374902821,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "string-width 8.2.1 → 8.2.2: no change in what nodert can see",
+      "seconds": 23
+    },
+    "source-map@0.7.6→0.8.0": {
+      "pkg": "source-map",
+      "from": "0.7.6",
+      "to": "0.8.0",
+      "weeklyDownloads": 313409866,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "source-map 0.7.6 → 0.8.0: no change in what nodert can see",
+      "seconds": 23
+    },
+    "balanced-match@4.0.3→4.0.4": {
+      "pkg": "balanced-match",
+      "from": "4.0.3",
+      "to": "4.0.4",
+      "weeklyDownloads": 294288897,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "balanced-match 4.0.3 → 4.0.4: no change in what nodert can see",
+      "seconds": 15
+    },
+    "color-name@2.1.0→2.1.1": {
+      "pkg": "color-name",
+      "from": "2.1.0",
+      "to": "2.1.1",
+      "weeklyDownloads": 293717884,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "color-name 2.1.0 → 2.1.1: no change in what nodert can see",
+      "seconds": 37
+    },
+    "eslint-visitor-keys@5.0.0→5.0.1": {
+      "pkg": "eslint-visitor-keys",
+      "from": "5.0.0",
+      "to": "5.0.1",
+      "weeklyDownloads": 294046373,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "eslint-visitor-keys 5.0.0 → 5.0.1: no change in what nodert can see",
+      "seconds": 37
+    },
+    "glob@13.0.5→13.0.6": {
+      "pkg": "glob",
+      "from": "13.0.5",
+      "to": "13.0.6",
+      "weeklyDownloads": 290551353,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "glob 13.0.5 → 13.0.6: no change in what nodert can see",
+      "seconds": 37
+    },
+    "ajv@8.18.0→8.20.0": {
+      "pkg": "ajv",
+      "from": "8.18.0",
+      "to": "8.20.0",
+      "weeklyDownloads": 287330282,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "ajv 8.18.0 → 8.20.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "color-convert@3.1.2→3.1.3": {
+      "pkg": "color-convert",
+      "from": "3.1.2",
+      "to": "3.1.3",
+      "weeklyDownloads": 287075811,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "color-convert 3.1.2 → 3.1.3: no change in what nodert can see",
+      "seconds": 38
+    },
+    "escape-string-regexp@4.0.0→5.0.0": {
+      "pkg": "escape-string-regexp",
+      "from": "4.0.0",
+      "to": "5.0.0",
+      "weeklyDownloads": 271455085,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "escape-string-regexp 4.0.0 → 5.0.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "type-fest@5.9.0→5.10.0": {
+      "pkg": "type-fest",
+      "from": "5.9.0",
+      "to": "5.10.0",
+      "weeklyDownloads": 283923197,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "type-fest 5.9.0 → 5.10.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "has-flag@5.0.0→5.0.1": {
+      "pkg": "has-flag",
+      "from": "5.0.0",
+      "to": "5.0.1",
+      "weeklyDownloads": 279613804,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "has-flag 5.0.0 → 5.0.1: no change in what nodert can see",
+      "seconds": 38
+    },
+    "react-is@19.2.8→19.3.0": {
+      "pkg": "react-is",
+      "from": "19.2.8",
+      "to": "19.3.0",
+      "weeklyDownloads": 269865474,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "react-is 19.2.8 → 19.3.0: no change in what nodert can see",
+      "seconds": 37
+    },
+    "readable-stream@4.6.0→4.7.0": {
+      "pkg": "readable-stream",
+      "from": "4.6.0",
+      "to": "4.7.0",
+      "weeklyDownloads": 267162140,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "readable-stream 4.6.0 → 4.7.0: no change in what nodert can see",
+      "seconds": 37
+    },
+    "glob-parent@6.0.1→6.0.2": {
+      "pkg": "glob-parent",
+      "from": "6.0.1",
+      "to": "6.0.2",
+      "weeklyDownloads": 248932187,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "glob-parent 6.0.1 → 6.0.2: no change in what nodert can see",
+      "seconds": 37
+    },
+    "p-limit@7.3.2→7.3.3": {
+      "pkg": "p-limit",
+      "from": "7.3.2",
+      "to": "7.3.3",
+      "weeklyDownloads": 253726160,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "p-limit 7.3.2 → 7.3.3: no change in what nodert can see",
+      "seconds": 38
+    },
+    "json-schema-traverse@0.5.0→1.0.0": {
+      "pkg": "json-schema-traverse",
+      "from": "0.5.0",
+      "to": "1.0.0",
+      "weeklyDownloads": 248132401,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "json-schema-traverse 0.5.0 → 1.0.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "p-locate@6.0.0→7.0.0": {
+      "pkg": "p-locate",
+      "from": "6.0.0",
+      "to": "7.0.0",
+      "weeklyDownloads": 243112942,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "p-locate 6.0.0 → 7.0.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "locate-path@7.2.0→8.0.0": {
+      "pkg": "locate-path",
+      "from": "7.2.0",
+      "to": "8.0.0",
+      "weeklyDownloads": 244244615,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "locate-path 7.2.0 → 8.0.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "which@6.0.1→7.0.0": {
+      "pkg": "which",
+      "from": "6.0.1",
+      "to": "7.0.0",
+      "weeklyDownloads": 254071452,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "which 6.0.1 → 7.0.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "find-up@7.0.0→8.0.0": {
+      "pkg": "find-up",
+      "from": "7.0.0",
+      "to": "8.0.0",
+      "weeklyDownloads": 252664655,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "find-up 7.0.0 → 8.0.0: no change in what nodert can see",
+      "seconds": 38
+    },
+    "undici-types@8.10.2→8.11.0": {
+      "pkg": "undici-types",
+      "from": "8.10.2",
+      "to": "8.11.0",
+      "weeklyDownloads": 237969180,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "undici-types 8.10.2 → 8.11.0: no change in what nodert can see",
+      "seconds": 18
+    },
+    "yallist@4.0.0→5.0.0": {
+      "pkg": "yallist",
+      "from": "4.0.0",
+      "to": "5.0.0",
+      "weeklyDownloads": 239626284,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "yallist 4.0.0 → 5.0.0: no change in what nodert can see",
+      "seconds": 47
+    },
+    "uuid@14.0.1→14.0.2": {
+      "pkg": "uuid",
+      "from": "14.0.1",
+      "to": "14.0.2",
+      "weeklyDownloads": 210091341,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "uuid 14.0.1 → 14.0.2: no change in what nodert can see",
+      "seconds": 19
+    },
+    "typescript@6.0.3→7.0.2": {
+      "pkg": "typescript",
+      "from": "6.0.3",
+      "to": "7.0.2",
+      "weeklyDownloads": 209215221,
+      "severity": "none",
+      "reasons": [],
+      "gained": {
+        "env": {
+          "added": [],
+          "removed": [
+            "NODE_ENV",
+            "NODE_INSPECTOR_IPC",
+            "TSC_NONPOLLING_WATCHER",
+            "TSC_WATCHDIRECTORY",
+            "TSC_WATCHFILE",
+            "TSC_WATCH_POLLINGCHUNKSIZE_HIGH",
+            "TSC_WATCH_POLLINGCHUNKSIZE_LOW",
+            "TSC_WATCH_POLLINGCHUNKSIZE_MEDIUM",
+            "TSC_WATCH_POLLINGINTERVAL_HIGH",
+            "TSC_WATCH_POLLINGINTERVAL_LOW",
+            "TSC_WATCH_POLLINGINTERVAL_MEDIUM",
+            "TSC_WATCH_UNCHANGEDPOLLTHRESHOLDS_HIGH",
+            "TSC_WATCH_UNCHANGEDPOLLTHRESHOLDS_LOW",
+            "TSC_WATCH_UNCHANGEDPOLLTHRESHOLDS_MEDIUM",
+            "VSCODE_INSPECTOR_OPTIONS"
+          ]
+        }
+      },
+      "summary": "typescript 6.0.3 → 7.0.2: ",
+      "seconds": 19
+    },
+    "mime-db@1.53.0→1.54.0": {
+      "pkg": "mime-db",
+      "from": "1.53.0",
+      "to": "1.54.0",
+      "weeklyDownloads": 207242559,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "mime-db 1.53.0 → 1.54.0: no change in what nodert can see",
+      "seconds": 19
+    },
+    "ws@8.21.2→8.21.3": {
+      "pkg": "ws",
+      "from": "8.21.2",
+      "to": "8.21.3",
+      "weeklyDownloads": 201592878,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "ws 8.21.2 → 8.21.3: no change in what nodert can see",
+      "seconds": 20
+    },
+    "globals@17.11.0→17.12.0": {
+      "pkg": "globals",
+      "from": "17.11.0",
+      "to": "17.12.0",
+      "weeklyDownloads": 203491831,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "globals 17.11.0 → 17.12.0: no change in what nodert can see",
+      "seconds": 20
+    },
+    "esbuild@0.28.1→0.28.2": {
+      "pkg": "esbuild",
+      "from": "0.28.1",
+      "to": "0.28.2",
+      "weeklyDownloads": 201162613,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "esbuild 0.28.1 → 0.28.2: no change in what nodert can see",
+      "seconds": 20
+    },
+    "isexe@3.1.5→4.0.0": {
+      "pkg": "isexe",
+      "from": "3.1.5",
+      "to": "4.0.0",
+      "weeklyDownloads": 211602206,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "isexe 3.1.5 → 4.0.0: no change in what nodert can see",
+      "seconds": 24
+    },
+    "ignore@7.0.9→7.0.10": {
+      "pkg": "ignore",
+      "from": "7.0.9",
+      "to": "7.0.10",
+      "weeklyDownloads": 237818202,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "ignore 7.0.9 → 7.0.10: no change in what nodert can see",
+      "seconds": 27
+    },
+    "postcss@8.5.27→8.5.28": {
+      "pkg": "postcss",
+      "from": "8.5.27",
+      "to": "8.5.28",
+      "weeklyDownloads": 229706637,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "postcss 8.5.27 → 8.5.28: no change in what nodert can see",
+      "seconds": 27
+    },
+    "safe-buffer@5.2.0→5.2.1": {
+      "pkg": "safe-buffer",
+      "from": "5.2.0",
+      "to": "5.2.1",
+      "weeklyDownloads": 237924258,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "safe-buffer 5.2.0 → 5.2.1: no change in what nodert can see",
+      "seconds": 28
+    },
+    "js-yaml@5.4.1→5.4.2": {
+      "pkg": "js-yaml",
+      "from": "5.4.1",
+      "to": "5.4.2",
+      "weeklyDownloads": 222034894,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "js-yaml 5.4.1 → 5.4.2: no change in what nodert can see",
+      "seconds": 27
+    },
+    "entities@8.0.0→8.1.0": {
+      "pkg": "entities",
+      "from": "8.0.0",
+      "to": "8.1.0",
+      "weeklyDownloads": 217752953,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "entities 8.0.0 → 8.1.0: no change in what nodert can see",
+      "seconds": 27
+    },
+    "path-key@3.1.1→4.0.0": {
+      "pkg": "path-key",
+      "from": "3.1.1",
+      "to": "4.0.0",
+      "weeklyDownloads": 214205864,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "path-key 3.1.1 → 4.0.0: no change in what nodert can see",
+      "seconds": 27
+    },
+    "iconv-lite@0.7.2→0.7.3": {
+      "pkg": "iconv-lite",
+      "from": "0.7.2",
+      "to": "0.7.3",
+      "weeklyDownloads": 217488237,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "iconv-lite 0.7.2 → 0.7.3: no change in what nodert can see",
+      "seconds": 27
+    },
+    "is-fullwidth-code-point@5.0.0→5.1.0": {
+      "pkg": "is-fullwidth-code-point",
+      "from": "5.0.0",
+      "to": "5.1.0",
+      "weeklyDownloads": 200327545,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "is-fullwidth-code-point 5.0.0 → 5.1.0: no change in what nodert can see",
+      "seconds": 12
+    },
+    "signal-exit@4.0.3→4.1.0": {
+      "pkg": "signal-exit",
+      "from": "4.0.3",
+      "to": "4.1.0",
+      "weeklyDownloads": 210826844,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "signal-exit 4.0.3 → 4.1.0: no change in what nodert can see",
+      "seconds": 27
+    },
+    "zod@4.6.4→4.6.5": {
+      "pkg": "zod",
+      "from": "4.6.4",
+      "to": "4.6.5",
+      "weeklyDownloads": 211933203,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "zod 4.6.4 → 4.6.5: no change in what nodert can see",
+      "seconds": 27
+    },
+    "mime-types@3.0.1→3.0.2": {
+      "pkg": "mime-types",
+      "from": "3.0.1",
+      "to": "3.0.2",
+      "weeklyDownloads": 198059257,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "mime-types 3.0.1 → 3.0.2: no change in what nodert can see",
+      "seconds": 18
+    },
+    "agent-base@8.0.0→9.0.0": {
+      "pkg": "agent-base",
+      "from": "8.0.0",
+      "to": "9.0.0",
+      "weeklyDownloads": 194313690,
+      "severity": "minor",
+      "reasons": [
+        "decodes something it did not decode before"
+      ],
+      "gained": {
+        "exec": {
+          "added": [
+            "{\"how\":\"base64-decode\",\"sample\":\"· chars\"}"
+          ],
+          "removed": []
+        }
+      },
+      "summary": "agent-base 8.0.0 → 9.0.0: decodes something it did not decode before",
+      "seconds": 27
+    },
+    "isarray@2.0.4→2.0.5": {
+      "pkg": "isarray",
+      "from": "2.0.4",
+      "to": "2.0.5",
+      "weeklyDownloads": 194269698,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "isarray 2.0.4 → 2.0.5: no change in what nodert can see",
+      "seconds": 27
+    },
+    "acorn@8.17.0→8.18.0": {
+      "pkg": "acorn",
+      "from": "8.17.0",
+      "to": "8.18.0",
+      "weeklyDownloads": 193711299,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "acorn 8.17.0 → 8.18.0: no change in what nodert can see",
+      "seconds": 29
+    }
+  },
+  "measured": "2026-09-23T16:55:18.832Z",
+  "strategy": "nodert",
+  "ranking": "weekly npm downloads, unscoped packages the published index holds",
+  "tally": {
+    "none": 58,
+    "minor": 1
+  }
+}

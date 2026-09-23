@@ -778,7 +778,7 @@ so nothing here is presented as more finished than it is.
 
 ## What this cannot do
 
-Six real limitations. They are listed here rather than discovered later, and the first four have a
+Six real limitations — one of them now mostly closed. They are listed here rather than discovered later, and the first four have a
 test in `differ/diff.test.js` asserting the failure still fails the way it is described — so a change
 that quietly widens or narrows a blind spot cannot land unnoticed.
 
@@ -805,15 +805,17 @@ watches Node's API surface, so a native addon, a WebAssembly module, or code tha
 reference to `net.Socket` before the probe loaded is invisible to it. That is why `canSee` and the
 strategy name travel with every transcript.
 
-**What an install script does.** The twins run `npm install` with scripts enabled, so a
-`postinstall` really executes — but the probe is loaded for the import, not for the install, so
-nothing it does is recorded. npm 12 stopped running those scripts by default, which is why the
-import is where this project looks; npm 10 and 11, still what most machines run, run them. A
-version whose install script phones home would come back quiet on every channel. The lockfile
-check names every package whose lockfile entry says `hasInstallScript`, under "runs code while being
-installed — which is not watched", rather than let the silence stand for it. Watching that phase is
-the probe loaded through `NODE_OPTIONS` for the install step with npm's own frames excluded, which
-changes what every entry means — so it is the next re-observation's job, not a patch to this one.
+**What an install script did, before 23 September.** The twins run `npm install` with scripts
+enabled, and until 23 September the probe was loaded for the import only — a `postinstall` ran and
+nothing it did was recorded. Now the install step runs with the probe in `NODE_OPTIONS`: npm itself
+records only the processes it starts (the lifecycle scripts), every Node process those start is
+watched whole, and the result is a separate `install` section, compared only when both sides have
+one. The first packages watched this way show why it matters: `commitplease` writes into the
+repository's `.git/hooks` as it installs, `@vscode/ripgrep` reads `GITHUB_TOKEN` and fetches from
+`api.github.com`, `@playwright/browser-chromium` downloads a browser from three hosts — none of it
+visible at import. What remains: entries made before 23 September have no install section, and
+the index says so by leaving it absent rather than empty; and a script written in shell is seen as
+the command npm started, not from inside.
 
 **Code that only runs somewhere else.** The index is observed on Linux, x64, glibc, in Node. A
 binary published only for macOS, Windows or musl — esbuild, swc, rollup and sharp publish one per

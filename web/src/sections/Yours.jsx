@@ -251,16 +251,19 @@ function Watch() {
           </div>
           <p className="yours__quiet">{d.summary} — {d.from}{d.seconds ? `, ${d.seconds}s` : ''}.</p>
           <div className="finding__body">
-            {Object.keys(CHANNEL_LABEL).map((c) => {
-              const before = (d.before?.[c] || []).map(describe);
-              const after = (d.after?.[c] || []).map(describe);
+            {[...Object.keys(CHANNEL_LABEL).map((c) => [c, c, d.before, d.after]),
+              ...(d.before?.install && d.after?.install ? Object.keys(CHANNEL_LABEL).map((c) => [`install:${c}`, `install ${c}`, d.before.install, d.after.install]) : [])]
+              .map(([key, label, b, a]) => {
+              const c = key.replace(/^install:/, '');
+              const before = (b?.[c] || []).map(describe);
+              const after = (a?.[c] || []).map(describe);
               if (!before.length && !after.length) return null;
               const gained = after.filter((x) => !before.includes(x));
               const lost = before.filter((x) => !after.includes(x));
               const kept = after.filter((x) => before.includes(x));
               return (
-                <div key={c} className="channel">
-                  <span className="channel__name">{c}</span>
+                <div key={key} className="channel">
+                  <span className="channel__name">{label}</span>
                   <span>
                     {gained.map((x) => <span key={`g${x}`} className="channel__gained">+ {x}<br /></span>)}
                     {lost.map((x) => <span key={`l${x}`} className="channel__lost">{x}<br /></span>)}

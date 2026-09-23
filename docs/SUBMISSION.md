@@ -183,6 +183,19 @@ a package that is not on the npm registry at all, as watched and silent. Now the
 whose probe never reported (`index/schema.js`, tested), `/api/watch` answers "not watched" instead
 of "no change". All 8,940 quiet entries were observed again with the fixed builder: 7,953 were observed, and 9 of those turned out not to be quiet; **987 could not be observed at all** — 886 of them binaries built for another platform, 28 not on npm at that version, 11 command-line tools that never let the probe report, 38 monorepo folders a parser bug had read as package names, 24 for other reasons — and were withdrawn.
 
+**Every plain network connection was recorded as `localhost`, port unknown.** `net.connect(port,
+host)` and every plain `http.request` hand the socket Node's internal `[options, callback]` array,
+and the probe read that array as the options — so it found no host and no port. The differ keys
+connections by host and port, so a new destination would have merged into the old key and never
+read as a change. All 7 network records in the index had it. Found while building install-phase
+watching, fixed, with a test that fails on the old probe.
+
+**Install scripts ran unwatched.** The probe was loaded for the import; a `postinstall` ran before
+it and was never seen. Now every Node process the install starts carries the probe (npm itself
+records only which scripts it launches), and the install phase is its own section of every new
+entry. The first ones watched: `commitplease` writes into `.git/hooks`, `@vscode/ripgrep` reads
+`GITHUB_TOKEN` and calls `api.github.com` — at install, where the index could not see before.
+
 **The web search found other products' changelogs, and read that as silence.** The public-record
 lookup asked Tavily for `<pkg> <version> changelog release notes OR security advisory`. For express
 4.18.2 — one of npm's most-used releases — all six results were n8n's, Instacart's and
