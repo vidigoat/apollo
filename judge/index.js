@@ -12,7 +12,7 @@
  * accuses a real maintainer of shipping malware is the day it stops being installed.
  */
 
-const { buildPrompt } = require('./prompt');
+const { buildPrompt, PROMPT_REVISION } = require('./prompt');
 const { complete, MODELS } = require('./nemotron');
 const { JudgementCache } = require('./cache');
 
@@ -91,7 +91,9 @@ async function judgeOne(d, record, deps = {}) {
    * Opt out with `deps.judgeCache = null`, which the test suites do so they never touch a real one.
    */
   const cache = deps.judgeCache === undefined ? defaultJudgeCache() : deps.judgeCache;
-  const cacheJob = { diff: d, models: MODELS, record };
+  // The prompt only differs from before when the diff has an install phase, so only then does its
+  // revision join the key — every verdict already committed for the demo corpus stays valid.
+  const cacheJob = { diff: d, models: MODELS, record, ...(d.install ? { prompt: PROMPT_REVISION } : {}) };
   if (cache && d.changed) {
     const hit = cache.get(cacheJob);
     if (hit) return hit;

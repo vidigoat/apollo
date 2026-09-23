@@ -86,6 +86,20 @@ function evidenceLines(d) {
   say('NOW SPAWNS      ', d.proc.added, (p) => p.argv.join(' '));
   say('NOW TOUCHES FILE', d.fs.added, (f) => `${f.op} ${f.path}`);
 
+  // What the install scripts did, when both sides were watched through `npm install`. Without these
+  // lines the models were told a release was alarming "at install" and shown nothing from install —
+  // the judge on ajv 6.12.1 concluded the strategy could not see install-time processes at all.
+  const i = d.install;
+  if (i) {
+    say('AT INSTALL, NOW BUILDS CODE ', i.exec?.added || [], (e) => `${e.how}: ${e.sample}`);
+    say('AT INSTALL, NOW READS ENV   ', i.env?.added || [], (e) => e);
+    say('AT INSTALL, NOW RESOLVES    ', i.dns?.added || [], (x) => x);
+    say('AT INSTALL, NOW CONNECTS TO ', i.net?.added || [], (n) => `${n.host}:${n.port} (${n.proto})`);
+    say('AT INSTALL, NOW SPAWNS      ', i.proc?.added || [], (p) => p.argv.join(' '));
+    say('AT INSTALL, NOW TOUCHES FILE', i.fs?.added || [], (f) => `${f.op} ${f.path}`);
+    say('AT INSTALL, NO LONGER SPAWNS', i.proc?.removed || [], (p) => p.argv.join(' '));
+  }
+
   return out.length ? out.join('\n') : '(no observable difference)';
 }
 
@@ -117,7 +131,7 @@ function buildPrompt(d, record) {
 
   const user = `Package: ${d.pkg}
 Version: ${d.from} -> ${d.to}
-Watched with: ${d.strategy}${canSeeCaveat(d)}
+Watched with: ${d.strategy}${canSeeCaveat(d)}${d.install ? '\nWatched at import AND through npm install: lines marked AT INSTALL are what its install scripts did (npm itself is not included).' : ''}
 Rules already said: ${d.severity}${d.reasons.length ? ` (${d.reasons.join('; ')})` : ''}
 
 ${known}
@@ -160,4 +174,10 @@ function canSeeCaveat(d) {
   return ` (this strategy ${parts.join('; and ')} — silence there means nothing)`;
 }
 
-module.exports = { buildPrompt, evidenceLines, SYSTEM };
+/**
+ * Bumped whenever what the models are shown changes. Verdicts are cached, and a verdict made from
+ * an older prompt — one that, say, never showed the install phase — is not an answer to the new one.
+ */
+const PROMPT_REVISION = '2026-09-24-install-phase';
+
+module.exports = { buildPrompt, evidenceLines, SYSTEM, PROMPT_REVISION };

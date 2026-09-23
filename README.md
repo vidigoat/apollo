@@ -47,7 +47,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 33 suites · 453 checks
+npm test            # 33 suites · 454 checks
 npm run smoke:live  # every route of the deployed site, after a deploy
 ```
 

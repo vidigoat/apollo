@@ -260,5 +260,19 @@ const VERDICT = (o = {}) => ({
     assert.ok(!long.startsWith(body + 'a'), 'the cut landed inside a word');
   });
 
+  await it('the models are shown what the install scripts did, marked AT INSTALL', async () => {
+    const { transcript } = require('../transcript/schema');
+    const { diff } = require('../differ/diff');
+    const e = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
+    const d = diff(
+      transcript({ pkg: 'ajv', version: '6.12.0', strategy: 'nodert', raw: { install: e }, result: { installExit: 0, reported: true } }),
+      transcript({ pkg: 'ajv', version: '6.12.1', strategy: 'nodert', result: { installExit: 0, reported: true }, raw: { install: { ...e, proc: [{ argv: ['sh', '-c', 'opencollective-postinstall || true'] }] } } })
+    );
+    const { user } = buildPrompt(d, null);
+    assert.match(user, /AT INSTALL, NOW SPAWNS\s+sh -c opencollective-postinstall/);
+    assert.match(user, /Watched at import AND through npm install/);
+    assert.doesNotMatch(user, /\(no observable difference\)/);
+  });
+
 console.log(`\n${passed} passed`);
 })();
