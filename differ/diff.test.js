@@ -348,4 +348,18 @@ it('a release that adds an install script is alarming — the shape of the class
   assert.ok(d.reasons.some((r) => /^at install: spawns a shell/.test(r)), JSON.stringify(d.reasons));
 });
 
+it('npm\'s own settings are not credentials; a setting about authentication still is', () => {
+  const { readsCredential } = require('./diff');
+  for (const n of ['npm_config_loglevel', 'npm_config_color', 'npm_config_arch', 'CI']) assert.equal(readsCredential(n), false, n);
+  for (const n of ['NPM_TOKEN', 'npm_config__authToken', 'npm_config_//registry.npmjs.org/:_authToken', 'npm_config__password', 'AWS_SECRET_ACCESS_KEY', 'GITHUB_TOKEN']) assert.equal(readsCredential(n), true, n);
+  // ajv 6.12.1's funding postinstall, as watched on Nebius: a new script, not a credential read.
+  const e = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
+  const before = transcript({ pkg: 'ajv', version: '6.12.0', strategy: 'nodert', raw: { install: e }, result: { installExit: 0, reported: true } });
+  const after = transcript({ pkg: 'ajv', version: '6.12.1', strategy: 'nodert', result: { installExit: 0, reported: true },
+    raw: { install: { ...e, env: ['CI', 'DISABLE_OPENCOLLECTIVE', 'OPEN_SOURCE_CONTRIBUTOR', 'npm_config_loglevel'], proc: [{ argv: ['sh', '-c', 'opencollective-postinstall || true'] }] } } });
+  const d = diff(before, after);
+  assert.ok(!d.reasons.some((r) => /credential/.test(r)), JSON.stringify(d.reasons));
+  assert.equal(d.severity, 'alarming', 'the new install script itself must still be alarming');
+});
+
 console.log(`\n${passed} passed`);

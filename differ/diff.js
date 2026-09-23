@@ -33,6 +33,18 @@ function setDiff(before, after, key) {
 /** Reading these is how credentials leave a machine. */
 const SENSITIVE_ENV = /(TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|AWS_|GITHUB_|NPM_|SSH|PRIVATE)/i;
 
+/*
+ * npm's own settings are not credentials. `NPM_` above catches NPM_TOKEN, and it also caught
+ * npm_config_loglevel — which every install script that wants to stay quiet reads — so watching the
+ * install phase would have called ajv's funding banner "reads a credential". A setting that is
+ * ABOUT authentication (npm_config__authToken, …:_auth, a password, a key) still is one.
+ */
+const readsCredential = (name) => {
+  const n = String(name);
+  if (/^npm_config_/i.test(n) && !/(auth|token|password|passwd|_key|keyfile|cert)/i.test(n)) return false;
+  return SENSITIVE_ENV.test(n);
+};
+
 /** Spawning these from a package install is rarely innocent. */
 const NOTABLE_PROC = /\b(curl|wget|sh|bash|zsh|powershell|nc|python|node\s+-e|eval)\b/i;
 
@@ -58,7 +70,7 @@ function severityOf(input) {
   const d = { net: none, dns: none, fs: none, env: none, proc: none, exec: none, ...input };
   const reasons = [];
 
-  if (d.env.added.some((e) => SENSITIVE_ENV.test(e))) reasons.push('reads a credential it did not read before');
+  if (d.env.added.some(readsCredential)) reasons.push('reads a credential it did not read before');
   if (d.proc.added.some((p) => NOTABLE_PROC.test(p.argv.join(' ')))) reasons.push('spawns a shell or a downloader it did not spawn before');
   // Building code at runtime that the old version did not build. A library that starts doing this
   // between a patch release has changed in kind, not degree — and decode-then-execute is the shape
@@ -208,4 +220,4 @@ function summarise(d) {
   return `${d.pkg} ${d.from} → ${d.to}: ${qualified}`;
 }
 
-module.exports = { diff, summarise, severityOf, SENSITIVE_ENV, NOTABLE_PROC, BUILDS_CODE };
+module.exports = { diff, summarise, severityOf, SENSITIVE_ENV, readsCredential, NOTABLE_PROC, BUILDS_CODE };

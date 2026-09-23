@@ -216,7 +216,13 @@ records only which scripts it launches), and the install phase is its own sectio
 entry. The first ones watched: `commitplease` writes into `.git/hooks`, `@vscode/ripgrep` reads
 `GITHUB_TOKEN` and calls `api.github.com` — at install, where the index could not see before. And
 a release that *adds* an install script — the shape of the classic attack — is now `alarming` by
-the rules, on that one new line in the diff (`differ/diff.test.js`).
+the rules, on that one new line in the diff (`differ/diff.test.js`). Checked on real history, in
+Nebius Sandboxes: **ajv 6.12.0 → 6.12.1** (287 million downloads a week) added
+`opencollective-postinstall`, and **core-js 2.6.5 → 2.6.6** added its funding banner; both come
+back alarming, as they should — both are benign, and saying so is the model's job, never the
+rules'. Watching them also caught the tool calling `npm_config_loglevel` a credential, which would
+have accused every quiet install script; npm's own settings are settings now, unless they are
+about authentication (tested).
 
 **The web search found other products' changelogs, and read that as silence.** The public-record
 lookup asked Tavily for `<pkg> <version> changelog release notes OR security advisory`. For express
