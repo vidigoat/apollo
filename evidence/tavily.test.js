@@ -124,6 +124,90 @@ const result = (o) => ({ url: 'https://example.com/a', title: '', content: '', .
     delete process.env.TAVILY_API_KEY;
   });
 
+  /* ── an empty answer is not a silent web ─────────────────────────────────── */
+
+  const live = (answers) => {
+    const calls = [];
+    const fetchImpl = async () => {
+      const results = answers[Math.min(calls.length, answers.length - 1)];
+      calls.push(results.length);
+      return { ok: true, json: async () => ({ results }) };
+    };
+    return { fetchImpl, calls, sleep: async () => {} };
+  };
+
+  await it('a search that returns nothing at all is asked again before it is believed', async () => {
+    /*
+     * Measured against the live API: the same query for a widely-released version came back with
+     * zero results in one run of three. Here, "nothing on the web mentions this" is EVIDENCE — so a
+     * flaky empty answer taken at face value is evidence manufactured against an innocent package.
+     */
+    const prev = process.env.TAVILY_API_KEY;
+    process.env.TAVILY_API_KEY = 'test';
+    try {
+      const t = live([[], [result({ title: 'ms 2.1.3 release notes', url: 'https://github.com/vercel/ms/releases', content: '2.1.3' })]]);
+      const r = await lookUp('ms', '2.1.3', t);
+      assert.equal(t.calls.length, 2, 'an empty answer was believed on the first try');
+      assert.equal(r.searchFailed, false);
+      assert.ok(r.mentions >= 1);
+    } finally {
+      process.env.TAVILY_API_KEY = prev;
+    }
+  });
+
+  await it('a search that stays empty says the SEARCH failed, which is no evidence either way', async () => {
+    const prev = process.env.TAVILY_API_KEY;
+    process.env.TAVILY_API_KEY = 'test';
+    try {
+      const t = live([[]]);
+      const r = await lookUp('ms', '2.1.3', t);
+      assert.equal(t.calls.length, 3);
+      assert.equal(r.searchFailed, true);
+      assert.match(r.verdict, /search that did not work/);
+      assert.doesNotMatch(r.verdict, /Nothing on the open web mentions/, 'an outage was reported as a silent web');
+    } finally {
+      process.env.TAVILY_API_KEY = prev;
+    }
+  });
+
+  await it('results that exist but do not mention this version ARE the silent web — still evidence', async () => {
+    const prev = process.env.TAVILY_API_KEY;
+    process.env.TAVILY_API_KEY = 'test';
+    try {
+      const t = live([[result({ title: 'ms is a tiny time library', content: 'about version 2.0.0' })]]);
+      const r = await lookUp('ms', '9.9.9', t);
+      assert.equal(t.calls.length, 1, 'a non-empty answer was retried');
+      assert.equal(r.searchFailed, false);
+      assert.equal(r.mentions, 0);
+      assert.match(r.verdict, /Nothing on the open web mentions/);
+    } finally {
+      process.env.TAVILY_API_KEY = prev;
+    }
+  });
+
+  await it('the judge is told about an advisory, and told apart a failed search from a silent web', () => {
+    /*
+     * The prompt had two branches: a changelog, or "the open web says nothing". An advisory for this
+     * exact version — the strongest evidence the lookup can return — fell into the second, so the
+     * model was told the web was silent at the one moment it was shouting.
+     */
+    const { buildPrompt } = require('../judge/prompt');
+    const ch = { added: [], removed: [] };
+    const d = { pkg: 'p', from: '1.0.0', to: '1.0.1', strategy: 'nodert', severity: 'alarming', reasons: [],
+      canSee: {}, net: ch, dns: ch, fs: ch, env: ch, proc: ch, exec: ch };
+    const text = (rec) => JSON.stringify(buildPrompt(d, rec));
+
+    const withAdvisory = text({ advisory: 'GHSA-1234: this version exfiltrates tokens' });
+    assert.match(withAdvisory, /A security advisory mentions this version: GHSA-1234/);
+    assert.doesNotMatch(withAdvisory, /says nothing about this version/, 'an advisory was reported as silence');
+
+    const failed = text({ searchFailed: true });
+    assert.match(failed, /search did not work/);
+    assert.doesNotMatch(failed, /says nothing about this version/, 'a failed search was reported as silence');
+
+    assert.match(text({}), /says nothing about this version/);
+  });
+
   await it('every verdict is a sentence a human can act on', async () => {
     for (const f of [
       { changelog: 'x', advisory: null, mentions: 1 },

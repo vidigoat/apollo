@@ -154,10 +154,12 @@ function install() {
  * share a heap. It removes the trivial version. The honest containment story is still a microVM,
  * which is what adapters/contree.js is for.
  */
-function runnerSource(pkg, outPath) {
+function runnerSource(pkg, outPath, probePath = __filename) {
+  // `probePath` is where the probe lives on the machine that will run this — this file's own path
+  // locally, and wherever it was uploaded inside a sandbox.
   return `
 const fs = require('node:fs');
-const { install } = require(${JSON.stringify(__filename)});
+const { install } = require(${JSON.stringify(probePath)});
 const OUT = ${JSON.stringify(outPath)};
 const probe = install();
 let threw = null;
@@ -189,6 +191,18 @@ function readReport(outPath) {
   } catch {
     return null;
   }
+  return parseReport(raw);
+}
+
+/**
+ * The same check, on bytes rather than a path.
+ *
+ * In a real sandbox the report never touches this machine's disk: it is written inside the
+ * microVM and read back out of the image the run produced. Splitting the parse from the read means
+ * both adapters apply exactly one definition of what a trustworthy report looks like.
+ */
+function parseReport(raw) {
+  if (raw == null) return null;
   let parsed;
   try {
     parsed = JSON.parse(raw);
@@ -206,4 +220,4 @@ function readReport(outPath) {
   return out;
 }
 
-module.exports = { install, runnerSource, readReport, MARKER };
+module.exports = { install, runnerSource, readReport, parseReport, MARKER };

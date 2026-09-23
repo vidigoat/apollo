@@ -95,9 +95,25 @@ function evidenceLines(d) {
  */
 function buildPrompt(d, record) {
   const f = fence();
-  const known = record?.changelog
-    ? `Changelog for this version: ${record.changelog}`
-    : 'The open web says nothing about this version. Absence of a record is weak evidence on its own — small packages often ship without notes.';
+  /*
+   * What the open web says, in the four states it can be in.
+   *
+   * This used to be two: a changelog, or "the open web says nothing". A security ADVISORY for this
+   * exact version — the strongest single piece of evidence the lookup can return — fell into the
+   * second branch, so the model was told the web was silent at the one moment it was shouting. And
+   * a search that failed outright was described the same way as a web with nothing to say, which
+   * turned an outage into evidence against the package.
+   */
+  const lines = [];
+  if (record?.advisory) lines.push(`A security advisory mentions this version: ${record.advisory}`);
+  if (record?.changelog) lines.push(`Changelog for this version: ${record.changelog}`);
+  if (!lines.length && record?.searchFailed) {
+    lines.push('The web search for this version returned no results at all — the search did not work. That is no evidence either way; do not treat it as silence.');
+  }
+  if (!lines.length) {
+    lines.push('The open web says nothing about this version. Absence of a record is weak evidence on its own — small packages often ship without notes.');
+  }
+  const known = lines.join('\n');
 
   const user = `Package: ${d.pkg}
 Version: ${d.from} -> ${d.to}

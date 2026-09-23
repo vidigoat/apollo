@@ -121,17 +121,53 @@ async function tavily() {
 async function sandboxes() {
   console.log(`\n${C.bold}Nebius Sandboxes${C.off}`);
   if (!process.env.NEBIUS_API_KEY) return skip('sandboxes', 'no key; the simulated adapter is in use');
+  if (!process.env.NEBIUS_PROJECT_ID) {
+    return no('sandboxes', 'NEBIUS_PROJECT_ID is not set — the service requires it as the `Project` header.\n' +
+      '      It is on the Sandboxes page of the Token Factory console, under Playground.');
+  }
+
+  /*
+   * Ask who we are before trying anything.
+   *
+   * For a week this check tried to boot a machine and read the 404 that came back as "access not
+   * granted yet". The 404 was the adapter's own guessed URL. /v1/whoami answers the actual question
+   * — authenticated or not, and exactly which operations this account may perform — so a failure
+   * here is a sentence somebody can act on, not a status code to be interpreted.
+   */
+  const { ConTreeSandboxes } = require('../adapters/contree');
+  let a;
+  let me;
   try {
-    const { ConTreeSandboxes } = require('../adapters/contree');
-    const a = new ConTreeSandboxes({ image: 'node:22' });
+    a = new ConTreeSandboxes({ image: 'docker.io/library/node:22-slim' });
+    me = await a.whoami();
+  } catch (e) {
+    return no('authenticated', `${e.message}`);
+  }
+  const p = me.permissions || {};
+  ok('authenticated', `limits: ${me.limits?.instance_max_concurrency ?? '?'} concurrent, ` +
+    `${me.limits?.instance_max_timeout ?? '?'}s per instance`);
+
+  const needed = ['import', 'spawn'];
+  const missing = needed.filter((k) => !p[k]);
+  if (missing.length) {
+    return no('permissions', `this account may not ${missing.join(' or ')} yet ` +
+      `(granted: ${Object.entries(p).filter(([, v]) => v).map(([k]) => k).join(', ') || 'nothing'}).\n` +
+      '      Access is requested with "Request beta access" on the Sandboxes page. The adapter is\n' +
+      '      already pointed at the real API, so a scored run needs no change once it is granted.');
+  }
+  ok('permissions', needed.join(', '));
+
+  try {
     const checkpoint = await a.boot();
     ok('boot + checkpoint', String(checkpoint));
-    const branches = await a.fork(checkpoint, 2);
-    ok('fork two twins from one checkpoint', branches.map((b) => b.id).join(', '));
-    for (const b of branches) await a.discard(b);
-    ok('discard', `${a.open} left open`);
+    const [twin] = await a.fork(checkpoint, 1);
+    await a.run(twin, '', { step: 'install', pkg: 'ms', version: '2.1.3' });
+    const r = await a.run(twin, '', { step: 'import', pkg: 'ms' });
+    if (r.observed) ok('a real package, observed in a real microVM', `ms@2.1.3 · net ${r.observed.net.length} · env ${r.observed.env.length}`);
+    else no('observed', 'the import ran and no report came back out of the image');
+    await a.discard(twin);
   } catch (e) {
-    no('sandboxes', `${e.message}\n      This is expected until access is granted. Everything runs on the simulated adapter meanwhile.`);
+    no('sandboxes', e.message);
   }
 }
 

@@ -62,22 +62,59 @@ async function lookUp(pkg, version, opts = {}) {
   }
 
   const fetchImpl = opts.fetchImpl || globalThis.fetch;
-  const res = await fetchImpl(ENDPOINT, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.TAVILY_API_KEY}` },
-    body: JSON.stringify({
-      query: `${pkg} ${version} changelog release notes OR security advisory`,
-      search_depth: 'basic',
-      max_results: 6,
-    }),
-  });
+  const sleep = opts.sleep || ((ms) => new Promise((r) => setTimeout(r, ms)));
+  const attempts = opts.attempts ?? 3;
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`tavily ${res.status}: ${body.slice(0, 200)}`);
+  /*
+   * An empty answer is asked again before it is believed.
+   *
+   * "Nothing on the open web mentions this" is EVIDENCE here — about a brand-new host, it is the
+   * finding. So a search that comes back with no results at all has to be told apart from one that
+   * came back with results, none of which mention this version. Measured against the live API: the
+   * same query for a widely-released version returned zero results in one run of three and three
+   * mentions in the other two. A flaky empty answer read as evidence is evidence manufactured
+   * against an innocent package.
+   *
+   * So a completely empty answer is retried, and if it is still empty the lookup says the SEARCH
+   * failed — which is no evidence either way — rather than that the web is silent.
+   */
+  let json = null;
+  let tried = 0;
+  for (; tried < attempts; tried++) {
+    if (tried) await sleep(400 * tried);
+    const res = await fetchImpl(ENDPOINT, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.TAVILY_API_KEY}` },
+      body: JSON.stringify({
+        query: `${pkg} ${version} changelog release notes OR security advisory`,
+        search_depth: 'basic',
+        max_results: 6,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`tavily ${res.status}: ${body.slice(0, 200)}`);
+    }
+    json = await res.json();
+    if ((json.results || []).length) break;
   }
 
-  return summarise(await res.json(), version);
+  if (!(json?.results || []).length) {
+    return {
+      changelog: null,
+      advisory: null,
+      mentions: 0,
+      sources: [],
+      simulated: false,
+      searchFailed: true,
+      attempts: tried,
+      verdict: `The search returned no results at all, ${tried} time${tried === 1 ? '' : 's'}. ` +
+        'That is a search that did not work, not a web that is silent — it is no evidence either way.',
+    };
+  }
+
+  return summarise(json, version);
 }
 
 /** Turn a pile of search results into the four facts the judgement layer actually uses. */
@@ -97,6 +134,7 @@ function summarise(json, version) {
     mentions: aboutThis.length,
     sources: aboutThis.slice(0, 4).map((r) => r.url),
     simulated: false,
+    searchFailed: false,
   };
   return { ...facts, verdict: verdictFor(facts) };
 }
