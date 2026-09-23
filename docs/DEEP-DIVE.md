@@ -840,7 +840,12 @@ repository's `.git/hooks` as it installs, `@vscode/ripgrep` reads `GITHUB_TOKEN`
 `api.github.com`, `@playwright/browser-chromium` downloads a browser from three hosts — none of it
 visible at import. What remains: entries made before 23 September have no install section, and
 the index says so by leaving it absent rather than empty; and a script written in shell is seen as
-the command npm started, not from inside.
+the command npm started, not from inside. The reports can be tampered with from inside the
+sandbox, and the design assumes they will be: a forged report can only add, because the reports
+are merged, never trusted to subtract; a script that deletes another's report is recorded doing
+it; npm writes its own report last, after every script has exited, and without it the phase reads
+"not watched" rather than "ran nothing"; a script that kills itself before reporting still leaves
+the command npm started it with, which is exactly the line a new install script adds to a diff.
 
 **Code that only runs somewhere else.** The index is observed on Linux, x64, glibc, in Node. A
 binary published only for macOS, Windows or musl — esbuild, swc, rollup and sharp publish one per
