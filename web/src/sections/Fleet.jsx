@@ -243,9 +243,20 @@ export default function Fleet({ data, published }) {
           </pre>
 
           <p className="offer__after">
-            Most of your tree will come back <b>unknown</b>, because most of npm has never been
-            watched by anybody. That is reported as its own outcome and never as a pass — and it is
-            the number that would have to fall for this to be worth adopting.
+            {/*
+              "Most of your tree will come back unknown" was true at 1,589 packages and went on being
+              printed after the index grew: on the held-out projects above, a quarter is. The share
+              comes from the same scan as the figures it sits under.
+            */}
+            {typeof pct === 'number' && pct >= 50 ? (
+              <>Some of your tree will still come back <b>unknown</b> — {100 - pct}% of the tree
+              above does — because most of npm has never been watched by anybody.</>
+            ) : (
+              <>Most of your tree will come back <b>unknown</b>, because most of npm has never been
+              watched by anybody.</>
+            )}{' '}
+            That is reported as its own outcome and never as a pass — and it is the number that would
+            have to fall for this to be worth adopting.
           </p>
         </div>
       )}
