@@ -339,4 +339,13 @@ it('an install phase is compared only when both sides watched it', () => {
   assert.equal(d.install, undefined);
 });
 
+it('a release that adds an install script is alarming — the shape of the classic attack', () => {
+  const e = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
+  const before = transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: { install: e }, result: { installExit: 0, reported: true } });
+  const after = transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', raw: { install: { ...e, proc: [{ argv: ['sh', '-c', 'node postinstall.js'] }] } }, result: { installExit: 0, reported: true } });
+  const d = diff(before, after);
+  assert.equal(d.severity, 'alarming');
+  assert.ok(d.reasons.some((r) => /^at install: spawns a shell/.test(r)), JSON.stringify(d.reasons));
+});
+
 console.log(`\n${passed} passed`);

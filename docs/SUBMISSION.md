@@ -214,7 +214,9 @@ watching, fixed, with a test that fails on the old probe.
 it and was never seen. Now every Node process the install starts carries the probe (npm itself
 records only which scripts it launches), and the install phase is its own section of every new
 entry. The first ones watched: `commitplease` writes into `.git/hooks`, `@vscode/ripgrep` reads
-`GITHUB_TOKEN` and calls `api.github.com` — at install, where the index could not see before.
+`GITHUB_TOKEN` and calls `api.github.com` — at install, where the index could not see before. And
+a release that *adds* an install script — the shape of the classic attack — is now `alarming` by
+the rules, on that one new line in the diff (`differ/diff.test.js`).
 
 **The web search found other products' changelogs, and read that as silence.** The public-record
 lookup asked Tavily for `<pkg> <version> changelog release notes OR security advisory`. For express
