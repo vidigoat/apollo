@@ -121,6 +121,22 @@ it('an install phase nobody reported on is absent, not an install that ran nothi
   assert.equal(readReport(out).install, undefined);
 });
 
+it('a decode Node makes while loading node:http is Node\'s, not the package\'s', () => {
+  // agent-base@9.0.0 contains no base64 at all, and the old probe credited it with decoding 64,860
+  // characters: Node decodes its bundled HTTP parser the first time node:http loads. The package here is ESM
+  // and decodes nothing; loading node:http makes Node decode its bundled HTTP parser, 64,860 chars.
+  const dir = path.join(ROOT, 'esm-pkg');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'esm-pkg', version: '1.0.0', type: 'module', exports: { default: './index.js' } }));
+  fs.writeFileSync(path.join(dir, 'index.js'), "import http from 'node:http'; export const x = typeof http;");
+  const out = path.join(ROOT, 'esm.json');
+  const runner = path.join(ROOT, 'run-esm.js');
+  fs.writeFileSync(runner, runnerSource(dir, out));
+  execFileSync(process.execPath, [runner], { cwd: ROOT, stdio: 'pipe', timeout: 20_000 });
+  const r = readReport(out);
+  assert.deepEqual(r.exec, [], `Node's own work was credited to the package: ${JSON.stringify(r.exec)}`);
+});
+
 it('sees a name being resolved', () => {
   const r = watch('dns', `require('node:dns').lookup('example.invalid', () => {});`);
   assert.ok(r.dns.includes('example.invalid'), JSON.stringify(r.dns));

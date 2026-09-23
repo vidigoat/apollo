@@ -143,7 +143,9 @@ function install() {
   // shape, and a shape is what the differ is good at.
   const RealFrom = Buffer.from;
   Buffer.from = function (value, enc, ...rest) {
-    if (enc === 'base64' && typeof value === 'string' && value.length > 128) {
+    // The same rule as environment reads: Node decodes on a package's behalf too — loading node:http, whose bundled HTTP parser it decodes,
+    // did for agent-base@9.0.0, which contains no base64 at all — and that is Node, not the package.
+    if (enc === 'base64' && typeof value === 'string' && value.length > 128 && !fromRuntime()) {
       note('base64-decode', `${value.length} chars`);
     }
     return RealFrom.call(Buffer, value, enc, ...rest);
