@@ -31,7 +31,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Index } = require('../index/schema');
-const { parseLockfile } = require('../lockfile');
+const { parseLockfile, installsOnLinux } = require('../lockfile');
 const { buildLock, checkLock } = require('../lock');
 
 const SKIP = new Set(['node_modules', '.git', '.Trash', 'Library', '.npm', '.cache', 'dist', 'build', '.next']);
@@ -104,6 +104,9 @@ function scanRepo(lockfilePath, index, root = null) {
     deps: parsed.total,
     known: built.known,
     unknown: built.unknown.length,
+    // Of the unknown, the binaries built only for macOS, Windows or musl: not installable in the
+    // Linux sandboxes the index is observed in, so unknown for a reason rather than for want of work.
+    otherPlatform: built.unknown.filter((id) => parsed.platforms?.has(id) && !installsOnLinux(parsed.platforms.get(id))).length,
     state,
     /*
      * Carried through in checkLock's own shape rather than flattened. The first version of this
@@ -177,6 +180,7 @@ function scanFleet(root, { index = new Index(), depth = 4, portable = false } = 
       depVersions: ok.reduce((n, r) => n + r.deps, 0),
       distinct: distinct.size,
       known: ok.reduce((n, r) => n + r.known, 0),
+      otherPlatform: ok.reduce((n, r) => n + (r.otherPlatform || 0), 0),
       drifting: ok.filter((r) => r.state === 'drift').length,
       pinned: ok.filter((r) => r.state !== 'unpinned').length,
     },

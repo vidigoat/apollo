@@ -133,7 +133,7 @@ export default function Fleet({ data, published }) {
 
   if (!data?.scanned) return null;
 
-  const { readable, refused, depVersions, known, distinct, pct, reuse } = fleetTotals(data);
+  const { readable, refused, depVersions, known, distinct, pct, reuse, otherPlatform } = fleetTotals(data);
   const observations = data.index?.versions ?? data.indexNow?.versions;
 
   return (
@@ -250,7 +250,9 @@ export default function Fleet({ data, published }) {
             */}
             {typeof pct === 'number' && pct >= 50 ? (
               <>Some of your tree will still come back <b>unknown</b> — {100 - pct}% of the tree
-              above does — because most of npm has never been watched by anybody.</>
+              above does — because most of npm has never been watched by anybody
+              {otherPlatform > 0 && <>, and {num(otherPlatform)} of those are binaries built only for
+              macOS, Windows or musl, which a Linux sandbox cannot install</>}.</>
             ) : (
               <>Most of your tree will come back <b>unknown</b>, because most of npm has never been
               watched by anybody.</>

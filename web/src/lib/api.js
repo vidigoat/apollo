@@ -96,6 +96,7 @@ export const fleetTotals = (data) => {
     : readable.reduce((n, r) => n + r.deps, 0);
   const known = Number.isFinite(t?.known) ? t.known : readable.reduce((n, r) => n + r.known, 0);
   const distinct = Number.isFinite(t?.distinct) ? t.distinct : null;
+  const otherPlatform = Number.isFinite(t?.otherPlatform) ? t.otherPlatform : null;
 
   return {
     readable,
@@ -103,6 +104,7 @@ export const fleetTotals = (data) => {
     depVersions,
     known,
     distinct,
+    otherPlatform,
     pct: depVersions ? Math.round((known / depVersions) * 100) : 0,
     /*
      * How many times running one package answers a question.
