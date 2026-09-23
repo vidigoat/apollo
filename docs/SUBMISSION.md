@@ -178,7 +178,8 @@ to your dependencies is wrong in exactly the way it exists to prevent.
 read seven environment variables on Nebius and none on the Mac. On the Mac's arm64 there is no
 prebuilt binary, the image has no Python to compile one, and the install failed — and the builder,
 given empty channels by a package that was never imported, recorded "watched, did nothing". Every
-quiet entry could have been one of those. Now the index refuses a version that did not install or
+quiet entry could have been one of those — and among them, the index held `@actions/github-script`,
+a package that is not on the npm registry at all, as watched and silent. Now the index refuses a version that did not install or
 whose probe never reported (`index/schema.js`, tested), `/api/watch` answers "not watched" instead
 of "no change", and all 8,940 quiet entries are being observed again with the fixed builder.
 
