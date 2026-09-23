@@ -49,3 +49,10 @@ of the labelled stand-in, which is better but not required.
   second model agreeing. The refusal is the differentiator; claiming detection throws it away.
 - Forgetting shot 8b. Shot 8 alone looks like a tool getting a better answer. 8 and 8b together show
   it being honest about what it could not see, which is the harder and better claim.
+
+## Raw footage (2026-09-23)
+
+`docs/media/run.webm` (1280×800, ~25 s, no sound) is a real recording of the hosted page: the run
+watched with ebpf, the finding opened, then the tab switched to **nodert** — flat-config turns red,
+and the NVIDIA model line is a real cached Nemotron verdict, not a simulated one. Made by
+`node scripts/record-run.js [url]`; nothing retaken. Use it as B-roll, or re-run for a fresh take.
