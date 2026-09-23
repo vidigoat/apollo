@@ -52,6 +52,8 @@ function parseLockfile(text) {
 
   const versions = new Map();
   const conflicts = new Map();
+  // name@version → the platforms a package says it is for (npm's `os`, `cpu`, `libc`), when it says.
+  const platforms = new Map();
   let format;
 
   const record = (name, version) => {
@@ -72,7 +74,9 @@ function parseLockfile(text) {
     format = json.lockfileVersion === 2 ? 'v2' : 'v3';
     for (const [key, node] of Object.entries(json.packages)) {
       if (isRoot(key) || !node) continue;
-      record(node.name || nameFromPath(key), node.version);
+      const name = node.name || nameFromPath(key);
+      record(name, node.version);
+      if (node.os || node.cpu || node.libc) platforms.set(`${name}@${node.version}`, { os: node.os, cpu: node.cpu, libc: node.libc });
     }
   } else if (json.dependencies && typeof json.dependencies === 'object') {
     format = 'v1';
@@ -99,8 +103,27 @@ function parseLockfile(text) {
     name: json.name ?? null,
     total: versions.size,
     versions,
+    platforms,
     conflicts: [...conflicts.entries()].map(([name, set]) => ({ name, versions: [...set] })),
   };
+}
+
+/**
+ * Can this package install where the index is built — linux, x64, glibc?
+ *
+ * esbuild, swc, rollup and friends publish one binary per platform, and a lockfile lists all of
+ * them. The ones for macOS or Windows cannot be installed, so cannot be watched, in a Linux
+ * sandbox; they are unknown for a reason worth saying out loud rather than just "never watched".
+ * npm's lists may negate (`!win32`), which is allowed-unless.
+ */
+function installsOnLinux({ os, cpu, libc } = {}) {
+  const fits = (list, value) => {
+    if (!Array.isArray(list) || !list.length) return true;
+    if (list.includes(`!${value}`)) return false;
+    const positive = list.filter((x) => !String(x).startsWith('!'));
+    return positive.length ? positive.includes(value) : true;
+  };
+  return fits(os, 'linux') && fits(cpu, 'x64') && fits(libc, 'glibc');
 }
 
 /**
@@ -160,4 +183,4 @@ function lockfileOnDisk(file = 'package-lock.json', cwd = process.cwd()) {
   return parseLockfile(fs.readFileSync(full, 'utf8'));
 }
 
-module.exports = { parseLockfile, whatMoved, lockfileAtRevision, lockfileOnDisk, nameFromPath };
+module.exports = { parseLockfile, installsOnLinux, whatMoved, lockfileAtRevision, lockfileOnDisk, nameFromPath };

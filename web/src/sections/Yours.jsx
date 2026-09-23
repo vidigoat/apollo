@@ -158,6 +158,13 @@ function Lockfile() {
             <details className="yours__unknown">
               <summary>{num(d.unknown)} never watched — listed by name, never counted as clean</summary>
               <p>{d.unknownSample.join(' · ')}{d.unknown > d.unknownSample.length ? ` · and ${num(d.unknown - d.unknownSample.length)} more` : ''}</p>
+              {d.otherPlatform > 0 && (
+                <p className="yours__quiet">
+                  {num(d.otherPlatform)} of these {d.otherPlatform === 1 ? 'is a binary' : 'are binaries'} built only for another
+                  platform — macOS, Windows or musl — like {d.otherPlatformSample.slice(0, 3).join(', ')}. They cannot be
+                  installed in the Linux sandboxes the index is observed in, so they stay unknown.
+                </p>
+              )}
             </details>
           )}
           <p className="yours__quiet">{d.note} Index: {num(d.index.versions)} observations, revision {d.index.revision}.</p>

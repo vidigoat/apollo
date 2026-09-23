@@ -49,6 +49,22 @@ const LOCK = JSON.stringify({
     } finally { s.close(); }
   });
 
+  await it('an unknown binary built for another platform is counted as such — still unknown', async () => {
+    const lock = JSON.stringify({ name: 'x', lockfileVersion: 3, packages: {
+      '': { name: 'x' },
+      'node_modules/@stakeout-test/darwin-arm64': { version: '1.0.0', os: ['darwin'], cpu: ['arm64'], optional: true },
+      'node_modules/@stakeout-test/linux-x64-musl': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['musl'], optional: true },
+      'node_modules/@stakeout-test/linux-x64-gnu': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['glibc'], optional: true },
+    } });
+    const s = await serve((req, res) => lockfile(req, res));
+    try {
+      const r = await (await post(`${s.url}/`, { lockfile: lock })).json();
+      assert.equal(r.unknown, 3, 'a binary for another platform was counted as known');
+      assert.equal(r.otherPlatform, 2);
+      assert.deepEqual(r.otherPlatformSample.sort(), ['@stakeout-test/darwin-arm64@1.0.0', '@stakeout-test/linux-x64-musl@1.0.0']);
+    } finally { s.close(); }
+  });
+
   await it('a repository is fetched from raw.githubusercontent.com only, by a path built here', async () => {
     const seen = [];
     const fake = async (url) => { seen.push(url); return { ok: true, status: 200, headers: new Headers(), text: async () => LOCK }; };

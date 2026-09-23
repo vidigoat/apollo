@@ -29,7 +29,7 @@
  * never on this server.
  */
 
-const { parseLockfile } = require('./lockfile');
+const { parseLockfile, installsOnLinux } = require('./lockfile');
 const { buildLock } = require('./lock');
 const { PublishedIndex } = require('./index/published');
 const { CHANNELS } = require('./index/schema');
@@ -163,6 +163,7 @@ function answerTree(text, from) {
   const idx = index();
   const built = buildLock(tree.versions, idx);
   const total = tree.versions.size;
+  const elsewhere = built.unknown.filter((id) => tree.platforms?.has(id) && !installsOnLinux(tree.platforms.get(id)));
   return {
     from,
     format: tree.format ?? null,
@@ -170,6 +171,10 @@ function answerTree(text, from) {
     known: built.known,
     unknown: built.unknown.length,
     unknownSample: built.unknown.slice(0, 60),
+    // Unknown for a reason: built only for macOS, Windows or musl, so not installable in the Linux
+    // sandboxes the index is observed in. Still unknown — just not a mystery.
+    otherPlatform: elsewhere.length,
+    otherPlatformSample: elsewhere.slice(0, 12),
     pct: total ? Math.round((built.known / total) * 100) : 0,
     index: idx.manifest(),
     does: behaviours(built.lock),
