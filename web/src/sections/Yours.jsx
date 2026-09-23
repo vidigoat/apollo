@@ -131,11 +131,11 @@ function Lockfile() {
           {d.installScripts?.length > 0 && (
             <div className="yours__attention">
               <h3 className="yours__h3">
-                {d.installScripts.length} {d.installScripts.length === 1 ? 'package runs' : 'packages run'} code while being installed — which is not watched
+                {num(d.installScriptCount)} {d.installScriptCount === 1 ? 'package runs' : 'packages run'} code while being installed — which is not watched
               </h3>
               <p className="yours__names">
                 {d.installScripts.slice(0, 16).map((id) => <span key={id} className="yours__name">{id}</span>)}
-                {d.installScripts.length > 16 && <span className="yours__name"><i>and {num(d.installScripts.length - 16)} more</i></span>}
+                {d.installScriptCount > 16 && <span className="yours__name"><i>and {num(d.installScriptCount - 16)} more</i></span>}
               </p>
               <p className="yours__quiet">
                 The index watches what a package does when it is imported. Install scripts run before that, and

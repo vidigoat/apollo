@@ -178,7 +178,8 @@ function answerTree(text, from) {
     otherPlatformSample: elsewhere.slice(0, 12),
     // What the index does not watch at all: code a package runs while it is being installed. The
     // lockfile says which ones have it; npm before 12 runs it by default.
-    installScripts: tree.installScripts ? [...tree.installScripts].sort() : [],
+    installScriptCount: tree.installScripts?.size ?? 0,
+    installScripts: tree.installScripts ? [...tree.installScripts].sort().slice(0, 200) : [],
     pct: total ? Math.round((built.known / total) * 100) : 0,
     index: idx.manifest(),
     does: behaviours(built.lock),

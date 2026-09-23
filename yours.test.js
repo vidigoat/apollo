@@ -62,6 +62,7 @@ const LOCK = JSON.stringify({
       const r = await (await post(`${s.url}/`, { lockfile: lock })).json();
       assert.equal(r.unknown, 4, 'a binary for another platform was counted as known');
       assert.deepEqual(r.installScripts, ['@stakeout-test/native@2.0.0'], 'an install script was not named as unwatched');
+      assert.equal(r.installScriptCount, 1);
       assert.equal(r.otherPlatform, 2);
       assert.deepEqual(r.otherPlatformSample.sort(), ['@stakeout-test/darwin-arm64@1.0.0', '@stakeout-test/linux-x64-musl@1.0.0']);
     } finally { s.close(); }
