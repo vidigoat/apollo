@@ -133,11 +133,16 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
  * the words it indexes — and read as debris at the edge of the screen rather than as the margin of
  * a document. It tracks the column now, and falls back to the screen edge when there is no room.
  */
+/*
+ * Anchored by its RIGHT edge, 24px short of the column, with labels growing leftwards into the
+ * margin. Anchored by its left edge it was about 165px wide with a label showing and began 124px
+ * before the column, so "on the pull request" ran ~40px into the text — at 1280px, straight across
+ * the check run it was indexing. Ticks fit any margin; labels only show where the margin holds them.
+ */
 .spine {
   position: fixed;
-  /* Far enough left that the label clears the column: the rail is about 92px wide with its
-     label showing, and it must not crowd text that starts at the column edge. */
-  left: max(16px, calc((100vw - 1120px) / 2 - 124px));
+  right: calc((100vw + 1120px) / 2 + 24px);
+  justify-items: end;
   top: 50%;
   transform: translateY(-50%);
   z-index: 40;
@@ -151,7 +156,7 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 
 .spine__item {
   display: grid;
-  grid-template-columns: 22px auto;
+  grid-template-columns: auto 22px;
   align-items: center;
   gap: 10px;
   background: none;
@@ -162,8 +167,9 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
   font: 500 10px/1 var(--mono);
   letter-spacing: 0.08em;
   text-transform: lowercase;
-  text-align: left;
+  text-align: right;
 }
+.spine__label { order: -1; white-space: nowrap; }
 .spine__tick {
   display: block;
   height: 1px;
@@ -175,8 +181,11 @@ code, .mono { font-family: var(--mono); font-size: 0.92em; }
 .spine__item[data-on='true'] { color: var(--bone); }
 .spine__item[data-on='true'] .spine__tick { width: 22px; background: var(--watched); }
 .spine__label { opacity: 0; transition: opacity 180ms ease; }
-.spine__item:hover .spine__label,
-.spine__item[data-on='true'] .spine__label { opacity: 1; }
+/* A label needs ~140px of margin plus the tick; below that the margin holds ticks only. */
+@media (min-width: 1500px) {
+  .spine__item:hover .spine__label,
+  .spine__item[data-on='true'] .spine__label { opacity: 1; }
+}
 
 /* ── page furniture ──────────────────────────────────────────────────────── */
 
