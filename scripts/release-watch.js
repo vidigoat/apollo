@@ -59,9 +59,15 @@ async function weeklyDownloads(names, fetchImpl = fetch) {
  * Scoped names one at a time — npm's bulk endpoint refuses them — four in flight at most, and only
  * when asked for (`--scoped N`), because it is one request per package against a public API.
  */
-async function scopedDownloads(names, fetchImpl = fetch, sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
+async function scopedDownloads(names, fetchImpl = fetch, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), { candidates = Infinity, heldVersions = null } = {}) {
   const out = new Map();
-  const scoped = names.filter((n) => n.startsWith('@') && !n.startsWith('@types/'));
+  // npm's downloads API refuses after a few quick requests, so ranking every scoped name one by
+  // one is half an hour. The candidates are narrowed first by how many versions the index holds —
+  // it is built from lockfiles, so that tracks how many projects depend on a package — and only
+  // those are asked about.
+  let scoped = names.filter((n) => n.startsWith('@') && !n.startsWith('@types/'));
+  if (heldVersions) scoped = scoped.sort((a, b) => (heldVersions[b] || 0) - (heldVersions[a] || 0));
+  scoped = scoped.slice(0, candidates);
   let next = 0;
   // The first run asked four at a time and dropped every 429 without a word: 12 of ~1,700 came back
   // ranked, and the watch would have looked at those as if they were the most-used. A 429 now waits
@@ -74,12 +80,13 @@ async function scopedDownloads(names, fetchImpl = fetch, sleep = (ms) => new Pro
           const res = await fetchImpl(`https://api.npmjs.org/downloads/point/last-week/${n}`);
           if (res.status === 429 || res.status >= 500) { await sleep(1500 * 2 ** attempt); continue; }
           if (res.ok) { const j = await res.json(); if (Number.isFinite(j.downloads)) out.set(n, j.downloads); }
+          await sleep(250);
           break;
         } catch { await sleep(1000); }
       }
     }
   };
-  await Promise.all(Array.from({ length: 2 }, worker));
+  await Promise.all(Array.from({ length: 1 }, async () => { await worker(); }));
   out.asked = scoped.length;
   return out;
 }
@@ -117,9 +124,10 @@ if (require.main === module) {
     const scopedTop = Number(flag('scoped', 0));
     if (scopedTop) {
       // @types/* is left out: a type declaration has no runtime, so there is nothing to watch.
-      const sd = await scopedDownloads(names);
+      const held = Object.fromEntries(Object.entries(pub.packages).map(([n, r]) => [n, Object.keys(r.versions || r).length]));
+      const sd = await scopedDownloads(names, fetch, undefined, { candidates: Math.ceil(scopedTop * 1.5), heldVersions: held });
       ranked.push(...[...sd.entries()].sort((a, b) => b[1] - a[1]).slice(0, scopedTop));
-      record.scoped = `top ${scopedTop} scoped packages by weekly downloads, @types/* excluded — ${sd.size} of ${sd.asked} scoped names ranked`;
+      record.scoped = `top ${scopedTop} scoped packages by weekly downloads, among the ${sd.asked} the index holds most versions of (@types/* excluded) — ${sd.size} ranked`;
       console.log(`  ${sd.size} of ${sd.asked} scoped names ranked`);
     }
     console.log(`\n  ${names.length} packages in the index · ${downloads.size} unscoped ranked · watching ${ranked.length}`);
