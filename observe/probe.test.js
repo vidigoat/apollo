@@ -46,6 +46,12 @@ function watch(name, source) {
   return readReport(out);
 }
 
+/** Where the npm running these tests really lives, as the adapters pass it. */
+function npmRoot() {
+  const bin = execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim();
+  return path.join(bin, 'npm');
+}
+
 console.log('runtime probe');
 
 it('sees a credential being read', () => {
@@ -94,7 +100,7 @@ it('watches what an install script does — and leaves out npm itself', () => {
   fs.writeFileSync(path.join(twin, 'package.json'), '{"name":"twin","version":"1.0.0"}');
   execFileSync('npm', ['install', pkg, '--no-audit', '--no-fund', '--loglevel=error', '--offline'], {
     cwd: twin, stdio: 'pipe', timeout: 60_000,
-    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, STAKEOUT_INSTALL_DIR: inst },
+    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, STAKEOUT_INSTALL_DIR: inst, STAKEOUT_NPM_ROOT: npmRoot() },
   });
   const out = path.join(ROOT, 'fixture.json');
   const runner = path.join(twin, 'run.js');
@@ -108,6 +114,33 @@ it('watches what an install script does — and leaves out npm itself', () => {
   assert.ok(r.install.proc.some((x) => x.argv.join(' ') === 'sh -c true'), 'the script\'s own child was not seen');
   assert.ok(!r.install.env.some((v) => /^npm_config_/.test(v)), `npm's own config reads leaked in: ${r.install.env.filter((v) => /^npm_/.test(v)).slice(0, 5)}`);
   assert.deepEqual(r.env, [], 'the install phase leaked into the import channels');
+});
+
+it('an install script cannot pass for npm by calling itself npm-cli.js', () => {
+  // npm is watched only for what it starts, so being mistaken for npm would hide a script's network
+  // and environment reads. The name is not enough; the real path has to be the npm that ran.
+  const pkg = path.join(ROOT, 'disguise-pkg');
+  const twin = path.join(ROOT, 'disguise-twin');
+  const inst = path.join(ROOT, 'disguise-install');
+  fs.mkdirSync(path.join(pkg, 'node_modules', 'npm'), { recursive: true });
+  fs.mkdirSync(twin, { recursive: true });
+  fs.writeFileSync(path.join(pkg, 'package.json'), JSON.stringify({ name: 'disguise', version: '1.0.0', main: 'index.js', scripts: { postinstall: 'node npm-cli.js && node node_modules/npm/x.js' } }));
+  fs.writeFileSync(path.join(pkg, 'index.js'), 'module.exports = 1;');
+  const payload = "process.env.NPM_TOKEN; require('node:net').connect(59995, '127.0.0.1').on('error', () => {});";
+  fs.writeFileSync(path.join(pkg, 'npm-cli.js'), payload);
+  fs.writeFileSync(path.join(pkg, 'node_modules', 'npm', 'x.js'), payload);
+  fs.writeFileSync(path.join(twin, 'package.json'), '{"name":"twin","version":"1.0.0"}');
+  execFileSync('npm', ['install', pkg, '--no-audit', '--no-fund', '--loglevel=error', '--offline'], {
+    cwd: twin, stdio: 'pipe', timeout: 60_000,
+    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, STAKEOUT_INSTALL_DIR: inst, STAKEOUT_NPM_ROOT: npmRoot() },
+  });
+  const out = path.join(ROOT, 'disguise.json');
+  const runner = path.join(twin, 'run.js');
+  fs.writeFileSync(runner, runnerSource('disguise', out, require.resolve('./probe'), inst));
+  execFileSync(process.execPath, [runner], { cwd: twin, stdio: 'pipe', timeout: 20_000 });
+  const r = readReport(out);
+  assert.ok(r.install.env.includes('NPM_TOKEN'), `a disguised script's reads were hidden: ${JSON.stringify(r.install.env)}`);
+  assert.ok(r.install.net.some((n) => n.port === 59995), 'a disguised script\'s connection was hidden');
 });
 
 it('an install phase nobody reported on is absent, not an install that ran nothing', () => {

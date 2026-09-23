@@ -288,8 +288,23 @@ function parseReport(raw) {
 const INSTALL_DIR = process.env.STAKEOUT_INSTALL_DIR;
 if (INSTALL_DIR && !global.__stakeoutInstallPhase) {
   global.__stakeoutInstallPhase = true;
-  const main = String(process.argv[1] || '');
-  const isNpm = /(^|[\\/])(npm-cli\.js|npm|npx-cli\.js|npx)$/.test(main) || /[\\/]node_modules[\\/]npm[\\/]/.test(main);
+  /*
+   * npm is recognised by where it really is, not by what it is called. By name alone, a postinstall
+   * running `node npm-cli.js` — or anything under a folder called node_modules/npm — was taken for
+   * npm and watched only for what it started, which hid its network and environment reads (a test
+   * does exactly that). STAKEOUT_NPM_ROOT is the npm the install was started with, set by the
+   * adapter; a process counts as npm only if its script's real path is inside it.
+   */
+  const npmRoot = process.env.STAKEOUT_NPM_ROOT;
+  let isNpm = false;
+  if (npmRoot) {
+    try {
+      const fsp = require('node:fs');
+      const real = fsp.realpathSync(String(process.argv[1] || ''));
+      const root = fsp.realpathSync(npmRoot);
+      isNpm = real.startsWith(`${root}/`) || real.startsWith(`${root}\\`);
+    } catch { isNpm = false; }
+  }
   // Captured before install() patches fs, so writing the report is not recorded as the package's write.
   const fsReal = require('node:fs');
   const write = fsReal.writeFileSync;

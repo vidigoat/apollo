@@ -367,7 +367,7 @@ class ConTreeSandboxes {
         cwd: IN_VM.twin,
         // Every Node process the install starts loads the probe: npm records the scripts it runs,
         // the scripts are watched whole. The import runner gathers the reports.
-        env: { NODE_OPTIONS: `--require ${IN_VM.probe}`, STAKEOUT_INSTALL_DIR: IN_VM.install },
+        env: { NODE_OPTIONS: `--require ${IN_VM.probe}`, STAKEOUT_INSTALL_DIR: IN_VM.install, STAKEOUT_NPM_ROOT: '/usr/local/lib/node_modules/npm' },
       });
       if (r.image) twin.image = r.image;
       return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed: null };

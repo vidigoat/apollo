@@ -22,6 +22,10 @@ const { runnerSource, readReport } = require('../observe/probe');
 // A plain path, not require.resolve: resolved at load, that threw inside the hosted bundle.
 const PROBE = path.join(__dirname, '..', 'observe', 'probe.js');
 
+/** The npm that runs installs here, by location — see observe/probe.js on why the name is not enough. */
+let NPM_ROOT;
+const npmRoot = () => (NPM_ROOT ||= require('node:path').join(require('node:child_process').execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim(), 'npm'));
+
 const run = promisify(execFile);
 
 class LocalMachines {
@@ -80,7 +84,7 @@ class LocalMachines {
 
     if (ctx.step === 'install') {
       // The install phase is watched the same way as in a sandbox — see observe/probe.js.
-      const env = { ...process.env, NODE_OPTIONS: `--require ${PROBE}`, STAKEOUT_INSTALL_DIR: this.installDir(branch) };
+      const env = { ...process.env, NODE_OPTIONS: `--require ${PROBE}`, STAKEOUT_INSTALL_DIR: this.installDir(branch), STAKEOUT_NPM_ROOT: npmRoot() };
       const r = await this.sh('npm', ['install', `${ctx.pkg}@${ctx.version}`, '--no-audit', '--no-fund', '--loglevel=error'], branch.dir, env);
       return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed: null };
     }
