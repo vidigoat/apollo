@@ -78,7 +78,15 @@ async function lookUp(pkg, version, opts = {}) {
    * So a completely empty answer is retried, and if it is still empty the lookup says the SEARCH
    * failed — which is no evidence either way — rather than that the web is silent.
    */
+  /*
+   * And an answer where no result NAMES the version is asked again too. With the query fixed, one
+   * live run in four for express 4.18.2 still came back with six results and none mentioning
+   * 4.18.2 — and "nothing mentions this version" is the one reading that counts against a package.
+   * So silence has to be heard more than once; the answer that names the version most is kept.
+   */
+  const naming = (j) => (j?.results || []).filter((r) => r.url && !NOT_EVIDENCE.test(r.url) && `${r.title} ${r.content}`.includes(version)).length;
   let json = null;
+  let best = null;
   let tried = 0;
   for (; tried < attempts; tried++) {
     if (tried) await sleep(400 * tried);
@@ -86,7 +94,7 @@ async function lookUp(pkg, version, opts = {}) {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.TAVILY_API_KEY}` },
       body: JSON.stringify({
-        query: `${pkg} ${version} changelog release notes OR security advisory`,
+        query: queryFor(pkg, version),
         search_depth: 'basic',
         max_results: 6,
       }),
@@ -97,8 +105,10 @@ async function lookUp(pkg, version, opts = {}) {
       throw new Error(`tavily ${res.status}: ${body.slice(0, 200)}`);
     }
     json = await res.json();
-    if ((json.results || []).length) break;
+    if ((json.results || []).length && (!best || naming(json) > naming(best))) best = json;
+    if (best && naming(best) > 0) break;
   }
+  json = best || json;
 
   if (!(json?.results || []).length) {
     return {
@@ -116,6 +126,19 @@ async function lookUp(pkg, version, opts = {}) {
 
   return summarise(json, version);
 }
+
+/*
+ * The query is about the PACKAGE, not about changelogs.
+ *
+ * It was `${pkg} ${version} changelog release notes OR security advisory`, and the generic words
+ * won: for express 4.18.2 all six results were other products' changelog pages — n8n, Instacart,
+ * keepachangelog.com — and not one mentioned the version. So the lookup reported the web silent
+ * about one of the most-downloaded releases on npm, and silence about a version is evidence against
+ * it here. Measured on three packages, `npm <pkg> <version>` returned results naming the version
+ * every time (4 of 6, 4 of 6, 1 of 6 for left-pad) and advisory pages where they exist. Whether a
+ * result is a changelog or an advisory is decided from the results, not asked for in the query.
+ */
+const queryFor = (pkg, version) => `npm ${pkg} ${version}`;
 
 /** Turn a pile of search results into the four facts the judgement layer actually uses. */
 function summarise(json, version) {
@@ -141,4 +164,4 @@ function summarise(json, version) {
 
 const trim = (s) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 300);
 
-module.exports = { lookUp, summarise, verdictFor, hasKey, NOT_EVIDENCE };
+module.exports = { lookUp, summarise, verdictFor, hasKey, NOT_EVIDENCE, queryFor };

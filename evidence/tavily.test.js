@@ -174,9 +174,12 @@ const result = (o) => ({ url: 'https://example.com/a', title: '', content: '', .
     const prev = process.env.TAVILY_API_KEY;
     process.env.TAVILY_API_KEY = 'test';
     try {
-      const t = live([[result({ title: 'ms is a tiny time library', content: 'about version 2.0.0' })]]);
+      // Silence is heard more than once before it counts: a live run returned six results and none
+      // naming a version that the next run found three times. Heard on every attempt, it counts.
+      const silent = [result({ title: 'ms is a tiny time library', content: 'about version 2.0.0' })];
+      const t = live([silent, silent, silent]);
       const r = await lookUp('ms', '9.9.9', t);
-      assert.equal(t.calls.length, 1, 'a non-empty answer was retried');
+      assert.equal(t.calls.length, 3, 'a silent answer was believed the first time');
       assert.equal(r.searchFailed, false);
       assert.equal(r.mentions, 0);
       assert.match(r.verdict, /Nothing on the open web mentions/);
@@ -217,6 +220,51 @@ const result = (o) => ({ url: 'https://example.com/a', title: '', content: '', .
     ]) {
       const v = verdictFor(f);
       assert.match(v, /^[A-Z].*\.$/s, `not a sentence: ${v}`);
+    }
+  });
+
+  await it('the query asks about the package, not about changelogs in general', async () => {
+    /*
+     * "express 4.18.2 changelog release notes OR security advisory" returned six other products'
+     * changelog pages and none about express — read downstream as the web being silent about one
+     * of npm's most-used releases. The query names the package and the version, and nothing else
+     * that a search engine can match on instead.
+     */
+    const { queryFor } = require('./tavily');
+    assert.equal(queryFor('express', '4.18.2'), 'npm express 4.18.2');
+    assert.doesNotMatch(queryFor('express', '4.18.2'), /changelog|release notes|advisory| OR /i);
+
+    let sent = null;
+    const prev = process.env.TAVILY_API_KEY;
+    process.env.TAVILY_API_KEY = 'test';
+    try {
+      await lookUp('left-pad', '1.3.0', {
+        sleep: async () => {},
+        fetchImpl: async (_u, init) => {
+          sent = JSON.parse(init.body);
+          return { ok: true, json: async () => ({ results: [{ url: 'https://www.npmjs.com/package/left-pad', title: 'left-pad', content: '1.3.0' }] }) };
+        },
+      });
+    } finally {
+      if (prev === undefined) delete process.env.TAVILY_API_KEY; else process.env.TAVILY_API_KEY = prev;
+    }
+    assert.equal(sent.query, 'npm left-pad 1.3.0');
+  });
+
+  await it('an answer that names the version is not asked again, and beats an earlier silent one', async () => {
+    const prev = process.env.TAVILY_API_KEY;
+    process.env.TAVILY_API_KEY = 'test';
+    try {
+      const t = live([
+        [result({ title: 'unrelated', content: 'nothing about it' })],
+        [result({ title: 'express 4.18.2 released', content: 'express 4.18.2 changelog' })],
+        [result({ title: 'never asked', content: '4.18.2' })],
+      ]);
+      const r = await lookUp('express', '4.18.2', t);
+      assert.equal(t.calls.length, 2);
+      assert.equal(r.mentions, 1);
+    } finally {
+      process.env.TAVILY_API_KEY = prev;
     }
   });
 
