@@ -75,10 +75,10 @@ function merge(fromDir, intoDir) {
  * index …` — and a package whose last version goes is removed whole. Only refusals: a sandbox that
  * errored for its own reasons says nothing about the package.
  */
-function refusedIn(log) {
+function refusedIn(log, { any = false } = {}) {
   const out = [];
   for (const line of log.split('\n')) {
-    const m = /^\s+fail\s+(\S+)\s+Refusing to index/.exec(line.replace(/\x1b\[[0-9;]*m/g, ''));
+    const m = (any ? /^\s+fail\s+(\S+)\s/ : /^\s+fail\s+(\S+)\s+Refusing to index/).exec(line.replace(/\x1b\[[0-9;]*m/g, ''));
     if (!m) continue;
     const at = m[1].lastIndexOf('@');
     if (at > 0) out.push({ name: m[1].slice(0, at), version: m[1].slice(at + 1) });

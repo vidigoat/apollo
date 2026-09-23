@@ -107,11 +107,12 @@ function work(flags) {
     return Array.from({ length: limit }, (_, i) => singles[Math.floor((i * singles.length) / limit)]);
   }
 
-  // `--retry-refused <build.log>`: the versions a build refused as never observed, tried once more,
-  // so a registry hiccup is not what takes an entry out of the index.
-  if (flags['retry-refused']) {
+  // `--retry-failed <build.log>`: every version a build failed on — refused as never observed, or
+  // lost to a sandbox or network error — tried once more, so a hiccup is not what takes an entry out
+  // of the index, and an errored one is not left standing unchecked.
+  if (flags['retry-failed']) {
     const { refusedIn } = require('./index-merge');
-    return refusedIn(fs.readFileSync(String(flags['retry-refused']), 'utf8'))
+    return refusedIn(fs.readFileSync(String(flags['retry-failed']), 'utf8'), { any: true })
       .map(({ name, version }) => ({ pkg: name, version, single: true }));
   }
   if (flags['from-lockfile']) {

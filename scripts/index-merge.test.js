@@ -71,6 +71,7 @@ it('versions a build refused are withdrawn, and only those — a sandbox error i
   ].join('\n');
   const refused = refusedIn(log);
   assert.deepEqual(refused.map((r) => `${r.name}@${r.version}`), ['@scope/native@1.0.0', 'only-one@2.0.0']);
+  assert.deepEqual(refusedIn(log, { any: true }).map((r) => `${r.name}@${r.version}`), ['@scope/native@1.0.0', 'only-one@2.0.0', 'kept@3.0.0'], 'a retry must include the errored ones');
   const x = withdraw(d, refused);
   assert.deepEqual(x, { withdrawn: 2, packagesRemoved: 1, absent: 0 });
   const after = new Index({ dir: d });
