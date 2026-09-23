@@ -56,7 +56,14 @@ export default function Releases() {
                     <br />
                   </span>
                 ))}
-                {note && <span className="yours__quiet">{note}</span>}
+                {note && <span className="yours__quiet">{note}<br /></span>}
+                {r.judgement?.meaning && (
+                  <span className="yours__quiet">
+                    <b>Nemotron{r.judgement.tier ? ` (${r.judgement.tier})` : ''}:</b> {r.judgement.meaning}
+                    {r.judgement.record?.verdict ? ` · public record: ${r.judgement.record.verdict}` : ''}
+                    {' '}· severity stays {r.judgement.severityStill || r.severity}, by the rules
+                  </span>
+                )}
               </span>
             </div>
           );
