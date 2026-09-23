@@ -363,7 +363,7 @@ on this machine instead of doing nothing. The hundredth repo is a lookup, not a 
 built locally and gitignored, so verifying "run a package once, answer for every repository" meant
 installing two thousand packages first — which makes it a sentence about an artefact that existed on
 exactly one laptop. `npm run index:publish` writes `public/index.json`: 5,691 packages, 11,267
-versions, about 320 kB over the wire, served from the demo URL. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,775 of their 3,548 dependency-versions are answered (78%)**, up from 56% before the index was grown today; the other 773 come back unknown by name. Most of anyone's tree comes back unknown, because most of
+versions, about 340 kB over the wire, served from the demo URL. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,775 of their 3,548 dependency-versions are answered (78%)**, up from 56% before the index was grown today; the other 773 come back unknown by name. Most of anyone's tree comes back unknown, because most of
 npm has never been watched by anybody, and that is reported as its own outcome rather than as a pass.
 
 Preparing it for publication is what found that **every one of the 2,129 entries was overclaiming**:

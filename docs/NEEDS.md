@@ -131,7 +131,7 @@ do and what it says instead.
 Both are live:
 
 - **<https://cassandra-nu.vercel.app>** — and it now serves the **published index** at
-  `/index.json`: 5,691 packages, about 320 kB over the wire. A stranger can point `cli.js lock --index` at
+  `/index.json`: 5,691 packages, about 340 kB over the wire. A stranger can point `cli.js lock --index` at
   it and get their own tree answered without building anything, which is the part of the argument
   that used to be unverifiable.
 - **<https://second-set-of-hands.vercel.app>** — and `/review.html` now **reads a manual you drop

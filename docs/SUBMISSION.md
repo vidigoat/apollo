@@ -348,7 +348,7 @@ That was unverifiable. The index was built locally and gitignored, so checking i
 two thousand packages first — which makes "run a package once, answer for every repository" a
 sentence about an artefact that existed on exactly one laptop.
 
-`npm run index:publish` writes it. **5,691 packages, 11,267 versions, about 320 kB over the wire**, served
+`npm run index:publish` writes it. **5,691 packages, 11,267 versions, about 340 kB over the wire**, served
 from the demo URL at `/index.json`. Then, in a repository that has never heard of this project:
 
 ```bash
