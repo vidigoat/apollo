@@ -167,17 +167,35 @@ class ConTreeSandboxes {
   }
 
   async api(route, { method = 'GET', json, bytes, raw = false } = {}) {
-    const res = await this.fetch(`${BASE}${route}`, {
-      method,
-      headers: this.headers(
-        json !== undefined
-          ? { 'content-type': 'application/json' }
-          : bytes
-            ? { 'content-type': 'application/octet-stream' }
-            : {}
-      ),
-      body: json !== undefined ? JSON.stringify(json) : bytes,
-    });
+    /*
+     * Twice more, on the failures that are the service's and not the request's: a dropped
+     * connection, 429, or a 5xx. Index builds of thousands lost a version to each of those — a
+     * "fetch failed" left the old entry standing unchecked, a 500 on one instance ended one watch
+     * a judge was waiting on. A 4xx is an answer and is never retried. A repeated POST can at worst
+     * start one extra disposable instance, which is the cheaper mistake.
+     */
+    const RETRY = new Set([429, 500, 502, 503, 504]);
+    let res;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        res = await this.fetch(`${BASE}${route}`, {
+          method,
+          headers: this.headers(
+            json !== undefined
+              ? { 'content-type': 'application/json' }
+              : bytes
+                ? { 'content-type': 'application/octet-stream' }
+                : {}
+          ),
+          body: json !== undefined ? JSON.stringify(json) : bytes,
+        });
+      } catch (e) {
+        if (attempt < 2) { await this.sleep(1000 * 3 ** attempt); continue; }
+        throw e;
+      }
+      if (RETRY.has(res.status) && attempt < 2) { await this.sleep(1000 * 3 ** attempt); continue; }
+      break;
+    }
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       const err = new Error(`sandboxes ${method} ${route} -> ${res.status}: ${text.slice(0, 300)}`);

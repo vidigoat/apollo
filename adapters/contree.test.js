@@ -299,5 +299,30 @@ const adapter = (svc, o = {}) =>
     assert.equal(b, a, 'public/probe.source.txt has drifted from observe/probe.js — copy it again: cp observe/probe.js public/probe.source.txt');
   });
 
+  await it('a dropped connection or a 5xx is tried twice more; a 4xx is an answer and is not', async () => {
+    const { ConTreeSandboxes } = require('./contree');
+    const waits = [];
+    const script = (statuses) => {
+      const calls = [];
+      const fetchImpl = async (url) => {
+        const s = statuses[calls.length];
+        calls.push(url);
+        if (s === 'drop') throw new TypeError('fetch failed');
+        return { ok: s < 300, status: s, text: async () => (s < 300 ? '{"ok":true}' : '{"error":"x"}'), arrayBuffer: async () => Buffer.from('') };
+      };
+      return { calls, a: new ConTreeSandboxes({ apiKey: 'k', projectId: 'p', fetchImpl, sleep: async (ms) => { waits.push(ms); } }) };
+    };
+    const one = script(['drop', 500, 200]);
+    assert.deepEqual(await one.a.api('/v1/whoami'), { ok: true });
+    assert.equal(one.calls.length, 3);
+    assert.deepEqual(waits, [1000, 3000]);
+    const three = script([503, 503, 503, 200]);
+    await assert.rejects(() => three.a.api('/v1/whoami'), /-> 503/);
+    assert.equal(three.calls.length, 3, 'it retried more than twice');
+    const bad = script([400, 200]);
+    await assert.rejects(() => bad.a.api('/v1/whoami'), /-> 400/);
+    assert.equal(bad.calls.length, 1, 'a 4xx was retried');
+  });
+
   console.log(`\n${passed} passed`);
 })();
