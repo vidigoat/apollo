@@ -165,7 +165,7 @@ function releaseWatchClaims() {
   }
   const all = Object.values(m.results || {});
   const same = all.filter((r) => r.severity === 'none').length;
-  return [{ what: 'release watch: unchanged of watched', value: `${same} of ${all.length}`, where: /\*\*(\d+ of \d+)\*\* latest releases/g }];
+  return [{ what: 'release watch: unchanged of watched', value: `${same.toLocaleString('en-US')} of ${all.length.toLocaleString('en-US')}`, where: /\*\*([\d,]+ of [\d,]+)\*\* latest releases/g }];
 }
 
 const CLAIMS = [

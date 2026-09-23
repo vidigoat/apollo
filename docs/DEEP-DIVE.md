@@ -776,6 +776,31 @@ so nothing here is presented as more finished than it is.
 
 ---
 
+## The newest releases of the most-used packages, watched
+
+`scripts/release-watch.js` asks the question the index exists for, about software nobody involved
+controls. It ranks the packages the index holds by weekly npm downloads — the bulk endpoint for
+unscoped names, one request at a time for the scoped ones, narrowed first to those the index holds
+the most versions of — takes each package's newest stable release and the stable release before
+it, and watches both in two Nebius Sandboxes forked from one checkpoint, import and install. The
+differ's rules decide severity. With `--explain`, the few that moved are looked up on the open web
+(Tavily) and read by Nemotron on Token Factory, which explains and never escalates.
+
+On 23 September: **1,287** pairs, **1,272** exactly the same on every channel, **13**
+that changed only which environment variables they read, and **2** that could not be watched
+because a version did not install — counted as neither. The model's reading of all 13 cost
+$0.0015 in total. The two worth knowing are in the README: jiti 2.7.0 now checks at import whether
+it runs inside an AI coding agent, through the std-env it bundles, and std-env 4.2.0 added JetBrains'
+Junie to that list — both confirmed in the published tarballs, which is the rule for anything
+written about a finding: the watch flags, a person reads the code.
+
+It also found two faults in this tool before it found anything in anybody else's: the probe had been
+crediting Node's own decoding of its HTTP parser to whichever package loaded `node:http`, and the
+ranking had been dropping rate-limited answers without a word, which would have called 384 arbitrary
+packages "the most-downloaded". Both are fixed, and each has a test that fails on the old code (`observe/probe.test.js`, `scripts/release-watch.test.js`).
+
+---
+
 ## What this cannot do
 
 Six real limitations — one of them now mostly closed. They are listed here rather than discovered later, and the first four have a

@@ -68,10 +68,9 @@ the sandboxes stay available.
 
 `node scripts/release-watch.js --top 1000` ranks the packages the index holds by weekly downloads,
 takes each one's newest release and the release before it, and watches both in Nebius Sandboxes —
-import and install. On 23 September, **976 of 988** latest releases behaved exactly like the
-release before on every channel; 1 could not be watched (it did not install) and is counted
-as neither. The other 11 changed only which environment variables they read — no new
-connection, process or runtime code anywhere — and two of them are worth knowing: **jiti 2.7.0**,
+import and install. On 23 September, **1,272 of 1,287** latest releases behaved exactly like the
+release before on every channel (299 of them scoped packages); 2 could not be watched and
+are counted as neither. The other 13 changed only which environment variables they read — no new connection, process or runtime code anywhere — and two of them are worth knowing: **jiti 2.7.0**,
 130 million downloads a week, now checks at import whether it is running inside an AI coding agent
 (`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more) through the `std-env`
 it bundles, and **std-env 4.2.0** itself added JetBrains' Junie to that list. Nothing malicious, and
