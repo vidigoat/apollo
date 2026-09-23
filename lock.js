@@ -82,6 +82,8 @@ function buildLock(tree, index) {
       // and saw nothing" and "we could not watch", and the file has to keep them apart.
       if (Array.isArray(entry[c])) record[c] = entry[c];
     }
+    // What its install scripts did, when the index watched that phase — pinned the same way.
+    if (entry.install) record.install = Object.fromEntries(CHANNELS.filter((c) => Array.isArray(entry.install[c])).map((c) => [c, entry.install[c]]));
     packages[`${name}@${version}`] = stable(record);
   }
 
@@ -146,6 +148,15 @@ function checkLock(lock, tree, index) {
       const after = Array.isArray(now[c]) ? stable(now[c]) : null;
       if (JSON.stringify(before) !== JSON.stringify(after)) {
         changes.push({ channel: c, before, after });
+      }
+    }
+    // The install phase drifts too — compared only when the lock and the index both have it, so a
+    // lock written before that phase was watched does not read as drift.
+    if (was.install && now.install) {
+      for (const c of CHANNELS) {
+        const before = Array.isArray(was.install[c]) ? stable(was.install[c]) : null;
+        const after = Array.isArray(now.install[c]) ? stable(now.install[c]) : null;
+        if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ channel: `install.${c}`, before, after });
       }
     }
     if (changes.length) drift.push({ package: key, changes });

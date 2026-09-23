@@ -223,4 +223,22 @@ it('a lock from a future format version is refused, loudly', () => {
   assert.throws(() => readLock(file), /lockfile version/);
 });
 
+it('an install script that starts reading a token is drift, even when the import is unchanged', () => {
+  const empty = { net: [], dns: [], fs: [], env: [], proc: [{ argv: ['sh', '-c', 'node post.js'] }], exec: [] };
+  const was = indexWith([['native', transcript('1.0.0', { install: empty })]]);
+  const { lock } = buildLock(new Map([['native', '1.0.0']]), was);
+  assert.ok(lock.packages['native@1.0.0'].install, 'the install phase was not pinned');
+  const now = indexWith([['native', transcript('1.0.0', { install: { ...empty, env: ['NPM_TOKEN'] } })]]);
+  const r = checkLock(lock, new Map([['native', '1.0.0']]), now);
+  assert.equal(r.clean, false);
+  assert.deepEqual(r.drift[0].changes.map((c) => c.channel), ['install.env']);
+});
+
+it('a lock written before the install phase was watched does not read as drift', () => {
+  const was = indexWith([['native', transcript('1.0.0')]]);
+  const { lock } = buildLock(new Map([['native', '1.0.0']]), was);
+  const now = indexWith([['native', transcript('1.0.0', { install: { net: [], dns: [], fs: [], env: ['CI'], proc: [], exec: [] } })]]);
+  assert.equal(checkLock(lock, new Map([['native', '1.0.0']]), now).clean, true);
+});
+
 console.log(`\n${passed} passed`);
