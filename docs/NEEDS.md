@@ -166,13 +166,18 @@ Not urgent for the build. It is a real exposure and it should not go into Decemb
 ### 10. Three new decisions, 23 Sep  ⏱ one reply each
 
 - **AWS credentials on Vercel for the hosted `/talk.html`?** Then a judge can talk to the agent on
-  the demo URL instead of watching the footage (`docs/media/talk.webm`). The catch: the spend
-  ceiling (`mcp/budget.js`) is a file, and serverless instances do not share files, so on Vercel it
-  caps each instance, not the total. A real global cap needs a shared store (a Vercel Marketplace
-  KV) or an AWS Budgets action — say which and it gets wired. Until then: no.
-- **Grow Stakeout's index on your Mac?** That is `STAKEOUT_ALLOW_LOCAL=1` — really installing
-  strangers' packages, install scripts and all, as you. It is how the 2,129 entries were made, and
-  it is the documented fallback if Sandboxes stays closed. I will not run it without a yes.
+  the demo URL instead of watching the footage (`docs/media/talk.webm`). The global cap is now
+  built: `mcp/shared-budget.js` keeps the ledger as one DynamoDB item that every instance reserves
+  against in a single conditional write — two instances racing for the last cent cannot both get
+  it (tested), an unreachable ledger stops the call, and a deployment with keys but no ledger
+  refuses to talk. Signing verified against the real DynamoDB endpoint. Turning it on is one
+  command, which shows what it will do and asks before touching anything:
+  `AWS_PROFILE=<admin profile> bash ~/second-set-of-hands/scripts/hosted-setup.sh` — a separate
+  IAM user that can only call Nova 2 Lite and touch that one table, a free-tier table, keys piped
+  into Vercel unprinted, $5 ceiling for everything together. `--undo` takes it all away.
+- **Grow Stakeout's index on your Mac?** Done — in Colima containers that see only
+  `~/stakeout-index-work`, then on Nebius once Sandboxes opened: 12,254 versions, 7,642 of them
+  observed on Nebius.
 - **A Tavily key on Vercel?** Optional. The hosted run's corpus is planted packages, so a live search
   would only confirm they are unmentioned; and the Tavily prize cannot be won alongside the Overall.
 
@@ -212,7 +217,7 @@ still yours to decide
   8   ~/cassandra goes PUBLIC at submission — Nebius requires it, and it is private today
       ~/second-set-of-hands may stay private if shared with testing@devpost.com and @AmazonAppDev
   9   rotate the AWS key
-  10  AWS keys on Vercel (needs a global spend cap first) · grow the index on your Mac · Tavily on Vercel (optional)
+  10  hosted agent: run scripts/hosted-setup.sh ($5 global cap, built and tested) · Tavily on Vercel (optional)
 
   one thing worth knowing before 8: the git history of ~/cassandra contains an old screenshot of
   a scan of YOUR home directory — repository names, from before that image was replaced. Private
