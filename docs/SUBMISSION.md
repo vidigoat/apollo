@@ -220,7 +220,12 @@ the rules, on that one new line in the diff (`differ/diff.test.js`). Checked on 
 Nebius Sandboxes: **ajv 6.12.0 → 6.12.1** (287 million downloads a week) added
 `opencollective-postinstall`, and **core-js 2.6.5 → 2.6.6** added its funding banner; both come
 back alarming, as they should — both are benign, and saying so is the model's job, never the
-rules'. Watching them also caught the tool calling `npm_config_loglevel` a credential, which would
+rules'. Given ajv's diff, all three Nemotron tiers read it right: *"adds an OpenCollective
+post-install script that runs during npm install, spawning a shell to execute
+opencollective-postinstall … typical for optional post-install messaging or telemetry, but the
+public record does not document this change"* — and, finding no release note for it through
+Tavily, the judge and the second model independently sent it to a person rather than calling it
+fine. Three models, one real release, $0.005. Watching them also caught the tool calling `npm_config_loglevel` a credential, which would
 have accused every quiet install script; npm's own settings are settings now, unless they are
 about authentication (tested).
 
