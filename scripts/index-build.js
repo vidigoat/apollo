@@ -107,6 +107,13 @@ function work(flags) {
     return Array.from({ length: limit }, (_, i) => singles[Math.floor((i * singles.length) / limit)]);
   }
 
+  // `--retry-refused <build.log>`: the versions a build refused as never observed, tried once more,
+  // so a registry hiccup is not what takes an entry out of the index.
+  if (flags['retry-refused']) {
+    const { refusedIn } = require('./index-merge');
+    return refusedIn(fs.readFileSync(String(flags['retry-refused']), 'utf8'))
+      .map(({ name, version }) => ({ pkg: name, version, single: true }));
+  }
   if (flags['from-lockfile']) {
     const tree = lockfileOnDisk(flags['from-lockfile'], process.cwd());
     const singles = [...tree.versions.entries()]
