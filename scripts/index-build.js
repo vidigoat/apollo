@@ -110,6 +110,22 @@ function work(flags) {
   // `--retry-failed <build.log>`: every version a build failed on — refused as never observed, or
   // lost to a sandbox or network error — tried once more, so a hiccup is not what takes an entry out
   // of the index, and an errored one is not left standing unchecked.
+  // `--from-release-watch <record>`: both versions of every pair the release watch covered — the
+  // newest releases of the most-used packages, which are what a fresh lockfile pins.
+  if (flags['from-release-watch']) {
+    const rec = JSON.parse(fs.readFileSync(String(flags['from-release-watch']), 'utf8'));
+    const seen = new Set();
+    const out = [];
+    for (const r of Object.values(rec.results || {})) {
+      for (const version of [r.from, r.to]) {
+        const id = `${r.pkg}@${version}`;
+        if (!r.pkg || !version || seen.has(id)) continue;
+        seen.add(id);
+        out.push({ pkg: r.pkg, version, single: true });
+      }
+    }
+    return out;
+  }
   // `--from-list <file>`: one name@version per line — a set chosen elsewhere, observed exactly.
   if (flags['from-list']) {
     return fs.readFileSync(String(flags['from-list']), 'utf8').split('\n').map((l) => l.trim()).filter(Boolean)
