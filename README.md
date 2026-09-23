@@ -59,8 +59,8 @@ dependency tree is telling on itself. Node 20+.
 **<https://cassandra-nu.vercel.app/#yours>** — two things that are not the demo: name a public GitHub
 repository (or drop a `package-lock.json`) and it is resolved against the published index, running
 nothing — with what nobody has watched listed by name, binaries built for another platform counted
-apart, and every package that runs an install script named, because install scripts are not
-watched; or pick any npm package and two of its versions, and both are installed and imported in two
+apart, and every package that runs an install script named with what that script was watched
+doing; or pick any npm package and two of its versions, and both are installed and imported in two
 Nebius Token Factory Sandboxes forked from one checkpoint while you wait, and diffed. Rate-limited, so
 the sandboxes stay available.
 

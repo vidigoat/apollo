@@ -14,8 +14,8 @@
  * Runs nothing. It is `stakeout lock` in a browser: every package-version in the tree resolved
  * against `public/index.json`, and the answer split into what is known — with what those packages
  * actually do when imported — and what nobody has watched, which is reported by name and never
- * as clean. Install scripts are not watched at all; the lockfile says which packages have one, and
- * the answer names them.
+ * as clean. Every package whose lockfile entry says it runs an install script is named, with what
+ * that script was watched doing wherever the index has its install phase.
  *
  * A repository is fetched from raw.githubusercontent.com and nowhere else, by a path built here from
  * a validated owner/name — so the URL is not the caller's to choose, and this cannot be pointed at
