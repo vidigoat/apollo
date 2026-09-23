@@ -47,7 +47,8 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 32 suites · 440 checks
+npm test            # 33 suites · 447 checks
+npm run smoke:live  # every route of the deployed site, after a deploy
 ```
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
@@ -65,15 +66,17 @@ the sandboxes stay available.
 
 ### The newest releases of the most-used packages, watched
 
-`node scripts/release-watch.js --top 300` ranks the packages the index holds by weekly downloads,
+`node scripts/release-watch.js --top 1000` ranks the packages the index holds by weekly downloads,
 takes each one's newest release and the release before it, and watches both in Nebius Sandboxes —
-import and install. On 23 September, **292 of 296** latest releases behaved exactly like the release
-before on every channel. The other four read new environment variables, and one is worth knowing:
-**jiti 2.7.0** — 130 million downloads a week — now checks at import whether it is running inside
-an AI coding agent (`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more),
-from the `std-env` it bundles; 2.6.1 did not. Nothing malicious, and nothing a version number would
-tell you — which is the kind of change this exists to put in front of somebody. Recorded in
-`docs/release-watch.json`; no model is called.
+import and install. On 23 September, **976 of 988** latest releases behaved exactly like the
+release before on every channel; 1 could not be watched (it did not install) and is counted
+as neither. The other 11 changed only which environment variables they read — no new
+connection, process or runtime code anywhere — and two of them are worth knowing: **jiti 2.7.0**,
+130 million downloads a week, now checks at import whether it is running inside an AI coding agent
+(`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more) through the `std-env`
+it bundles, and **std-env 4.2.0** itself added JetBrains' Junie to that list. Nothing malicious, and
+nothing a version number would tell you — which is the kind of change this exists to put in front
+of somebody. Recorded in `docs/release-watch.json`; no model is called.
 
 ### In Nebius Token Factory Sandboxes
 

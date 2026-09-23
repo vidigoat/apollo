@@ -144,14 +144,16 @@ is the reason a successful prompt injection cost this system nothing (below).
 
 ### Pointed at the newest releases of the most-used packages
 
-On 23 September, `scripts/release-watch.js` watched the newest release of the 296 most-downloaded
-packages the index holds against the release before it, in Nebius Sandboxes, import and install.
-292 behaved exactly as before. Four read new environment variables — and one of those is the kind of
-change this project exists to surface: **jiti 2.7.0, 130 million downloads a week, now checks at
-import whether it is running inside an AI coding agent** — `CLAUDECODE`, `CODEX_SANDBOX`,
-`CURSOR_AGENT`, `GEMINI_CLI` and fifteen more — through the `std-env` it bundles. 2.6.1 read none of
-them; confirmed in both published tarballs. Benign — and not something the version number tells you. The watch also turned up a
-false positive in the tool itself (below), which is why a hit is read by hand before it is claimed.
+On 23 September, `scripts/release-watch.js` watched the newest release of the 988 most-downloaded
+unscoped packages the index holds against the release before it, in Nebius Sandboxes, import and
+install. **976 of 988 latest releases** behaved exactly as before; 1 did not install and is
+counted as neither. The other 11 changed only which environment variables they read — and one of
+those is the kind of change this project exists to surface: **jiti 2.7.0, 130 million downloads a
+week, now checks at import whether it is running inside an AI coding agent** — `CLAUDECODE`,
+`CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more — through the `std-env` it bundles,
+and std-env 4.2.0 went on to add JetBrains' Junie. Both confirmed in the published tarballs.
+Benign — and not something the version number tells you. The watch also turned up a false positive
+in the tool itself (below), which is why a hit is read by hand before it is claimed.
 
 ## Challenges we ran into
 
