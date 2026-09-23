@@ -56,3 +56,15 @@ of the labelled stand-in, which is better but not required.
 watched with ebpf, the finding opened, then the tab switched to **nodert** — flat-config turns red,
 and the NVIDIA model line is a real cached Nemotron verdict, not a simulated one. Made by
 `node scripts/record-run.js [url]`; nothing retaken. Use it as B-roll, or re-run for a fresh take.
+
+## On Nebius (23 Sep) — the shot to open the Nebius section with
+
+Sandboxes beta access landed on 23 Sep, so the twins can be shown running on Nebius for real.
+
+| shot | what | say |
+|---|---|---|
+| N1 | terminal: `npm run real -- --nebius` — three real upgrades, each pair forked into Nebius microVMs from one checkpoint image; picocolors 1.1.1 newly reads `CI`, `FORCE_COLOR`, `NO_COLOR`, and Nemotron explains it; *Machines left open: 0* | "Nothing ran on my machine. Every twin was a Nebius sandbox, forked from the same checkpoint." |
+| N2 | terminal: `npm run crossval -- --dir …` or `docs/crossval.json` — **300 of 300 identical** | "Same packages, watched on Nebius and watched elsewhere. Three hundred of three hundred identical. That's why one observation can answer for everyone." |
+| N3 | the site's fleet section — **12,254** observations, **83%** of six held-out projects answered | "Forty-one public projects taught it. Six it never saw — and it already knows 83% of what they depend on." |
+
+`docs/images/nebius-real.png` is a still of N1 from a real run, if the live one is slow on the day.
