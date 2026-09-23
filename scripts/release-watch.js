@@ -42,15 +42,28 @@ function lastTwo(meta) {
   return prior ? [prior, latest] : null;
 }
 
-async function weeklyDownloads(names, fetchImpl = fetch) {
+/**
+ * Weekly downloads for every unscoped name, 128 to a request.
+ *
+ * A chunk that failed used to be skipped without a word — and after a burst of requests npm answers
+ * 429, so a ranking of 384 names out of 3,931 went on to be called "the most-downloaded". A 429 is
+ * now waited out; a chunk that still fails stops the ranking, because a partial ranking is not a
+ * smaller version of the right answer, it is a different and wrong one.
+ */
+async function weeklyDownloads(names, fetchImpl = fetch, sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
   const out = new Map();
   const unscoped = names.filter((n) => !n.startsWith('@'));
   for (let i = 0; i < unscoped.length; i += 128) {
     const chunk = unscoped.slice(i, i + 128);
-    const res = await fetchImpl(`https://api.npmjs.org/downloads/point/last-week/${chunk.join(',')}`);
-    if (!res.ok) continue;
-    const json = await res.json();
+    let json = null;
+    for (let attempt = 0; attempt < 6 && !json; attempt++) {
+      const res = await fetchImpl(`https://api.npmjs.org/downloads/point/last-week/${chunk.join(',')}`).catch(() => null);
+      if (res?.ok) json = await res.json();
+      else await sleep(2000 * 2 ** attempt);
+    }
+    if (!json) throw new Error(`npm's downloads API would not rank names ${i + 1}–${i + chunk.length}; refusing to call a partial ranking "the most-downloaded"`);
     for (const [n, v] of Object.entries(json)) if (v && Number.isFinite(v.downloads)) out.set(n, v.downloads);
+    await sleep(300);
   }
   return out;
 }

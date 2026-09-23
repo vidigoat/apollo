@@ -60,5 +60,15 @@ const it = async (name, fn) => {
     assert.equal(n, 3);
   });
 
+  await it('a ranking with a chunk npm would not answer is refused, not published as the top', async () => {
+    const { weeklyDownloads } = require('./release-watch');
+    let calls = 0;
+    const flaky = async () => (++calls === 1 ? { ok: false, status: 429 } : { ok: true, json: async () => ({ a: { downloads: 3 } }) });
+    const r = await weeklyDownloads(['a'], flaky, async () => {});
+    assert.equal(r.get('a'), 3, 'a 429 lost the chunk');
+    const dead = async () => ({ ok: false, status: 429 });
+    await assert.rejects(() => weeklyDownloads(['a'], dead, async () => {}), /refusing to call a partial ranking/);
+  });
+
   console.log(`\n${passed} passed`);
 })();
