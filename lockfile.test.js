@@ -254,4 +254,18 @@ it('a tree of ten thousand packages is read without complaint', () => {
   assert.ok(Date.now() - started < 3000, 'reading a lockfile should not be the slow part of anything');
 });
 
+it('a monorepo workspace folder is not a package — neither the folder nor its link', () => {
+  // npm's own lockfile: the index once held "workspaces/libnpmaccess@11.0.0" as a watched package.
+  const g = parseLockfile(JSON.stringify({
+    name: 'npm', lockfileVersion: 3,
+    packages: {
+      '': { name: 'npm', workspaces: ['workspaces/*'] },
+      'workspaces/libnpmaccess': { name: 'libnpmaccess', version: '11.0.0' },
+      'node_modules/libnpmaccess': { resolved: 'workspaces/libnpmaccess', link: true },
+      'node_modules/semver': { version: '7.6.3' },
+    },
+  }));
+  assert.deepEqual([...g.versions.keys()], ['semver']);
+});
+
 console.log(`\n${passed} passed`);

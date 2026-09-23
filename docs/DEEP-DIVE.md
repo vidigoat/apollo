@@ -353,7 +353,7 @@ from real installs, and came out at exactly 11,242. The 2,120 row is where the b
 
 The hosted demo has no filesystem to read, so a real scan is committed: six **held-out** public
 projects — undici, bootstrap, ionic-framework, highlight.js, shelljs, cheerio — 3,548
-dependency-versions, 2,944 of them already answered (83%). Held out means none of them was used to
+dependency-versions, 2,775 of them already answered (78%). Held out means none of them was used to
 choose what went into the index, which was grown from nineteen other public projects' lockfiles, so
 the figure is generalisation rather than recall; it was 56% before the index was grown. The page says whose tree it is rather than
 letting it read as yours, and `GET /api/project?at=<n>` there says plainly that the lockfile is not
@@ -362,8 +362,8 @@ on this machine instead of doing nothing. The hundredth repo is a lookup, not a 
 **And the index is a file now, which is what makes that claim checkable by somebody else.** It was
 built locally and gitignored, so verifying "run a package once, answer for every repository" meant
 installing two thousand packages first — which makes it a sentence about an artefact that existed on
-exactly one laptop. `npm run index:publish` writes `public/index.json`: 6,231 packages, 7,914
-versions, about 390 kB over the wire, served from the demo URL. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,944 of their 3,548 dependency-versions are answered (83%)**, up from 56% before the index was grown today; the other 604 come back unknown by name. Most of anyone's tree comes back unknown, because most of
+exactly one laptop. `npm run index:publish` writes `public/index.json`: 5,691 packages, 11,267
+versions, about 320 kB over the wire, served from the demo URL. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,775 of their 3,548 dependency-versions are answered (78%)**, up from 56% before the index was grown today; the other 773 come back unknown by name. Most of anyone's tree comes back unknown, because most of
 npm has never been watched by anybody, and that is reported as its own outcome rather than as a pass.
 
 Preparing it for publication is what found that **every one of the 2,129 entries was overclaiming**:
@@ -641,9 +641,15 @@ one layer up.
 that never reported, is not an observation. `Index.put` refuses it, so the version stays absent and
 `stakeout check` calls it unknown; `diff()` refuses to compare it, so no caller can turn it into
 "no change"; `/api/watch` answers "not watched" in words. Any of the 8,940 all-quiet entries could
-have been one of these, so every one is being observed again with the fixed builder, and the
-versions it refuses twice are withdrawn (`index-merge --withdraw`, which removes exactly those and
-nothing else).
+have been one of these, so every one was observed again with the fixed builder. 7,953 were
+observed, and all but 9 were still quiet — the quiet entries were right almost everywhere they were
+real. **987 could not be observed at all**: 886 binaries built for another platform, 28 not on npm
+at all or not at that version (`@actions/github-script`, from somebody's git dependency), 15 whose
+install script failed, 11 command-line tools that start running when imported and never let the
+probe report, 38 that were not packages — workspace folders of npm's own monorepo, which the
+lockfile parser had been reading as package names (fixed, and tested) — and 9 for other reasons.
+Each was refused twice and withdrawn (`index-merge --withdraw`, which removes exactly those and
+nothing else), and they are unknown now — which is what they always were.
 
 ### 4. Absence of a public record raises priority and proves nothing
 
@@ -1066,7 +1072,7 @@ npm test
 ```
 
 ```
-32 suites · 432 checks
+32 suites · 433 checks
 all green
 ```
 

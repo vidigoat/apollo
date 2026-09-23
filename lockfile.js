@@ -76,6 +76,10 @@ function parseLockfile(text) {
     format = json.lockfileVersion === 2 ? 'v2' : 'v3';
     for (const [key, node] of Object.entries(json.packages)) {
       if (isRoot(key) || !node) continue;
+      // A key outside node_modules/ is a workspace folder of a monorepo, and `link: true` is the
+      // symlink to one. Neither came from the registry: read as packages, npm's own lockfile turned
+      // "workspaces/libnpmaccess" into a package name, and the index held it as watched.
+      if (!key.includes('node_modules/') || node.link) continue;
       const name = node.name || nameFromPath(key);
       record(name, node.version);
       if (node.os || node.cpu || node.libc) platforms.set(`${name}@${node.version}`, { os: node.os, cpu: node.cpu, libc: node.libc });

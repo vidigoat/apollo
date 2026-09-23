@@ -47,7 +47,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 32 suites · 432 checks
+npm test            # 32 suites · 433 checks
 ```
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
@@ -57,7 +57,9 @@ dependency tree is telling on itself. Node 20+.
 
 **<https://cassandra-nu.vercel.app/#yours>** — two things that are not the demo: name a public GitHub
 repository (or drop a `package-lock.json`) and it is resolved against the published index, running
-nothing; or pick any npm package and two of its versions, and both are installed and imported in two
+nothing — with what nobody has watched listed by name, binaries built for another platform counted
+apart, and every package that runs an install script named, because install scripts are not
+watched; or pick any npm package and two of its versions, and both are installed and imported in two
 Nebius Token Factory Sandboxes forked from one checkpoint while you wait, and diffed. Rate-limited, so
 the sandboxes stay available.
 
@@ -88,7 +90,7 @@ cd ~/your-project
 node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
 ```
 
-That reads a **published index** — 6,231 packages and 12,254 versions somebody has already run,
+That reads a **published index** — 5,691 packages and 11,267 versions somebody has already run,
 about 390 kB over the wire — and writes a `stakeout.lock` for *your* tree. Some of it will come
 back **unknown**, because most of npm has never been watched by anybody, and the lock says so by
 name rather than pretending to cover it.
@@ -135,16 +137,16 @@ A package's behaviour does not depend on who imported it, so it is observed once
 that. Pointed at a whole machine — 76 projects and 20,897 dependency-versions — 2,120 observations in
 the index answered 12,986 of them, **62%**, from an index you could build in an afternoon.
 
-<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,944 of 3,548 dependency-versions answered" width="100%">
+<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,775 of 3,548 dependency-versions answered" width="100%">
 
 The scan bundled with this repository is of six **held-out** public projects — undici, bootstrap,
 ionic-framework, highlight.js, shelljs and cheerio — none of which was used to choose what went into
 the index, so it measures how well the index generalises rather than how well it remembers: 3,548
 dependency-versions across 6 readable lockfiles, which are only 2,527 distinct package-versions, and
-2,944 of them answered. The index itself was grown to 12,254 versions from the lockfiles of
+2,775 of them answered. The index itself was grown to 11,267 versions from the lockfiles of
 forty-one widely used projects (vscode, TypeScript, nest, puppeteer, axios, npm, playwright, lodash,
 three.js, rollup and apollo among them) — watched in containers that could see nothing of the machine
-running them, and 4,340 of them in Nebius Token Factory Sandboxes, which each entry records.
+running them, and 11,244 of them in Nebius Token Factory Sandboxes, which each entry records.
 Unobserved surface is **hatched, never filled** — a fill is a quantity, and this is the absence of
 one.
 

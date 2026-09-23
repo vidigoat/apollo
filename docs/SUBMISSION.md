@@ -181,7 +181,7 @@ given empty channels by a package that was never imported, recorded "watched, di
 quiet entry could have been one of those — and among them, the index held `@actions/github-script`,
 a package that is not on the npm registry at all, as watched and silent. Now the index refuses a version that did not install or
 whose probe never reported (`index/schema.js`, tested), `/api/watch` answers "not watched" instead
-of "no change", and all 8,940 quiet entries are being observed again with the fixed builder.
+of "no change". All 8,940 quiet entries were observed again with the fixed builder: 7,953 were observed, and 9 of those turned out not to be quiet; **987 could not be observed at all** — 886 of them binaries built for another platform, 28 not on npm at that version, 11 command-line tools that never let the probe report, 38 monorepo folders a parser bug had read as package names, 24 for other reasons — and were withdrawn.
 
 **The web search found other products' changelogs, and read that as silence.** The public-record
 lookup asked Tavily for `<pkg> <version> changelog release notes OR security advisory`. For express
@@ -348,7 +348,7 @@ That was unverifiable. The index was built locally and gitignored, so checking i
 two thousand packages first — which makes "run a package once, answer for every repository" a
 sentence about an artefact that existed on exactly one laptop.
 
-`npm run index:publish` writes it. **6,231 packages, 12,254 versions, about 390 kB over the wire**, served
+`npm run index:publish` writes it. **5,691 packages, 11,267 versions, about 320 kB over the wire**, served
 from the demo URL at `/index.json`. Then, in a repository that has never heard of this project:
 
 ```bash
@@ -357,7 +357,7 @@ cd ~/your-project
 node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
 ```
 
-On six public projects that were not used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,944 of their 3,548 dependency-versions are answered (83%)**, up from 56% before the index was grown today; the other 604 come back unknown by name. Most of anyone's tree comes back unknown, because most of npm has never been watched by
+On six public projects that were not used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,775 of their 3,548 dependency-versions are answered (78%)**, up from 56% before the index was grown today; the other 773 come back unknown by name. Most of anyone's tree comes back unknown, because most of npm has never been watched by
 anybody, and `check` reports that as its own outcome rather than as a pass. That is the point of
 publishing it — the claim is now a thing that can be wrong.
 
