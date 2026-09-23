@@ -77,6 +77,8 @@ it bundles, and **std-env 4.2.0** itself added JetBrains' Junie to that list. No
 nothing a version number would tell you — which is the kind of change this exists to put in front
 of somebody. Recorded in `docs/release-watch.json`; no model is called.
 
+<img src="docs/images/releases.jpg" alt="The release watch on the site: 1,272 of 1,287 newest releases unchanged; the 13 that read different environment variables, each with Nemotron's reading and the public record, jiti 2.7.0 among them" width="720">
+
 ### In Nebius Token Factory Sandboxes
 
 ```bash
