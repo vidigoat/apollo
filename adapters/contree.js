@@ -280,7 +280,9 @@ class ConTreeSandboxes {
     const base = op.result?.image;
     if (!base) throw new Error(`importing ${ref} returned no image`);
 
-    this.probeFile = await this.upload(fs.readFileSync(path.join(__dirname, '..', 'observe', 'probe.js')));
+    // require.resolve, not path.join: the deployment bundler traces a resolved module and cannot
+    // trace a joined string, and the hosted watch failed with ENOENT on exactly this file.
+    this.probeFile = await this.upload(fs.readFileSync(require.resolve('../observe/probe.js')));
 
     const setup = await this.spawn({
       image: base,
