@@ -274,5 +274,23 @@ const VERDICT = (o = {}) => ({
     assert.doesNotMatch(user, /\(no observable difference\)/);
   });
 
+  await it('an empty answer — reasoning that spent the tokens — is asked once more with twice the room', async () => {
+    const { judgeOne } = require('./index');
+    const good = JSON.stringify({ meaning: 'a funding message at install', explained: true, worthWaking: false, confidence: 'medium', note: '' });
+    const asked = [];
+    const complete = async ({ model, maxTokens }) => {
+      asked.push([model, maxTokens]);
+      const judgeCalls = asked.filter(([m]) => m === asked[asked.length - 1][0]).length;
+      if (model.includes('Nano')) return { text: JSON.stringify({ meaning: 'x', explained: false, worthWaking: true, confidence: 'low', note: '' }), costUsd: 0, model };
+      return { text: judgeCalls === 1 ? '' : good, costUsd: 0, model };
+    };
+    const d = { pkg: 'ajv', from: '6.12.0', to: '6.12.1', strategy: 'nodert', canSee: {}, changed: true, severity: 'alarming', reasons: ['at install: spawns a shell'],
+      net: { added: [], removed: [] }, dns: { added: [], removed: [] }, fs: { added: [], removed: [] }, env: { added: [], removed: [] }, proc: { added: [], removed: [] }, exec: { added: [], removed: [] } };
+    const j = await judgeOne(d, null, { complete, judgeCache: null });
+    assert.equal(j.verdict?.meaning, 'a funding message at install', JSON.stringify(j));
+    const judgeAsks = asked.filter(([m]) => !m.includes('Nano'));
+    assert.equal(judgeAsks[1][1], judgeAsks[0][1] * 2, 'the retry did not get more room');
+  });
+
 console.log(`\n${passed} passed`);
 })();

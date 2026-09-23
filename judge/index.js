@@ -149,8 +149,22 @@ async function judgeOne(d, record, deps = {}) {
     return settled;
   }
 
+  /*
+   * An EMPTY answer is asked once more with twice the room. Nemotron's reasoning is charged against
+   * max_tokens (judge/nemotron.js), so a long working-out can spend it all and leave content empty —
+   * which parseVerdict reads as "not a verdict" and the pipeline falls back to the rules. That
+   * happened on ajv 6.12.1, whose prompt had just grown the install evidence. A non-empty answer
+   * that does not parse is not retried: that is the model answering badly, not running out of room.
+   */
+  const ask = async (model, maxTokens) => {
+    const r = track(await call({ model, system, user, maxTokens }));
+    const v = parseVerdict(r.text);
+    if (v || String(r.text || '').trim()) return v;
+    return parseVerdict(track(await call({ model, system, user, maxTokens: maxTokens * 2 })).text);
+  };
+
   // 2. Judgement — the expensive model, on the handful that earned it.
-  const verdict = parseVerdict((track(await call({ model: MODELS.judge, system, user, maxTokens: 1100 }))).text);
+  const verdict = await ask(MODELS.judge, 1100);
   if (!verdict) {
     return {
       pkg: d.pkg, severity: d.severity, judged: true, tier: 'judge', verdict: null, accused: false,
@@ -163,7 +177,7 @@ async function judgeOne(d, record, deps = {}) {
   let accused = false;
   let second = null;
   if (d.severity === 'alarming' && verdict.worthWaking && !verdict.explained) {
-    second = parseVerdict((track(await call({ model: MODELS.second, system, user, maxTokens: 900 }))).text);
+    second = await ask(MODELS.second, 900);
     accused = second?.worthWaking === true && second?.explained === false;
   }
 
