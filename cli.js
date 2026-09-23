@@ -34,7 +34,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Index } = require('./index/schema');
 const { open } = require('./index/published');
-const { lockfileOnDisk } = require('./lockfile');
+const { lockfileOnDisk, installsOnLinux } = require('./lockfile');
 const { buildLock, checkLock, writeLock, readLock, DEFAULT_FILE } = require('./lock');
 const { CHANNELS } = require('./index/schema');
 
@@ -110,6 +110,10 @@ async function cmdLock({ flags }) {
     console.log(`  ${C.amber}${plural(unknown.length, 'package')} the index has never seen${C.off}`);
     for (const u of unknown.slice(0, 8)) console.log(`      ${C.dim}${u}${C.off}`);
     if (unknown.length > 8) console.log(`      ${C.dim}… and ${unknown.length - 8} more, all listed in ${out}${C.off}`);
+    const elsewhere = unknown.filter((id) => tree.platforms?.has(id) && !installsOnLinux(tree.platforms.get(id)));
+    if (elsewhere.length) {
+      console.log(`  ${C.dim}${elsewhere.length} of them ${elsewhere.length === 1 ? 'is' : 'are'} built only for another platform (macOS, Windows, musl), so not installable where the index is observed.${C.off}`);
+    }
     console.log(`  ${C.dim}They are recorded under "unknown" — the lock does not pretend to cover them.${C.off}`);
   }
   console.log('');
