@@ -6,7 +6,7 @@ import Fleet from './sections/Fleet.jsx';
 import How from './sections/How.jsx';
 import Check from './sections/Check.jsx';
 import Limits from './sections/Limits.jsx';
-import { tree, fleet, published, num } from './lib/api.js';
+import { tree, fleet, published, run, num } from './lib/api.js';
 
 const SECTIONS = [
   ['top', 'stakeout'],
@@ -19,6 +19,7 @@ const SECTIONS = [
 
 export default function App() {
   const [meta, setMeta] = useState(null);
+  const [calls, setCalls] = useState(null);
   const [scan, setScan] = useState(null);
   const [index, setIndex] = useState(null);
   const [here, setHere] = useState('top');
@@ -31,6 +32,9 @@ export default function App() {
     // numbers are simply not rendered — a page that prints a fallback figure is a page that lies
     // quietly on the day the API breaks.
     tree().then(setMeta).catch(() => {});
+    // The default run's model-call count, for the one headline that states it. Served from the
+    // committed verdicts, so loading the page spends nothing.
+    run().then((r) => setCalls(r.modelCalls)).catch(() => {});
     fleet().then(setScan).catch(() => {});
     published().then(setIndex).catch(() => {});
   }, []);
@@ -134,7 +138,7 @@ export default function App() {
         <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />
         {scan && <Fleet data={scan} published={index} />}
-        <How tree={meta} />
+        <How tree={meta} calls={calls} />
         <Limits />
       </main>
 

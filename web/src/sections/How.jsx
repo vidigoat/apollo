@@ -59,7 +59,9 @@ const STEPS = [
   },
 ];
 
-export default function How({ tree = null }) {
+const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
+
+export default function How({ tree = null, calls = null }) {
   const still = useReducedMotion();
 
   /*
@@ -78,7 +80,16 @@ export default function How({ tree = null }) {
   return (
     <section className="wrap" id="how">
       <p className="eyebrow">how it works</p>
-      <h2>Nine model calls for a twelve-hundred-package tree</h2>
+      {/*
+        "Nine" was typed, and true only for the run this page happens to default to — the same
+        corpus watched four ways takes two to ten. It slipped past the check for typed figures
+        because a word is not a digit, exactly as "the fifteen that are lit" once did. It comes from
+        the default run now, as a word, and says "a handful" until that has answered.
+      */}
+      <h2>
+        {typeof calls === 'number' ? (WORDS[calls] ?? String(calls)) : 'A handful of'} model calls for a
+        twelve-hundred-package tree
+      </h2>
       <p className="lede">
         Every step below exists to stop the next one from running. That is not an optimisation bolted
         on afterwards — it is the only reason the arithmetic works at all.
