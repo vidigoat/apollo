@@ -28,7 +28,8 @@
     "check-readme": "node scripts/check-readme.js",
     "check-run": "node scripts/check-run.js",
     "index:publish": "node scripts/publish-index.js",
-    "crossval": "node scripts/cross-validate.js"
+    "crossval": "node scripts/cross-validate.js",
+    "smoke:live": "node scripts/smoke-live.js"
   },
   "keywords": [
     "supply-chain",
