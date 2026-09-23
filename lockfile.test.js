@@ -268,4 +268,9 @@ it('a monorepo workspace folder is not a package — neither the folder nor its 
   assert.deepEqual([...g.versions.keys()], ['semver']);
 });
 
+it('a name that is not a string is not a package name — the path is', () => {
+  const g = parseLockfile(JSON.stringify({ name: 'x', lockfileVersion: 3, packages: { '': {}, 'node_modules/ms': { name: { a: 1 }, version: '2.1.3' } } }));
+  assert.deepEqual([...g.versions.keys()], ['ms']);
+});
+
 console.log(`\n${passed} passed`);

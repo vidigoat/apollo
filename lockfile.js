@@ -80,7 +80,8 @@ function parseLockfile(text) {
       // symlink to one. Neither came from the registry: read as packages, npm's own lockfile turned
       // "workspaces/libnpmaccess" into a package name, and the index held it as watched.
       if (!key.includes('node_modules/') || node.link) continue;
-      const name = node.name || nameFromPath(key);
+      // `name` is only trusted as a string; anything else came out as "[object Object]" (fuzzer).
+      const name = typeof node.name === 'string' && node.name ? node.name : nameFromPath(key);
       record(name, node.version);
       if (node.os || node.cpu || node.libc) platforms.set(`${name}@${node.version}`, { os: node.os, cpu: node.cpu, libc: node.libc });
       if (node.hasInstallScript && /^\d+\.\d+\.\d+/.test(String(node.version))) installScripts.add(`${name}@${node.version}`);
