@@ -199,7 +199,7 @@ parser — 64,860 characters of base64 — the first time `http` loads, and the 
 whichever package loaded it: the release watch flagged agent-base 9.0.0 for "decoding something it
 did not before", and its tarball contains no base64 at all. The decode hook now takes the same
 caller-frame rule as environment reads, a test fails on the old probe, and every index entry with a
-runtime-code record was observed again.
+runtime-code record was observed again: 165 of the 223 recorded decodes were Node's, and are gone.
 
 **Every plain network connection was recorded as `localhost`, port unknown.** `net.connect(port,
 host)` and every plain `http.request` hand the socket Node's internal `[options, callback]` array,
