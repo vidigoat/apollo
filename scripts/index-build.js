@@ -290,7 +290,7 @@ if (require.main !== module) return;
       failed++;
       // One package that will not install must never end the run. It is recorded as absent, which
       // is honest, and `stakeout check` reports absent as "unknown" rather than as clean.
-      console.log(`  ${C.red}fail ${C.off} ${label} ${C.dim}${String(e.message).split('\n')[0].slice(0, 70)}${C.off}`);
+      console.log(`  ${C.red}fail ${C.off} ${label} ${C.dim}${String(e.message).split('\n')[0].slice(0, 140)}${C.off}`);
     }
 
     if (++done % 10 === 0) index.writeManifest({ note: 'build in progress' });
