@@ -107,7 +107,7 @@ A package's behaviour does not depend on who imported it, so it is observed once
 that. Pointed at a whole machine — 76 projects and 20,897 dependency-versions — 2,120 observations in
 the index answered 12,986 of them, **62%**, from an index you could build in an afternoon.
 
-<img src="docs/images/fleet.jpg" alt="A scan of turborepo drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline" width="100%">
+<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,705 of 3,548 dependency-versions answered" width="100%">
 
 The scan bundled with this repository is of six **held-out** public projects — undici, bootstrap,
 ionic-framework, highlight.js, shelljs and cheerio — none of which was used to choose what went into
