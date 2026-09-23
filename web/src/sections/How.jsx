@@ -26,7 +26,7 @@ const STEPS = [
   },
   {
     who: 'transcript',
-    what: 'net · dns · files · env · processes · code built at runtime. Temp directories, pids and hashes normalised away, so two identical runs of the same version compare equal.',
+    what: 'net · dns · files · env · processes · code built at runtime — at import, and for everything its install scripts do, which npm before 12 runs by default. Temp directories, pids and hashes normalised away, so two identical runs of the same version compare equal.',
     cost: 'free',
   },
   {

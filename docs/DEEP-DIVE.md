@@ -1099,7 +1099,7 @@ npm test
 ```
 
 ```
-33 suites · 450 checks
+33 suites · 451 checks
 all green
 ```
 

@@ -92,9 +92,11 @@ function checkRun(result, { total } = {}) {
       const what = (d.changes || [])
         .map((c) => {
           const gained = (c.after || []).filter((x) => !(c.before || []).some((y) => same(x, y)));
+          // Install-time drift says so in words: "at install, env", not the key "install.env".
+          const where = String(c.channel).startsWith('install.') ? `at install, ${c.channel.slice(8)}` : c.channel;
           return gained.length
-            ? `${c.channel}: now ${gained.map(describe).join(', ')}`
-            : `${c.channel}: no longer ${(c.before || []).map(describe).join(', ')}`;
+            ? `${where}: now ${gained.map(describe).join(', ')}`
+            : `${where}: no longer ${(c.before || []).map(describe).join(', ')}`;
         })
         .join('  ·  ');
       return `- **${d.package}** — ${what}`;

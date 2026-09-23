@@ -167,6 +167,17 @@ function wiredTo({ files = ['package-lock.json'], contents = {} } = {}) {
     assert.match(run.summary, /version did not move/i);
   });
 
+  await it('drift in what an install script does is named as install-time, in words', () => {
+    const run = checkRun({
+      checked: 1,
+      drift: [{ package: 'native@1.0.0', changes: [{ channel: 'install.env', before: [], after: ['NPM_TOKEN'] }] }],
+      unknown: [],
+      added: [],
+    });
+    assert.equal(run.conclusion, 'failure');
+    assert.match(run.summary, /at install, env: now NPM_TOKEN/);
+  });
+
   await it('unknown is NEUTRAL, never failure', () => {
     /*
      * The most important assertion in this file.
