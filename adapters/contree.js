@@ -58,6 +58,8 @@ const IN_VM = {
   probe: '/stakeout/probe.js',
   runner: '/twin/__stakeout_runner.js',
   report: '/stakeout/report.json',
+  // Where the install step's processes leave their reports (observe/probe.js, "the install phase").
+  install: '/stakeout/install',
 };
 
 /** Observation needs particular things from a guest. If we cannot get them, say so instead of reporting silence. */
@@ -363,6 +365,9 @@ class ConTreeSandboxes {
         command: 'npm',
         args: ['install', `${ctx.pkg}@${ctx.version}`, '--no-audit', '--no-fund', '--loglevel=error'],
         cwd: IN_VM.twin,
+        // Every Node process the install starts loads the probe: npm records the scripts it runs,
+        // the scripts are watched whole. The import runner gathers the reports.
+        env: { NODE_OPTIONS: `--require ${IN_VM.probe}`, STAKEOUT_INSTALL_DIR: IN_VM.install },
       });
       if (r.image) twin.image = r.image;
       return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed: null };
@@ -370,7 +375,7 @@ class ConTreeSandboxes {
 
     if (ctx.step === 'import') {
       const runner = await this.upload(
-        Buffer.from(runnerSource(ctx.pkg, IN_VM.report, IN_VM.probe))
+        Buffer.from(runnerSource(ctx.pkg, IN_VM.report, IN_VM.probe, IN_VM.install))
       );
       const r = await this.spawn({
         image: twin.image,

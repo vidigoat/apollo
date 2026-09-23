@@ -154,6 +154,19 @@ function attention(lock) {
   return out.sort((a, b) => b.reads.length + b.starts.length - (a.reads.length + a.starts.length)).slice(0, 30);
 }
 
+/** name@version → what its install scripts did, for the ones the index watched through install. */
+function installWatched(ids, idx) {
+  const out = {};
+  for (const id of ids || []) {
+    const at = id.lastIndexOf('@');
+    const e = idx.lookup(id.slice(0, at), id.slice(at + 1));
+    if (!e?.install) continue;
+    out[id] = Object.fromEntries(CHANNELS.filter((c) => e.install[c]?.length).map((c) => [c, e.install[c].slice(0, 12).map(describe)]));
+    if (Object.keys(out).length >= 60) break;
+  }
+  return out;
+}
+
 function answerTree(text, from) {
   let tree;
   try {
@@ -180,6 +193,8 @@ function answerTree(text, from) {
     // lockfile says which ones have it; npm before 12 runs it by default.
     installScriptCount: tree.installScripts?.size ?? 0,
     installScripts: tree.installScripts ? [...tree.installScripts].sort().slice(0, 200) : [],
+    // For those the index has watched through their install phase: what the scripts did.
+    installWatched: installWatched(tree.installScripts, idx),
     pct: total ? Math.round((built.known / total) * 100) : 0,
     index: idx.manifest(),
     does: behaviours(built.lock),
@@ -363,4 +378,4 @@ const guarded = (fn) => (req, res, deps) => Promise.resolve().then(() => fn(req,
   if (!res.headersSent) json(res, 500, { error: 'Something went wrong on our side. Nothing was run.' });
 });
 
-module.exports = { lockfile: guarded(lockfile), watch: guarded(watch), answerTree, fetchLockfile, behaviours, attentionFor: attention, limited, describe, NAME, VERSION };
+module.exports = { lockfile: guarded(lockfile), watch: guarded(watch), answerTree, fetchLockfile, behaviours, attentionFor: attention, limited, describe, NAME, VERSION, installWatched };

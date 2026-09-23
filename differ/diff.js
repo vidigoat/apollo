@@ -132,8 +132,29 @@ function diff(before, after) {
 
   const qb = quietness(before);
   const qa = quietness(after);
-  const severity = severityOf(parts);
-  const changed = Object.values(parts).some((p) => p.added.length || p.removed.length);
+  const importSeverity = severityOf(parts);
+
+  /*
+   * The install phase, compared only when both sides watched it — an entry from before it was
+   * watched has no install section, and "gained an install script" against a side that never looked
+   * would be an artefact of how we watched. When both did, the same rules apply, the reasons say
+   * "at install", and the diff takes the more severe of the two phases.
+   */
+  let install = null;
+  let severity = importSeverity;
+  if (before.install && after.install) {
+    install = {};
+    ['net', 'dns', 'fs', 'env', 'proc', 'exec'].forEach((field) => {
+      install[field] = setDiff(before.install[field] || [], after.install[field] || [], keyFor[field]);
+    });
+    const s = severityOf(install);
+    const ORDER = ['none', 'minor', 'notable', 'alarming'];
+    severity = {
+      level: ORDER[Math.max(ORDER.indexOf(importSeverity.level), ORDER.indexOf(s.level))],
+      reasons: [...importSeverity.reasons, ...s.reasons.map((r) => `at install: ${r}`)],
+    };
+  }
+  const changed = [...Object.values(parts), ...Object.values(install || {})].some((p) => p.added.length || p.removed.length);
 
   const importDelta =
     before.timing.importMs != null && after.timing.importMs != null ? after.timing.importMs - before.timing.importMs : null;
@@ -148,6 +169,8 @@ function diff(before, after) {
     canSee: before.canSee,
     changed,
     ...parts,
+    // Present only when both sides watched the install phase.
+    ...(install ? { install } : {}),
     timing: { importDeltaMs: importDelta },
     severity: severity.level,
     reasons: severity.reasons,

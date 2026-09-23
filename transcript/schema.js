@@ -114,11 +114,29 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
     if (CAN_SEE[strategy][field] === false) r[field] = [];
   });
 
-  return {
+  const t = {
     pkg,
     version,
     strategy,
     canSee: CAN_SEE[strategy],
+    ...channels(r),
+    timing: { installMs: timing.installMs ?? null, importMs: timing.importMs ?? null },
+    result: { installExit: result.installExit ?? null, importExit: result.importExit ?? null, threw: result.threw ?? null, reported: result.reported ?? null, installError: result.installError ?? null },
+  };
+  /*
+   * What the install scripts did, when the install phase was watched (nodert only). Absent means
+   * it was not watched — never "no scripts ran". Kept apart from the import channels so every entry
+   * made before this existed still compares like with like.
+   */
+  if (strategy === 'nodert' && raw.install && typeof raw.install === 'object') {
+    t.install = channels({ ...empty(), ...raw.install });
+  }
+  return t;
+}
+
+/** The six channels, sorted and de-duplicated so two identical runs compare equal. */
+function channels(r) {
+  return {
     net: uniqueSorted(r.net.map(normaliseNet), (n) => `${n.host}:${n.port}/${n.proto}`),
     dns: [...new Set(r.dns.map((d) => String(d).toLowerCase()))].sort(),
     fs: uniqueSorted(
@@ -134,8 +152,6 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
       r.exec.map((e) => ({ how: String(e.how || 'unknown'), sample: normalisePath(String(e.sample || '').slice(0, 160)) })),
       (e) => `${e.how} ${e.sample}`
     ),
-    timing: { installMs: timing.installMs ?? null, importMs: timing.importMs ?? null },
-    result: { installExit: result.installExit ?? null, importExit: result.importExit ?? null, threw: result.threw ?? null, reported: result.reported ?? null, installError: result.installError ?? null },
   };
 }
 

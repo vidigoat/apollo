@@ -96,6 +96,8 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
     // An adapter that can observe returns structured behaviour alongside the exit code.
     if (out.observed) {
       reported = true;
+      // The install phase travels separately, so the import channels mean what they always meant.
+      if (out.observed.install) raw.install = out.observed.install;
       ['net', 'dns', 'fs', 'env', 'proc', 'exec'].forEach((field) => {
         if (out.observed[field]) raw[field].push(...out.observed[field]);
       });

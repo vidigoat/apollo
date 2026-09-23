@@ -110,6 +110,12 @@ function work(flags) {
   // `--retry-failed <build.log>`: every version a build failed on — refused as never observed, or
   // lost to a sandbox or network error — tried once more, so a hiccup is not what takes an entry out
   // of the index, and an errored one is not left standing unchecked.
+  // `--from-list <file>`: one name@version per line — a set chosen elsewhere, observed exactly.
+  if (flags['from-list']) {
+    return fs.readFileSync(String(flags['from-list']), 'utf8').split('\n').map((l) => l.trim()).filter(Boolean)
+      .map((id) => { const at = id.lastIndexOf('@'); return at > 0 ? { pkg: id.slice(0, at), version: id.slice(at + 1), single: true } : null; })
+      .filter(Boolean);
+  }
   if (flags['retry-failed']) {
     const { refusedIn } = require('./index-merge');
     return refusedIn(fs.readFileSync(String(flags['retry-failed']), 'utf8'), { any: true })

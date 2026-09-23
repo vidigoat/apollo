@@ -128,21 +128,35 @@ function Lockfile() {
             <p className="yours__quiet">None of the known part reads anything that looks like a credential, or starts a shell.</p>
           )}
 
-          {d.installScripts?.length > 0 && (
-            <div className="yours__attention">
-              <h3 className="yours__h3">
-                {num(d.installScriptCount)} {d.installScriptCount === 1 ? 'package runs' : 'packages run'} code while being installed — which is not watched
-              </h3>
-              <p className="yours__names">
-                {d.installScripts.slice(0, 16).map((id) => <span key={id} className="yours__name">{id}</span>)}
-                {d.installScriptCount > 16 && <span className="yours__name"><i>and {num(d.installScriptCount - 16)} more</i></span>}
-              </p>
-              <p className="yours__quiet">
-                The index watches what a package does when it is imported. Install scripts run before that, and
-                npm before version 12 runs them by default; nothing here says what they do.
-              </p>
-            </div>
-          )}
+          {d.installScripts?.length > 0 && (() => {
+            const watched = d.installWatched || {};
+            const seen = Object.keys(watched);
+            return (
+              <div className="yours__attention">
+                <h3 className="yours__h3">
+                  {num(d.installScriptCount)} {d.installScriptCount === 1 ? 'package runs' : 'packages run'} code while being installed
+                  {seen.length ? ` — ${num(seen.length)} watched doing it` : ' — none of them watched doing it yet'}
+                </h3>
+                {seen.map((id) => (
+                  <div key={id} className="channel">
+                    <span className="channel__name">install</span>
+                    <span><b>{id}</b>{' '}
+                      <span className="channel__gained">
+                        {Object.entries(watched[id]).map(([c, xs]) => `${c}: ${xs.slice(0, 4).join(', ')}`).join(' · ') || 'watched, and did nothing it could see'}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+                <p className="yours__names">
+                  {d.installScripts.filter((id) => !watched[id]).slice(0, 16).map((id) => <span key={id} className="yours__name">{id}</span>)}
+                </p>
+                <p className="yours__quiet">
+                  Install scripts run before anything is imported, and npm before version 12 runs them by default. The
+                  ones listed by name alone have not been watched through their install yet; nothing here says what they do.
+                </p>
+              </div>
+            );
+          })()}
 
           <h3 className="yours__h3">What the known part does when it is imported</h3>
           <div className="yours__does">

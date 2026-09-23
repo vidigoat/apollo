@@ -151,6 +151,15 @@ const LOCK = JSON.stringify({
     } finally { s.close(); }
   });
 
+  await it('an install script the index watched is described; one it did not is only named', () => {
+    const { installWatched } = require('./yours');
+    const idx = { lookup: (n, v) => (n === 'core-js' && v === '3.38.1' ? { install: { env: ['CI', 'ADBLOCK'], proc: [{ argv: ['sh', '-c', 'node postinstall.js'] }] } } : n === 'esbuild' ? { env: [] } : null) };
+    const out = installWatched(new Set(['core-js@3.38.1', 'esbuild@0.25.0', 'never@1.0.0']), idx);
+    assert.deepEqual(Object.keys(out), ['core-js@3.38.1'], 'an entry without an install phase was described as watched');
+    assert.deepEqual(out['core-js@3.38.1'].env, ['CI', 'ADBLOCK']);
+    assert.deepEqual(out['core-js@3.38.1'].proc, ['sh -c node postinstall.js']);
+  });
+
   await it('the hourly limits hold per caller and for the whole deployment', () => {
     const now = 1_000_000;
     for (let i = 0; i < 4; i++) assert.equal(limited('a', now + i), null);

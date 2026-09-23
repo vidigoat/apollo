@@ -318,4 +318,25 @@ it('a side that never installed is not compared — its silence would read as "n
   assert.throws(() => diff(ok, silent), /never reported/);
 });
 
+it('a new install script that reads a token is a finding, even with an identical import', () => {
+  const quiet = { net: [], dns: [], fs: [], env: [], proc: [{ argv: ['sh', '-c', 'node build.js'] }], exec: [] };
+  const before = transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: { install: quiet }, result: { installExit: 0, reported: true } });
+  const after = transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', result: { installExit: 0, reported: true },
+    raw: { install: { ...quiet, env: ['NPM_TOKEN'], net: [{ host: 'collect.example', port: 443, proto: 'tls' }], proc: [{ argv: ['sh', '-c', 'node build.js'] }, { argv: ['sh', '-c', 'node postinstall.js'] }] } } });
+  const d = diff(before, after);
+  assert.equal(d.changed, true);
+  assert.ok(['notable', 'alarming'].includes(d.severity), d.severity);
+  assert.ok(d.reasons.some((r) => r.startsWith('at install:')), JSON.stringify(d.reasons));
+  assert.deepEqual(d.install.env.added, ['NPM_TOKEN']);
+});
+
+it('an install phase is compared only when both sides watched it', () => {
+  const before = transcript({ pkg: 'p', version: '1.0.0', strategy: 'nodert', raw: {}, result: { installExit: 0, reported: true } });
+  const after = transcript({ pkg: 'p', version: '1.0.1', strategy: 'nodert', result: { installExit: 0, reported: true },
+    raw: { install: { net: [], dns: [], fs: [], env: ['CI'], proc: [{ argv: ['sh', '-c', 'node x.js'] }], exec: [] } } });
+  const d = diff(before, after);
+  assert.equal(d.changed, false, 'an install phase one side never watched read as a change');
+  assert.equal(d.install, undefined);
+});
+
 console.log(`\n${passed} passed`);

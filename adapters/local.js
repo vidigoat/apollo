@@ -19,6 +19,7 @@ const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { runnerSource, readReport } = require('../observe/probe');
+const PROBE = require.resolve('../observe/probe');
 
 const run = promisify(execFile);
 
@@ -77,7 +78,9 @@ class LocalMachines {
     this.runs++;
 
     if (ctx.step === 'install') {
-      const r = await this.sh('npm', ['install', `${ctx.pkg}@${ctx.version}`, '--no-audit', '--no-fund', '--loglevel=error'], branch.dir);
+      // The install phase is watched the same way as in a sandbox — see observe/probe.js.
+      const env = { ...process.env, NODE_OPTIONS: `--require ${PROBE}`, STAKEOUT_INSTALL_DIR: this.installDir(branch) };
+      const r = await this.sh('npm', ['install', `${ctx.pkg}@${ctx.version}`, '--no-audit', '--no-fund', '--loglevel=error'], branch.dir, env);
       return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed: null };
     }
 
@@ -85,7 +88,7 @@ class LocalMachines {
       const runner = path.join(branch.dir, '__stakeout_runner.js');
       // Outside the branch directory, so a package rummaging through its own cwd does not find it.
       const out = path.join(this.root, `report-${path.basename(branch.dir)}.json`);
-      fs.writeFileSync(runner, runnerSource(ctx.pkg, out));
+      fs.writeFileSync(runner, runnerSource(ctx.pkg, out, PROBE, this.installDir(branch)));
       const r = await this.sh(process.execPath, [runner], branch.dir);
       // readReport returns null when the probe never reported — a crash, a timeout, a process that
       // called process.exit() itself. Null means "we did not see", never "it did nothing".
@@ -97,9 +100,14 @@ class LocalMachines {
     return { code: 0, stdout: '', observed: null };
   }
 
-  async sh(cmd, args, cwd) {
+  /** Outside the branch directory, like the report, so a package rummaging through its cwd does not find it. */
+  installDir(branch) {
+    return path.join(this.root, `install-${path.basename(branch.dir)}`);
+  }
+
+  async sh(cmd, args, cwd, env) {
     try {
-      const { stdout, stderr } = await run(cmd, args, { cwd, timeout: this.timeoutMs, maxBuffer: 16 * 1024 * 1024 });
+      const { stdout, stderr } = await run(cmd, args, { cwd, env, timeout: this.timeoutMs, maxBuffer: 16 * 1024 * 1024 });
       return { code: 0, stdout, stderr };
     } catch (e) {
       // A non-zero exit is a result, not an exception — a package that fails to install is a fact
@@ -112,6 +120,7 @@ class LocalMachines {
   async discard(branch) {
     this.live.delete(branch.id);
     fs.rmSync(branch.dir, { recursive: true, force: true });
+    fs.rmSync(this.installDir(branch), { recursive: true, force: true });
   }
 
   get open() {

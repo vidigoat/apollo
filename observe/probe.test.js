@@ -66,6 +66,61 @@ it('sees a socket being opened, and to where', () => {
   assert.ok(r.net.some((n) => n.host === '127.0.0.1' && n.port === 59999), JSON.stringify(r.net));
 });
 
+it('sees where net.connect and a plain http request go — not "localhost", port null', () => {
+  // Both hand Socket#connect Node's internal normalised array, not an options object. Read as an
+  // object it had no host and no port, so every such connection was recorded as localhost:null —
+  // and the differ keys connections by host and port, so a new destination merged into the old key.
+  const r = watch('net-common', `
+    const net = require('node:net');
+    net.connect(59998, '127.0.0.1').on('error', () => {});
+    require('node:http').request({ host: '127.0.0.1', port: 59997, path: '/' }).on('error', () => {}).end();
+  `);
+  assert.ok(r.net.some((n) => n.host === '127.0.0.1' && n.port === 59998), JSON.stringify(r.net));
+  assert.ok(r.net.some((n) => n.host === '127.0.0.1' && n.port === 59997), JSON.stringify(r.net));
+  assert.ok(!r.net.some((n) => n.port === null), `a connection lost its port: ${JSON.stringify(r.net)}`);
+});
+
+it('watches what an install script does — and leaves out npm itself', () => {
+  // A local fixture, installed from its folder: nothing leaves the machine and no stranger's code
+  // runs. Its postinstall reads a credential-shaped variable, opens a socket and starts a shell.
+  const pkg = path.join(ROOT, 'fixture-pkg');
+  const twin = path.join(ROOT, 'fixture-twin');
+  const inst = path.join(ROOT, 'fixture-install');
+  fs.mkdirSync(pkg, { recursive: true });
+  fs.mkdirSync(twin, { recursive: true });
+  fs.writeFileSync(path.join(pkg, 'package.json'), JSON.stringify({ name: 'stakeout-fixture', version: '1.0.0', main: 'index.js', scripts: { postinstall: 'node post.js' } }));
+  fs.writeFileSync(path.join(pkg, 'index.js'), 'module.exports = 1;');
+  fs.writeFileSync(path.join(pkg, 'post.js'), "process.env.NPM_TOKEN; require('node:net').connect(59996, '127.0.0.1').on('error', () => {}); require('node:child_process').spawnSync('sh', ['-c', 'true']);");
+  fs.writeFileSync(path.join(twin, 'package.json'), '{"name":"twin","version":"1.0.0"}');
+  execFileSync('npm', ['install', pkg, '--no-audit', '--no-fund', '--loglevel=error', '--offline'], {
+    cwd: twin, stdio: 'pipe', timeout: 60_000,
+    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, STAKEOUT_INSTALL_DIR: inst },
+  });
+  const out = path.join(ROOT, 'fixture.json');
+  const runner = path.join(twin, 'run.js');
+  fs.writeFileSync(runner, runnerSource('stakeout-fixture', out, require.resolve('./probe'), inst));
+  execFileSync(process.execPath, [runner], { cwd: twin, stdio: 'pipe', timeout: 20_000 });
+  const r = readReport(out);
+  assert.ok(r.install, 'the install phase was not reported');
+  assert.ok(r.install.env.includes('NPM_TOKEN'), `install env: ${JSON.stringify(r.install.env)}`);
+  assert.ok(r.install.net.some((n) => n.host === '127.0.0.1' && n.port === 59996), JSON.stringify(r.install.net));
+  assert.ok(r.install.proc.some((x) => x.argv.join(' ') === 'sh -c node post.js'), 'npm did not record the script it ran');
+  assert.ok(r.install.proc.some((x) => x.argv.join(' ') === 'sh -c true'), 'the script\'s own child was not seen');
+  assert.ok(!r.install.env.some((v) => /^npm_config_/.test(v)), `npm's own config reads leaked in: ${r.install.env.filter((v) => /^npm_/.test(v)).slice(0, 5)}`);
+  assert.deepEqual(r.env, [], 'the install phase leaked into the import channels');
+});
+
+it('an install phase nobody reported on is absent, not an install that ran nothing', () => {
+  const out = path.join(ROOT, 'no-install.json');
+  const dir = path.join(ROOT, 'no-install-pkg');
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.js'), '1;');
+  const runner = path.join(ROOT, 'run-no-install.js');
+  fs.writeFileSync(runner, runnerSource(path.join(dir, 'index.js'), out, require.resolve('./probe'), path.join(ROOT, 'empty-install-dir')));
+  execFileSync(process.execPath, [runner], { cwd: ROOT, stdio: 'pipe', timeout: 20_000 });
+  assert.equal(readReport(out).install, undefined);
+});
+
 it('sees a name being resolved', () => {
   const r = watch('dns', `require('node:dns').lookup('example.invalid', () => {});`);
   assert.ok(r.dns.includes('example.invalid'), JSON.stringify(r.dns));

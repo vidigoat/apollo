@@ -57,7 +57,10 @@ function install() {
   const net = require('node:net');
   const realConnect = net.Socket.prototype.connect;
   net.Socket.prototype.connect = function (...args) {
-    const o = typeof args[0] === 'object' ? args[0] : { port: args[0], host: args[1] };
+    // net.connect(port, host) and every plain http request arrive here as Node's normalised
+    // [options, callback] array, not as options — read as an object it had no host and no port.
+    const first = Array.isArray(args[0]) ? args[0][0] : args[0];
+    const o = first && typeof first === 'object' ? first : { port: first, host: args[1] };
     push('net', { host: String(o.host || o.path || 'localhost'), port: Number(o.port) || null, proto: 'tcp' });
     return realConnect.apply(this, args);
   };
@@ -173,11 +176,30 @@ function install() {
  * share a heap. It removes the trivial version. The honest containment story is still a microVM,
  * which is what adapters/contree.js is for.
  */
-function runnerSource(pkg, outPath, probePath = __filename) {
+function runnerSource(pkg, outPath, probePath = __filename, installDir = null) {
   // `probePath` is where the probe lives on the machine that will run this — this file's own path
-  // locally, and wherever it was uploaded inside a sandbox.
+  // locally, and wherever it was uploaded inside a sandbox. `installDir` is where the install step's
+  // processes left their reports (see INSTALL_DIR below); read before the probe is installed, so the
+  // reading is not itself observed.
   return `
 const fs = require('node:fs');
+const path = require('node:path');
+const INSTALL_DIR = ${JSON.stringify(installDir)};
+let installSeen = null;
+if (INSTALL_DIR) {
+  try {
+    const parts = fs.readdirSync(INSTALL_DIR).filter((f) => f.endsWith('.json'))
+      .map((f) => { try { return JSON.parse(fs.readFileSync(path.join(INSTALL_DIR, f), 'utf8')); } catch { return null; } })
+      .filter(Boolean);
+    // No report at all means the phase was not watched — npm itself always reports — so it stays
+    // null, never an empty install that reads as "ran nothing".
+    if (!parts.some((r) => r.role === 'npm')) throw new Error('not watched');
+    installSeen = { net: [], dns: [], fs: [], env: [], proc: [], exec: [], processes: parts.length };
+    for (const r of parts) for (const k of ['net', 'dns', 'fs', 'env', 'proc', 'exec']) {
+      if (Array.isArray(r.seen && r.seen[k])) installSeen[k].push(...r.seen[k].slice(0, 500));
+    }
+  } catch { installSeen = null; }
+}
 const { install } = require(${JSON.stringify(probePath)});
 const OUT = ${JSON.stringify(outPath)};
 const probe = install();
@@ -189,7 +211,7 @@ try {
 }
 // Give anything the import kicked off a moment to actually reach the network.
 setTimeout(() => {
-  try { fs.writeFileSync(OUT, JSON.stringify({ ...probe.seen, threw })); } catch {}
+  try { fs.writeFileSync(OUT, JSON.stringify({ ...probe.seen, threw, ...(installSeen ? { install: installSeen } : {}) })); } catch {}
   process.exit(0);
 }, 300);
 `;
@@ -236,7 +258,62 @@ function parseReport(raw) {
     if (!Array.isArray(parsed[k])) return null;
     out[k] = parsed[k];
   }
+  // The install phase, when it was watched: the same six channels, the same rule. A malformed one
+  // is dropped rather than trusted — the import observation still stands on its own.
+  const i = parsed.install;
+  if (i && typeof i === 'object' && !Array.isArray(i) && ['net', 'dns', 'fs', 'env', 'proc', 'exec'].every((k) => Array.isArray(i[k]))) {
+    out.install = Object.fromEntries(['net', 'dns', 'fs', 'env', 'proc', 'exec'].map((k) => [k, i[k]]));
+  }
   return out;
+}
+
+/*
+ * ── The install phase ──────────────────────────────────────────────────────
+ *
+ * The runner above watches the import. An install script — `preinstall`, `install`,
+ * `postinstall` — runs before that, and npm 10 and 11 run it by default. So the install step runs
+ * with NODE_OPTIONS=--require <this file> and STAKEOUT_INSTALL_DIR set, and every Node process it
+ * starts loads this block:
+ *
+ *   - npm itself records only which processes it starts. That is the list of lifecycle scripts that
+ *     ran, command line and all — and it leaves npm's own registry traffic, config reads and cache
+ *     writes out, which are npm's behaviour, not the package's.
+ *   - any other Node process — an install script, or something one started — is watched whole.
+ *
+ * Each writes its own report when it exits; the runner gathers them before the import. A script
+ * written in shell rather than Node is seen as the command npm started, not from inside.
+ */
+const INSTALL_DIR = process.env.STAKEOUT_INSTALL_DIR;
+if (INSTALL_DIR && !global.__stakeoutInstallPhase) {
+  global.__stakeoutInstallPhase = true;
+  const main = String(process.argv[1] || '');
+  const isNpm = /(^|[\\/])(npm-cli\.js|npm|npx-cli\.js|npx)$/.test(main) || /[\\/]node_modules[\\/]npm[\\/]/.test(main);
+  // Captured before install() patches fs, so writing the report is not recorded as the package's write.
+  const fsReal = require('node:fs');
+  const write = fsReal.writeFileSync;
+  let seen;
+  if (isNpm) {
+    seen = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
+    const cp = require('node:child_process');
+    for (const fn of ['spawn', 'spawnSync', 'exec', 'execSync', 'execFile', 'execFileSync', 'fork']) {
+      const real = cp[fn];
+      if (typeof real !== 'function') continue;
+      cp[fn] = function (cmd, ...rest) {
+        const a = Array.isArray(rest[0]) ? rest[0] : [];
+        if (seen.proc.length < 500) seen.proc.push({ argv: [String(cmd), ...a.map(String)] });
+        return real.call(cp, cmd, ...rest);
+      };
+    }
+  } else {
+    seen = install().seen;
+  }
+  process.on('exit', () => {
+    try {
+      const body = JSON.stringify({ role: isNpm ? 'npm' : 'script', seen });
+      fsReal.mkdirSync(INSTALL_DIR, { recursive: true });
+      write(`${INSTALL_DIR}/${process.pid}-${Date.now()}.json`, body);
+    } catch { /* a report that cannot be written is a phase not seen, and the runner says so */ }
+  });
 }
 
 module.exports = { install, runnerSource, readReport, parseReport, MARKER };

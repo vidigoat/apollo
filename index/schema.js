@@ -96,6 +96,11 @@ function entryFor(transcript) {
     // facts and the index has to be able to express both.
     if (Array.isArray(transcript[c])) out[c] = transcript[c];
   }
+  // What its install scripts did, when that phase was watched. Absent: not watched (every entry
+  // before 23 Sep), never "ran nothing".
+  if (transcript.install && typeof transcript.install === 'object') {
+    out.install = Object.fromEntries(CHANNELS.filter((c) => Array.isArray(transcript.install[c])).map((c) => [c, transcript.install[c]]));
+  }
   return out;
 }
 
