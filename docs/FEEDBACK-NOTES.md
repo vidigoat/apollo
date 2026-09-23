@@ -124,3 +124,33 @@ publishing one.
 **Suggestion:** a per-key monthly cap, settable in the console, that returns a distinct error code
 when hit. Even a hard stop with no warning would be better than no ceiling, and for this audience it
 is the difference between publishing a demo URL and not.
+
+---
+
+### 2026-09-23 · A week of 404s that were our URL — and a 404 is how "no access" looks too
+
+**What happened.** For a week every Sandboxes call returned `404 Not Found`, with a key that worked
+for chat completions. We read that as "access not granted yet" and waited. It was not access: the
+base URL we had inferred was wrong, and we were not sending a `Project` header at all. Both came out
+of reading the `contree-sdk` 0.3.6 source, not the docs — the REST surface is
+`https://api.tokenfactory.nebius.com/sandboxes`, with `Authorization: Bearer <key>` **and**
+`Project: <project id>` on every request.
+
+Against the right URL the key authenticates, and `whoami` answers — with every permission false and
+the limits stated (50 concurrent instances, 3,600 s each). The beta request has been submitted
+through the page; nothing in the API or console says whether it is pending, refused, or granted.
+
+**Why it is worth reporting.** Two opposite states — *you are calling the wrong thing* and *you are
+calling the right thing without permission* — came back identical, so an entrant cannot tell a bug
+in their own code from a queue they are sitting in. We sat in the wrong one for a week.
+
+**It also answered our 15 Sep note.** The model is images and instances: a non-disposable run
+produces a new image, and that image is the checkpoint — forking is running from the same image
+twice. That is a clean primitive, and one sentence saying so in the README would have saved the
+inference.
+
+**Suggestions:**
+1. Document the REST base URL and the `Project` header next to the SDK quickstart.
+2. Answer an unpermitted call with `403` and a reason (`sandboxes beta access not granted for this
+   project`), never `404` — keep 404 for paths that do not exist.
+3. Show the beta request's status in the console, and in `whoami`.
