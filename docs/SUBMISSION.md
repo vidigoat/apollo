@@ -163,6 +163,16 @@ throughout. All the model could do was decline to *add* an accusation. "Rules es
 explain" turned a successful prompt injection into a non-event, which is a better argument for that
 design than any amount of reasoning about it.
 
+**The probe was crediting packages with Node's own behaviour.** The first stranger's lockfile
+checked on the site said 117 of its packages read `NODE_V8_COVERAGE` — babel helpers "reading
+coverage settings". Across the index it was 3,176 versions. Stack traces at the read, in a container,
+showed who was asking: Node itself, in `maybeCacheSourceMap`, whenever a file ships a source map —
+and `WATCH_REPORT_DEPENDENCIES` from the ESM loader, and `FORCE_COLOR` while Node set up its own
+colours. The probe now counts a read only when the frame that made it is the package's code, a test
+fails on the old probe, and every entry that had recorded an environment read was observed again in
+Nebius Sandboxes with the fixed one. A behavioural lockfile that attributes the runtime's behaviour
+to your dependencies is wrong in exactly the way it exists to prevent.
+
 **The web search found other products' changelogs, and read that as silence.** The public-record
 lookup asked Tavily for `<pkg> <version> changelog release notes OR security advisory`. For express
 4.18.2 — one of npm's most-used releases — all six results were n8n's, Instacart's and

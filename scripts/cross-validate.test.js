@@ -44,4 +44,15 @@ it('a version the index has never seen is not counted as agreeing with it', () =
   assert.equal(r.notInIndex, 1);
 });
 
+it('a match is tallied by where each side was made, so same-machine agreement is not cross-machine', () => {
+  const a = dir(); const b = dir();
+  new Index({ dir: a }).put('ms', t('2.1.3'));
+  new Index({ dir: a }).put('kleur', { ...t('4.1.5'), observedOn: 'nebius-token-factory-sandboxes' });
+  new Index({ dir: b }).put('ms', { ...t('2.1.3'), observedOn: 'nebius-token-factory-sandboxes' });
+  new Index({ dir: b }).put('kleur', { ...t('4.1.5'), observedOn: 'nebius-token-factory-sandboxes' });
+  const r = compare(b, new Index({ dir: a }));
+  assert.deepEqual(r.pairs['local vs nebius-token-factory-sandboxes'], { identical: 1, differing: 0 });
+  assert.deepEqual(r.pairs['nebius-token-factory-sandboxes vs nebius-token-factory-sandboxes'], { identical: 1, differing: 0 });
+});
+
 console.log(`\n${passed} passed`);

@@ -3,6 +3,7 @@
  * Does an observation depend on the machine that made it? Measured.
  *
  *   node scripts/cross-validate.js --fleet <fleet.json> --limit 300     # re-observe on Nebius, compare
+ *   node scripts/cross-validate.js --local 300                           # re-observe entries made locally
  *   node scripts/cross-validate.js --dir <index-dir>                     # compare an index already built
  *
  * The whole argument of a central index is that a package's behaviour is a property of the
@@ -31,7 +32,7 @@ const walk = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true 
   .flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith('.json') ? [path.join(d, e.name)] : []));
 
 function compare(dir, against = new Index()) {
-  const out = { compared: 0, identical: 0, differing: 0, notInIndex: 0, byChannel: {}, observedOn: {}, examples: [] };
+  const out = { compared: 0, identical: 0, differing: 0, notInIndex: 0, byChannel: {}, observedOn: {}, pairs: {}, examples: [] };
   for (const f of walk(path.join(dir, 'entries'))) {
     const r = JSON.parse(fs.readFileSync(f, 'utf8'));
     for (const [v, e] of Object.entries(r.versions || {})) {
@@ -40,6 +41,11 @@ function compare(dir, against = new Index()) {
       out.compared++;
       if (e.observedOn) out.observedOn[e.observedOn] = (out.observedOn[e.observedOn] || 0) + 1;
       const bad = CHANNELS.filter((c) => JSON.stringify(e[c] ?? null) !== JSON.stringify(l[c] ?? null));
+      // Where each side was made, so a match between two runs on the same machine is never
+      // reported as agreement between two machines.
+      const pair = `${l.observedOn || 'local'} vs ${e.observedOn || 'local'}`;
+      out.pairs[pair] = out.pairs[pair] || { identical: 0, differing: 0 };
+      out.pairs[pair][bad.length ? 'differing' : 'identical']++;
       if (!bad.length) { out.identical++; continue; }
       out.differing++;
       for (const c of bad) out.byChannel[c] = (out.byChannel[c] || 0) + 1;
@@ -56,16 +62,21 @@ if (require.main === module) {
   const limit = Number(flag('limit')) || 300;
   if (!dir) {
     const fleet = flag('fleet');
-    if (!fleet) { console.error('usage: --fleet <fleet.json> [--limit N]  or  --dir <index-dir>'); process.exit(3); }
+    const local = flag('local');
+    if (!fleet && !local) { console.error('usage: --fleet <fleet.json> [--limit N]  or  --local N  or  --dir <index-dir>'); process.exit(3); }
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crossval-'));
-    execFileSync(process.execPath, [path.join(__dirname, 'index-build.js'), '--nebius', '--from-fleet', fleet,
-      '--limit', String(limit), '--concurrency', '30', '--out', dir], { stdio: 'inherit' });
+    const from = fleet ? ['--from-fleet', fleet, '--limit', String(limit)]
+      : ['--from-index', path.join(ROOT, 'index', 'data'), '--observed-on', 'local', '--limit', String(Number(local) || 300)];
+    execFileSync(process.execPath, [path.join(__dirname, 'index-build.js'), '--nebius', ...from,
+      '--concurrency', '30', '--out', dir], { stdio: 'inherit' });
   }
   const r = compare(dir);
   const record = { measured: new Date().toISOString().slice(0, 10), strategy: 'nodert', ...r };
   fs.writeFileSync(path.join(ROOT, 'docs', 'crossval.json'), `${JSON.stringify(record, null, 2)}\n`);
   console.log(`\n  ${r.identical} of ${r.compared} transcripts identical on every channel` +
     `${r.differing ? ` · ${r.differing} differ (${Object.entries(r.byChannel).map(([c, n]) => `${c} ${n}`).join(', ')})` : ''}` +
-    ` · observed on ${Object.keys(r.observedOn).join(', ') || 'unrecorded'}\n  recorded in docs/crossval.json\n`);
+    ` · observed on ${Object.keys(r.observedOn).join(', ') || 'unrecorded'}` +
+    `${Object.entries(r.pairs).map(([k, v]) => `\n    ${k}: ${v.identical} identical, ${v.differing} differ`).join('')}` +
+    `\n  recorded in docs/crossval.json\n`);
   process.exitCode = r.differing ? 1 : 0;
 }

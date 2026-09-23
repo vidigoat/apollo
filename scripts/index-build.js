@@ -80,23 +80,28 @@ function work(flags) {
   /*
    * `--from-index <dir>` re-observes what an index already holds — after the probe changes, say.
    * `--with env` narrows it to entries that recorded something on that channel, which is all a fix
-   * that only REMOVES misattributed reads can change.
+   * that only REMOVES misattributed reads can change. `--observed-on local` keeps only entries made
+   * on the builder machine — what a cross-machine check has to re-observe somewhere else — and a
+   * `--limit` then takes an even spread across the alphabet rather than the first N names.
    */
   if (flags['from-index']) {
     const dir = path.resolve(String(flags['from-index']), 'entries');
     const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith('.json') ? [path.join(d, e.name)] : []));
     const only = flags.with ? String(flags.with) : null;
+    const on = flags['observed-on'] ? String(flags['observed-on']) : null;
     const singles = [];
     for (const f of walk(dir)) {
       const rec = JSON.parse(fs.readFileSync(f, 'utf8'));
       for (const [version, e] of Object.entries(rec.versions || {})) {
         if (only && !(Array.isArray(e[only]) && e[only].length)) continue;
+        if (on && (e.observedOn || 'local') !== on) continue;
         singles.push({ pkg: rec.name, version, single: true });
       }
     }
     singles.sort((a, b) => `${a.pkg}@${a.version}`.localeCompare(`${b.pkg}@${b.version}`));
     const limit = Number(flags.limit) || 0;
-    return limit ? singles.slice(0, limit) : singles;
+    if (!limit || limit >= singles.length) return singles;
+    return Array.from({ length: limit }, (_, i) => singles[Math.floor((i * singles.length) / limit)]);
   }
 
   if (flags['from-lockfile']) {
