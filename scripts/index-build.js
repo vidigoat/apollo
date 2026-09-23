@@ -182,7 +182,17 @@ if (require.main !== module) return;
     process.exit(3);
   }
 
-  const jobs = work(flags);
+  /*
+
+   * `--from N` starts at job N of the ranked list. For a second builder working the far end of the
+
+   * same list into its own `--out` — two processes writing one directory would race on the same
+
+   * package file — and for resuming at a known place.
+
+   */
+
+  const jobs = (work(flags)).slice(Number(flags.from) || 0);
   const strategy = bestStrategy(adapter);
 
   console.log(`\n  ${C.bold}building the behavioural index${C.off}`);
