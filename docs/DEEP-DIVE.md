@@ -351,19 +351,19 @@ The curve is the economics of a central index, and it is why stopping early is f
 is already done. The 1,500 row is not a projection — it was predicted from the ranking, then built
 from real installs, and came out at exactly 11,242. The 2,120 row is where the build was stopped.
 
-The hosted demo has no filesystem to read, so a real scan of a checkout of
-[vercel/turborepo](https://github.com/vercel/turborepo) is committed — 24 projects, 3,107
-dependency-versions, 1,984 of them already answered — 64% of a public monorepo. The page says whose tree it is rather than
+The hosted demo has no filesystem to read, so a real scan is committed: six **held-out** public
+projects — undici, bootstrap, ionic-framework, highlight.js, shelljs, cheerio — 3,548
+dependency-versions, 2,705 of them already answered (76%). Held out means none of them was used to
+choose what went into the index, which was grown from nineteen other public projects' lockfiles, so
+the figure is generalisation rather than recall; it was 56% before that build. The page says whose tree it is rather than
 letting it read as yours, and `GET /api/project?at=<n>` there says plainly that the lockfile is not
 on this machine instead of doing nothing. The hundredth repo is a lookup, not a hundredth sandbox run.
 
 **And the index is a file now, which is what makes that claim checkable by somebody else.** It was
 built locally and gitignored, so verifying "run a package once, answer for every repository" meant
 installing two thousand packages first — which makes it a sentence about an artefact that existed on
-exactly one laptop. `npm run index:publish` writes `public/index.json`: 1,589 packages, 2,129
-versions, 61 kB over the wire, served from the demo URL. In a repository that has never heard of
-this project, `cli.js lock --index <url>` pinned 47 of 151 packages from real observations and
-recorded the other 104 as unknown by name. Most of anyone's tree comes back unknown, because most of
+exactly one laptop. `npm run index:publish` writes `public/index.json`: 4,592 packages, 7,914
+versions, about 250 kB over the wire, served from the demo URL. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,705 of their 3,548 dependency-versions are answered (76%)**, up from 56% before the index was grown; the other 843 come back unknown by name. Most of anyone's tree comes back unknown, because most of
 npm has never been watched by anybody, and that is reported as its own outcome rather than as a pass.
 
 Preparing it for publication is what found that **every one of the 2,129 entries was overclaiming**:

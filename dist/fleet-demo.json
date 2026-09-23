@@ -1,255 +1,74 @@
 {
   "root": null,
-  "describes": "turborepo",
-  "scannedAt": "2026-09-21T14:49:33.634Z",
+  "describes": "six public projects \u2014 undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio",
+  "describesNote": "none of which was used to choose what went into the index",
+  "scannedAt": "2026-09-23T07:34:49.970Z",
   "index": {
-    "packages": 1588,
-    "versions": 2120,
-    "revision": "2026-09-21"
+    "packages": 4592,
+    "versions": 7914,
+    "revision": "2026-09-23"
   },
   "repos": [
     {
-      "name": "fixtures/issue-12493",
-      "dir": "lockfile-tests/fixtures/issue-12493",
-      "deps": 945,
-      "known": 595,
-      "unknown": 350,
+      "name": "twbs/bootstrap",
+      "dir": "twbs_bootstrap",
+      "deps": 1205,
+      "known": 840,
+      "unknown": 365,
       "state": "unpinned",
       "drift": []
     },
     {
-      "name": "fixtures/npm-shallow-install",
-      "dir": "lockfile-tests/fixtures/npm-shallow-install",
-      "deps": 746,
-      "known": 502,
-      "unknown": 244,
+      "name": "nodejs/undici",
+      "dir": "nodejs_undici",
+      "deps": 602,
+      "known": 539,
+      "unknown": 63,
       "state": "unpinned",
       "drift": []
     },
     {
-      "name": "examples/with-npm",
-      "dir": "examples/with-npm",
-      "deps": 571,
-      "known": 309,
-      "unknown": 262,
+      "name": "ionic-team/ionic-framework",
+      "dir": "ionic-team_ionic-framework",
+      "deps": 491,
+      "known": 313,
+      "unknown": 178,
       "state": "unpinned",
       "drift": []
     },
     {
-      "name": "fixtures/npm-lock-workspace-variation",
-      "dir": "lockfile-tests/fixtures/npm-lock-workspace-variation",
-      "deps": 348,
-      "known": 274,
-      "unknown": 74,
+      "name": "highlightjs/highlight.js",
+      "dir": "highlightjs_highlight.js",
+      "deps": 422,
+      "known": 352,
+      "unknown": 70,
       "state": "unpinned",
       "drift": []
     },
     {
-      "name": "fixtures/npm-lock",
-      "dir": "lockfile-tests/fixtures/npm-lock",
-      "deps": 296,
-      "known": 161,
-      "unknown": 135,
+      "name": "cheeriojs/cheerio",
+      "dir": "cheeriojs_cheerio",
+      "deps": 414,
+      "known": 317,
+      "unknown": 97,
       "state": "unpinned",
       "drift": []
     },
     {
-      "name": "fixtures/issue-10985",
-      "dir": "lockfile-tests/fixtures/issue-10985",
-      "deps": 61,
-      "known": 44,
-      "unknown": 17,
+      "name": "shelljs/shelljs",
+      "dir": "shelljs_shelljs",
+      "deps": 414,
+      "known": 344,
+      "unknown": 70,
       "state": "unpinned",
       "drift": []
-    },
-    {
-      "name": "fixtures/framework_inference",
-      "dir": "turborepo-tests/integration/fixtures/framework_inference",
-      "deps": 54,
-      "known": 39,
-      "unknown": 15,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/issue-13321",
-      "dir": "lockfile-tests/fixtures/issue-13321",
-      "deps": 22,
-      "known": 20,
-      "unknown": 2,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/issue-13109",
-      "dir": "lockfile-tests/fixtures/issue-13109",
-      "deps": 20,
-      "known": 18,
-      "unknown": 2,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/npm",
-      "dir": "lockfile-tests/fixtures/npm",
-      "deps": 10,
-      "known": 7,
-      "unknown": 3,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/npm-basic",
-      "dir": "lockfile-tests/fixtures/npm-basic",
-      "deps": 10,
-      "known": 7,
-      "unknown": 3,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/npm-peer-dep",
-      "dir": "lockfile-tests/fixtures/npm-peer-dep",
-      "deps": 8,
-      "known": 8,
-      "unknown": 0,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/relationship_projection_contract",
-      "dir": "turborepo-tests/integration/fixtures/relationship_projection_contract",
-      "deps": 8,
-      "known": 0,
-      "unknown": 8,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/watch_task_inputs_dependency_test",
-      "dir": "turborepo-tests/integration/fixtures/watch_task_inputs_dependency_test",
-      "deps": 3,
-      "known": 0,
-      "unknown": 3,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/workspace-peer-dependency",
-      "dir": "lockfile-tests/fixtures/workspace-peer-dependency",
-      "deps": 2,
-      "known": 0,
-      "unknown": 2,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "__fixtures__/workspace",
-      "dir": "packages/eslint-plugin-turbo/__fixtures__/workspace",
-      "deps": 1,
-      "known": 0,
-      "unknown": 1,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/cargo_monorepo",
-      "dir": "turborepo-tests/integration/fixtures/cargo_monorepo",
-      "deps": 1,
-      "known": 0,
-      "unknown": 1,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/uv_monorepo",
-      "dir": "turborepo-tests/integration/fixtures/uv_monorepo",
-      "deps": 1,
-      "known": 0,
-      "unknown": 1,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/affected_tasks_inputs",
-      "dir": "turborepo-tests/integration/fixtures/affected_tasks_inputs",
-      "deps": 0,
-      "known": 0,
-      "unknown": 0,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/basic_monorepo",
-      "dir": "turborepo-tests/integration/fixtures/basic_monorepo",
-      "deps": 0,
-      "known": 0,
-      "unknown": 0,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/boundaries_circular",
-      "dir": "turborepo-tests/integration/fixtures/boundaries_circular",
-      "deps": 0,
-      "known": 0,
-      "unknown": 0,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/boundaries_tags",
-      "dir": "turborepo-tests/integration/fixtures/boundaries_tags",
-      "deps": 0,
-      "known": 0,
-      "unknown": 0,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/composable_config",
-      "dir": "turborepo-tests/integration/fixtures/composable_config",
-      "deps": 0,
-      "known": 0,
-      "unknown": 0,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "fixtures/ordered",
-      "dir": "turborepo-tests/integration/fixtures/ordered",
-      "deps": 0,
-      "known": 0,
-      "unknown": 0,
-      "state": "unpinned",
-      "drift": []
-    },
-    {
-      "name": "watch_deps_test",
-      "dir": "turborepo-tests/integration/fixtures/watch_deps_test",
-      "error": "Unrecognised lockfile: no \"packages\" or \"dependencies\" (lockfileVersion 3). Refusing to report an empty tree, which would read as \"nothing to check\"."
-    },
-    {
-      "name": "watch_mixed_persistent_test",
-      "dir": "turborepo-tests/integration/fixtures/watch_mixed_persistent_test",
-      "error": "Unrecognised lockfile: no \"packages\" or \"dependencies\" (lockfileVersion 3). Refusing to report an empty tree, which would read as \"nothing to check\"."
-    },
-    {
-      "name": "watch_task_inputs_persistent_test",
-      "dir": "turborepo-tests/integration/fixtures/watch_task_inputs_persistent_test",
-      "error": "Unrecognised lockfile: no \"packages\" or \"dependencies\" (lockfileVersion 3). Refusing to report an empty tree, which would read as \"nothing to check\"."
-    },
-    {
-      "name": "watch_test",
-      "dir": "turborepo-tests/integration/fixtures/watch_test",
-      "error": "Unrecognised lockfile: no \"packages\" or \"dependencies\" (lockfileVersion 3). Refusing to report an empty tree, which would read as \"nothing to check\"."
     }
   ],
   "totals": {
-    "repos": 24,
-    "depVersions": 3107,
-    "distinct": 1756,
-    "known": 1984,
+    "repos": 6,
+    "depVersions": 3548,
+    "distinct": 2527,
+    "known": 2705,
     "drifting": 0,
     "pinned": 0
   }

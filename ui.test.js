@@ -128,9 +128,17 @@ const it = async (name, fn) => {
      *
      * So: the real bundled scan, through the real derivation, and every figure the paragraph
      * prints has to be a finite number.
+     *
+     * With a refusal added if the bundled scan happens to have none. The demo was a turborepo scan
+     * with four; it is now six held-out public projects, all readable, and a test that only proves
+     * something when the bundled data cooperates is a test that stops proving it without a sound.
+     * The refused row is the shape fleet-scan writes for a lockfile it will not guess at.
      */
     const { fleetTotals, num } = await import('./web/src/lib/api.js');
     const scan = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'fleet-demo.json'), 'utf8'));
+    if (!scan.repos.some((r) => r.error)) {
+      scan.repos.push({ name: 'a lockfile in a format this reader declines', dir: 'refused', error: 'unreadable', state: 'unreadable', drift: [] });
+    }
 
     const t = fleetTotals(scan);
     for (const key of ['depVersions', 'known', 'distinct', 'pct', 'reuse', 'refused']) {

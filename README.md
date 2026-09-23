@@ -60,8 +60,8 @@ cd ~/your-project
 node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
 ```
 
-That reads a **published index** — 1,589 packages and 2,129 versions somebody has already run,
-about sixty kilobytes over the wire — and writes a `stakeout.lock` for *your* tree. Most of it will
+That reads a **published index** — 4,592 packages and 7,914 versions somebody has already run,
+about 250 kB over the wire — and writes a `stakeout.lock` for *your* tree. Most of it will
 come back **unknown**, because most of npm has never been watched by anybody, and the lock says so
 by name rather than pretending to cover it.
 
@@ -109,11 +109,15 @@ the index answered 12,986 of them, **62%**, from an index you could build in an 
 
 <img src="docs/images/fleet.jpg" alt="A scan of turborepo drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline" width="100%">
 
-The scan above is the one bundled with this repository, so you can check it: turborepo: 3,107
-dependency-versions across 24 readable lockfiles, which are only 1,756 distinct package-versions.
-Four more lockfiles are written in a form the reader will not guess at, and are left out rather than
-counted as empty. Unobserved surface is **hatched, never filled** — a fill is a quantity, and this is
-the absence of one.
+The scan bundled with this repository is of six **held-out** public projects — undici, bootstrap,
+ionic-framework, highlight.js, shelljs and cheerio — none of which was used to choose what went into
+the index, so it measures how well the index generalises rather than how well it remembers: 3,548
+dependency-versions across 6 readable lockfiles, which are only 2,527 distinct package-versions, and
+2,705 of them answered. The index itself was grown to 7,914 versions from the lockfiles of nineteen
+widely used projects (vscode, TypeScript, nest, puppeteer, axios, npm, playwright among them),
+installed and watched inside a container that could see nothing of the machine running it.
+Unobserved surface is **hatched, never filled** — a fill is a quantity, and this is the absence of
+one.
 
 ## What this cannot do
 

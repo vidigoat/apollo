@@ -328,7 +328,7 @@ That was unverifiable. The index was built locally and gitignored, so checking i
 two thousand packages first — which makes "run a package once, answer for every repository" a
 sentence about an artefact that existed on exactly one laptop.
 
-`npm run index:publish` writes it. **1,589 packages, 2,129 versions, 61 kB over the wire**, served
+`npm run index:publish` writes it. **4,592 packages, 7,914 versions, about 250 kB over the wire**, served
 from the demo URL at `/index.json`. Then, in a repository that has never heard of this project:
 
 ```bash
@@ -337,8 +337,7 @@ cd ~/your-project
 node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
 ```
 
-On a real tree: **47 of 151 packages pinned from real observations, 104 recorded as unknown by
-name.** Most of anyone's tree comes back unknown, because most of npm has never been watched by
+On six public projects that were not used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,705 of their 3,548 dependency-versions are answered (76%)**, up from 56% before the index was grown; the other 843 come back unknown by name. Most of anyone's tree comes back unknown, because most of npm has never been watched by
 anybody, and `check` reports that as its own outcome rather than as a pass. That is the point of
 publishing it — the claim is now a thing that can be wrong.
 

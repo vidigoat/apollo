@@ -111,7 +111,8 @@ function fleetClaims() {
   );
   const b = bundled.totals;
   claims.push(
-    { what: 'bundled fleet: dependency-versions', value: b.depVersions.toLocaleString(), where: /turborepo: ([\d,]+)\s*\n?dependency-versions/g },
+    { what: 'bundled fleet: dependency-versions', value: b.depVersions.toLocaleString(), where: /remembers: ([\d,]+)\s*\n?dependency-versions/g },
+    { what: 'bundled fleet: answered', value: b.known.toLocaleString(), where: /and\s+([\d,]+) of them answered/g },
     { what: 'bundled fleet: readable lockfiles', value: String(b.repos), where: /across (\d+) readable lockfiles/g },
     { what: 'bundled fleet: distinct package-versions', value: b.distinct.toLocaleString(), where: /only ([\d,]+) distinct package-versions/g },
     /*
@@ -119,8 +120,13 @@ function fleetClaims() {
      * site summed the refused rows in with the rest and printed "NaN of NaN — 0%" — so it is now
      * stated in the README and checked here rather than being a number nobody looks at.
      */
-    { what: 'bundled fleet: refused lockfiles', value: String(bundled.repos.length - b.repos), where: /\n(\w+) more lockfiles are written/g, spell: true }
   );
+  // Only while there are refusals to state: the held-out scan reads all six, and a README that went
+  // on saying "four more lockfiles are written…" would be the stale sentence this checker exists for.
+  const refusedNow = bundled.repos.length - b.repos;
+  if (refusedNow > 0) {
+    claims.push({ what: 'bundled fleet: refused lockfiles', value: String(refusedNow), where: /\n(\w+) more lockfiles are written/g, spell: true });
+  }
 
   let local;
   try {
