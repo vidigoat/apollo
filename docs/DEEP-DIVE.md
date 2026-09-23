@@ -617,6 +617,34 @@ see every channel.** eBPF cannot watch code built at runtime, the proxy sees no 
 state this system can describe and cannot currently reach — which is a truer thing to publish than
 the alternative, and there is a test asserting it out loud so it cannot quietly stop being said.
 
+#### A third and a fourth time, in the index itself
+
+Both found on 23 September, by pointing the site's own lockfile check at strangers' trees.
+
+**Node's reads, credited to packages.** The first lockfile checked said 117 of its packages read
+`NODE_V8_COVERAGE`. Across the index it was 3,176 versions. A stack trace at the read, in a
+container, named the reader: Node itself, in `maybeCacheSourceMap`, whenever a file ships a source
+map — plus `WATCH_REPORT_DEPENDENCIES` from the ESM loader and `FORCE_COLOR` from Node's own colour
+setup. The probe now counts a read only when the frame that made it is not `node:` internal, a test
+fails on the old probe, and all 5,289 entries that had recorded an environment read were observed
+again, in Nebius Sandboxes, with no failures.
+
+**A version that never installed, written down as quiet.** The new cross-machine check
+(`npm run crossval -- --local 300`: entries made on a Mac, re-observed on Nebius) matched 299 of
+300. The odd one, `utf-8-validate@5.0.10`, read seven variables on Nebius and none on the Mac. On
+arm64 it has no prebuilt binary, `node:22-slim` has no Python to compile one, and the install
+failed — after which the runner imported nothing, the probe had nothing to report, and the builder
+wrote six empty arrays: *watched, did nothing*. The same shape as `observed: null` becoming `{}`,
+one layer up.
+
+`transcript/schema.js` now has `unobserved()`: an install that exited non-zero, or a `nodert` probe
+that never reported, is not an observation. `Index.put` refuses it, so the version stays absent and
+`stakeout check` calls it unknown; `diff()` refuses to compare it, so no caller can turn it into
+"no change"; `/api/watch` answers "not watched" in words. Any of the 8,940 all-quiet entries could
+have been one of these, so every one is being observed again with the fixed builder, and the
+versions it refuses twice are withdrawn (`index-merge --withdraw`, which removes exactly those and
+nothing else).
+
 ### 4. Absence of a public record raises priority and proves nothing
 
 Most small packages ship without release notes. "Nothing on the open web mentions this version" is
@@ -744,8 +772,8 @@ so nothing here is presented as more finished than it is.
 
 ## What this cannot do
 
-Four real limitations. They are listed here rather than discovered later, and each one has a test
-in `differ/diff.test.js` asserting the failure still fails the way it is described — so a change
+Six real limitations. They are listed here rather than discovered later, and the first four have a
+test in `differ/diff.test.js` asserting the failure still fails the way it is described — so a change
 that quietly widens or narrows a blind spot cannot land unnoticed.
 
 **A package that was already malicious in the version you had.** This is the big one. Stakeout
@@ -771,7 +799,30 @@ watches Node's API surface, so a native addon, a WebAssembly module, or code tha
 reference to `net.Socket` before the probe loaded is invisible to it. That is why `canSee` and the
 strategy name travel with every transcript.
 
-A fifth, less interesting one: a brand-new dependency has no previous version, so there is nothing
+**What an install script does.** The twins run `npm install` with scripts enabled, so a
+`postinstall` really executes — but the probe is loaded for the import, not for the install, so
+nothing it does is recorded. npm 12 stopped running those scripts by default, which is why the
+import is where this project looks; npm 10 and 11, still what most machines run, run them. A
+version whose install script phones home would come back quiet on every channel. The lockfile
+check names every package whose lockfile entry says `hasInstallScript`, under "runs code while being
+installed — which is not watched", rather than let the silence stand for it. Watching that phase is
+the probe loaded through `NODE_OPTIONS` for the install step with npm's own frames excluded, which
+changes what every entry means — so it is the next re-observation's job, not a patch to this one.
+
+**Code that only runs somewhere else.** The index is observed on Linux, x64, glibc, in Node. A
+binary published only for macOS, Windows or musl — esbuild, swc, rollup and sharp publish one per
+platform, and a lockfile lists them all — cannot be installed there, and neither can a native
+addon that has no prebuilt binary and needs a compiler the image lacks. Those are left out of the
+index and reported as unknown, with the reason (`EBADPLATFORM`, a native build that failed); the
+lockfile check counts the other-platform ones separately so they read as unknown-for-a-reason. A
+package written for the browser is subtler: it installs, is imported, and may throw on its first
+line (`window is not defined`), so its entry is a real observation of everything it did before the
+throw and nothing after. Entries do not yet record that the import threw — the transcript has it
+(`result.threw`), the index entry drops it — so that distinction is not on the page. The trigger
+to fix it is the next full re-observation: `entryFor` gains a `threw` field, and the lockfile check
+counts those beside the other-platform ones.
+
+A sixth, less interesting one: a brand-new dependency has no previous version, so there is nothing
 to diff. That case needs a different tool, and `diff()` refuses rather than returning something
 that resembles a clean result.
 
@@ -1015,7 +1066,7 @@ npm test
 ```
 
 ```
-28 suites · 372 checks
+32 suites · 431 checks
 all green
 ```
 
@@ -1026,8 +1077,10 @@ work. So the count is now asserted by the test runner itself: `scripts/test.js` 
 against the tally it has just printed and fails, naming both numbers. It lives there rather than in
 `check-readme` because there the count is already in hand — having that script re-run the whole
 suite to learn something the suite had just printed made it slow enough to stop being run, and a
-check nobody runs protects nothing. A mechanism has kept this number honest ever since; two written
-rules did not.
+check nobody runs protects nothing. That kept the README honest — and this block went stale a
+third time underneath it, at `28 suites · 372 checks`, because the mechanism only read the README.
+It reads this file too now. Two written rules and one partial mechanism did not hold the number; a
+check on every place it is printed does.
 Everywhere else in this README says "every suite".
 
 The runner deliberately does not chain suites with `&&`. That stops at the first failure and

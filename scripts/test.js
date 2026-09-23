@@ -72,3 +72,14 @@ if (!readme.includes(tally)) {
   );
   process.exit(1);
 }
+// And the deep dive, which printed the same line in a block of its own and went stale a third time
+// while the README stayed right. Only a line that IS the tally — the prose that quotes old numbers
+// as history is left alone.
+for (const doc of ['docs/DEEP-DIVE.md']) {
+  const text = fs.readFileSync(path.join(ROOT, doc), 'utf8');
+  const stale = [...text.matchAll(/^(\d+ suites · \d+ checks)$/gm)].map((m) => m[1]).filter((q) => q !== tally);
+  if (stale.length) {
+    console.log(`\n${doc} is stale: it says "${stale[0]}" and this run was "${tally}". Nothing else is wrong.`);
+    process.exit(1);
+  }
+}
