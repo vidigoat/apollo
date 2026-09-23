@@ -142,6 +142,17 @@ is the reason a successful prompt injection cost this system nothing (below).
 
 ---
 
+### Pointed at the newest releases of the most-used packages
+
+On 23 September, `scripts/release-watch.js` watched the newest release of the 296 most-downloaded
+packages the index holds against the release before it, in Nebius Sandboxes, import and install.
+292 behaved exactly as before. Four read new environment variables — and one of those is the kind of
+change this project exists to surface: **jiti 2.7.0, 130 million downloads a week, now checks at
+import whether it is running inside an AI coding agent** — `CLAUDECODE`, `CODEX_SANDBOX`,
+`CURSOR_AGENT`, `GEMINI_CLI` and fifteen more — through the `std-env` it bundles. 2.6.1 read none of
+them; confirmed in both published tarballs. Benign, and in no changelog. The watch also turned up a
+false positive in the tool itself (below), which is why a hit is read by hand before it is claimed.
+
 ## Challenges we ran into
 
 **A prompt injection worked.** The judgement prompt had never been answered by a real model —
@@ -182,6 +193,13 @@ quiet entry could have been one of those — and among them, the index held `@ac
 a package that is not on the npm registry at all, as watched and silent. Now the index refuses a version that did not install or
 whose probe never reported (`index/schema.js`, tested), `/api/watch` answers "not watched" instead
 of "no change". All 8,940 quiet entries were observed again with the fixed builder: 7,953 were observed, and 9 of those turned out not to be quiet; **987 could not be observed at all** — 886 of them binaries built for another platform, 28 not on npm at that version, 11 command-line tools that never let the probe report, 38 monorepo folders a parser bug had read as package names, 24 for other reasons — and were withdrawn.
+
+**Loading `node:http` counted as the package decoding something.** Node decodes its bundled HTTP
+parser — 64,860 characters of base64 — the first time `http` loads, and the probe credited that to
+whichever package loaded it: the release watch flagged agent-base 9.0.0 for "decoding something it
+did not before", and its tarball contains no base64 at all. The decode hook now takes the same
+caller-frame rule as environment reads, a test fails on the old probe, and every index entry with a
+runtime-code record was observed again.
 
 **Every plain network connection was recorded as `localhost`, port unknown.** `net.connect(port,
 host)` and every plain `http.request` hand the socket Node's internal `[options, callback]` array,

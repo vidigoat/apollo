@@ -63,6 +63,18 @@ watched; or pick any npm package and two of its versions, and both are installed
 Nebius Token Factory Sandboxes forked from one checkpoint while you wait, and diffed. Rate-limited, so
 the sandboxes stay available.
 
+### The newest releases of the most-used packages, watched
+
+`node scripts/release-watch.js --top 300` ranks the packages the index holds by weekly downloads,
+takes each one's newest release and the release before it, and watches both in Nebius Sandboxes —
+import and install. On 23 September, **292 of 296** latest releases behaved exactly like the release
+before on every channel. The other four read new environment variables, and one is worth knowing:
+**jiti 2.7.0** — 130 million downloads a week — now checks at import whether it is running inside
+an AI coding agent (`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more),
+from the `std-env` it bundles; 2.6.1 did not. Nothing malicious, and nothing a changelog said —
+which is the kind of change this exists to put in front of somebody. Recorded in
+`docs/release-watch.json`; no model is called.
+
 ### In Nebius Token Factory Sandboxes
 
 ```bash

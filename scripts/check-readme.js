@@ -155,8 +155,22 @@ function crossvalClaims() {
   return [{ what: 'cross-validation: identical of compared', value: `${m.identical} of ${m.compared}`, where: /\*\*(\d+ of \d+)\*\* (?:re-observations|entries made|matched)/g }];
 }
 
+/** The release watch, from its recording (docs/release-watch.json) — it needs Nebius, so it is not re-run here. */
+function releaseWatchClaims() {
+  let m;
+  try {
+    m = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'release-watch.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+  const all = Object.values(m.results || {});
+  const same = all.filter((r) => r.severity === 'none').length;
+  return [{ what: 'release watch: unchanged of watched', value: `${same} of ${all.length}`, where: /\*\*(\d+ of \d+)\*\* latest releases/g }];
+}
+
 const CLAIMS = [
   ...crossvalClaims(),
+  ...releaseWatchClaims(),
   // No `where` here: "N packages" is a phrase this README uses for several different counts — the
   // tree, the ones that moved, the ones in a survey — so matching it in context would be matching
   // the wrong things. A contextual pattern is only an improvement where the phrase means one thing.
