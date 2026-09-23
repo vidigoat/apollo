@@ -62,7 +62,7 @@ const publicRecordFor = (pkg, version) => lookUp(pkg, version, { recorded: PUBLI
  * environment variable at BOTH versions and is correctly reported as unchanged, and one that
  * actually changed. The middle case is the one that shows we are watching rather than guessing.
  */
-const REAL_JOBS = require('./scripts/survey').PAIRS;
+const REAL_JOBS = require('./scripts/survey-pairs').PAIRS;
 
 const realAllowed = () => process.env.STAKEOUT_ALLOW_LOCAL === '1';
 

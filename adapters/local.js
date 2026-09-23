@@ -19,7 +19,8 @@ const path = require('node:path');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { runnerSource, readReport } = require('../observe/probe');
-const PROBE = require.resolve('../observe/probe');
+// A plain path, not require.resolve: resolved at load, that threw inside the hosted bundle.
+const PROBE = path.join(__dirname, '..', 'observe', 'probe.js');
 
 const run = promisify(execFile);
 
