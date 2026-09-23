@@ -77,6 +77,28 @@ function work(flags) {
    * to know is what THAT version does. Drift is found later by re-checking, not by guessing which
    * neighbouring version to compare against.
    */
+  /*
+   * `--from-index <dir>` re-observes what an index already holds — after the probe changes, say.
+   * `--with env` narrows it to entries that recorded something on that channel, which is all a fix
+   * that only REMOVES misattributed reads can change.
+   */
+  if (flags['from-index']) {
+    const dir = path.resolve(String(flags['from-index']), 'entries');
+    const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : e.name.endsWith('.json') ? [path.join(d, e.name)] : []));
+    const only = flags.with ? String(flags.with) : null;
+    const singles = [];
+    for (const f of walk(dir)) {
+      const rec = JSON.parse(fs.readFileSync(f, 'utf8'));
+      for (const [version, e] of Object.entries(rec.versions || {})) {
+        if (only && !(Array.isArray(e[only]) && e[only].length)) continue;
+        singles.push({ pkg: rec.name, version, single: true });
+      }
+    }
+    singles.sort((a, b) => `${a.pkg}@${a.version}`.localeCompare(`${b.pkg}@${b.version}`));
+    const limit = Number(flags.limit) || 0;
+    return limit ? singles.slice(0, limit) : singles;
+  }
+
   if (flags['from-lockfile']) {
     const tree = lockfileOnDisk(flags['from-lockfile'], process.cwd());
     const singles = [...tree.versions.entries()]

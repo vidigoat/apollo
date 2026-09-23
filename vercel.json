@@ -5,13 +5,13 @@
   "functions": {
     "api/index.js": {
       "memory": 512,
-      "maxDuration": 30,
-      "includeFiles": "{public,judge/verdicts}/**"
+      "maxDuration": 120,
+      "includeFiles": "{public,judge/verdicts,observe}/**"
     },
     "api/[...path].js": {
       "memory": 512,
-      "maxDuration": 30,
-      "includeFiles": "{public,judge/verdicts}/**"
+      "maxDuration": 120,
+      "includeFiles": "{public,judge/verdicts,observe}/**"
     }
   }
 }

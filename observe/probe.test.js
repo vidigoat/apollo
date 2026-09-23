@@ -169,4 +169,18 @@ it('an ordinary package builds no code at all', () => {
   assert.deepEqual(r.exec, [], 'something ordinary was recorded as building code');
 });
 
+it('a read Node makes while loading the package is Node\'s, not the package\'s', () => {
+  // A file with a source map makes Node read NODE_V8_COVERAGE (maybeCacheSourceMap); util.debuglog
+  // makes it read NODE_DEBUG. Neither is the package asking — only the direct read below is.
+  const r = watch('runtime-reads', [
+    "require('node:util').debuglog('stakeout-test')('x');",
+    'process.env.STAKEOUT_DIRECT_READ;',
+    'module.exports = 1;',
+    '//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibWFwcGluZ3MiOiIifQ==',
+  ].join('\n'));
+  assert.ok(r.env.includes('STAKEOUT_DIRECT_READ'), `a direct read was missed: ${JSON.stringify(r.env)}`);
+  assert.ok(!r.env.includes('NODE_V8_COVERAGE'), `Node's source-map read was credited to the package: ${JSON.stringify(r.env)}`);
+  assert.ok(!r.env.includes('NODE_DEBUG'), `Node's debuglog read was credited to the package: ${JSON.stringify(r.env)}`);
+});
+
 console.log(`\n${passed} passed`);

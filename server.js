@@ -167,6 +167,13 @@ function handler(req, res) {
       return githubWebhook(req, res);
     }
 
+    /*
+     * The two things a visitor can do with their OWN packages: resolve a lockfile against the
+     * published index (runs nothing), and watch one upgrade in Nebius Sandboxes. See yours.js.
+     */
+    if (url.pathname === '/api/lockfile') return require('./yours').lockfile(req, res);
+    if (url.pathname === '/api/watch') return require('./yours').watch(req, res);
+
     if (url.pathname === '/api/tree') {
       return send(
         res,

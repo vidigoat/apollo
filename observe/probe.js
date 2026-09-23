@@ -26,10 +26,29 @@ function install() {
 
   /* ── environment ─────────────────────────────────────────────────── */
   // A read is the signal. Which variable was read matters; the value must never leave this process.
+  /*
+   * Only reads the package's own code makes.
+   *
+   * Every read was counted, and Node reads the environment on the package's behalf while loading it:
+   * `NODE_V8_COVERAGE` in maybeCacheSourceMap whenever a file ships a source map, and
+   * `WATCH_REPORT_DEPENDENCIES` in the ESM loader, and FORCE_COLOR while initialising its own colour
+   * support. Across the index that credited 3,176 package versions with reading NODE_V8_COVERAGE —
+   * babel helpers "reading coverage settings" — which is Node's behaviour, not theirs. So the frame
+   * that made the read decides: a caller inside `node:` is the runtime, and is not the package.
+   */
+  const fromRuntime = () => {
+    const limit = Error.stackTraceLimit;
+    Error.stackTraceLimit = 4;
+    const stack = String(new Error().stack || '');
+    Error.stackTraceLimit = limit;
+    // [0] "Error", [1] this function, [2] the trap, [3] whoever touched process.env.
+    const caller = stack.split('\n')[3] || '';
+    return /\(node:|at node:/.test(caller);
+  };
   const realEnv = process.env;
   process.env = new Proxy(realEnv, {
     get(target, prop) {
-      if (typeof prop === 'string') push('env', prop);
+      if (typeof prop === 'string' && !fromRuntime()) push('env', prop);
       return target[prop];
     },
   });

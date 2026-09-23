@@ -47,11 +47,19 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 31 suites · 414 checks
+npm test            # 32 suites · 422 checks
 ```
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
 dependency tree is telling on itself. Node 20+.
+
+### On the site, with your own packages
+
+**<https://cassandra-nu.vercel.app/#yours>** — two things that are not the demo: name a public GitHub
+repository (or drop a `package-lock.json`) and it is resolved against the published index, running
+nothing; or pick any npm package and two of its versions, and both are installed and imported in two
+Nebius Token Factory Sandboxes forked from one checkpoint while you wait, and diffed. Rate-limited, so
+the sandboxes stay available.
 
 ### In Nebius Token Factory Sandboxes
 
