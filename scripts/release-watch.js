@@ -3,6 +3,7 @@
  * The latest release of the most-used packages, watched against the release before it.
  *
  *   node scripts/release-watch.js --top 200 --concurrency 20      # in Nebius Token Factory Sandboxes
+ *   node scripts/release-watch.js --top 1000 --explain            # and the ones that moved, explained
  *
  * `survey.js` asks the baseline question over a fixed list of pairs. This asks the live one: of the
  * packages the index already holds, rank by weekly downloads, take each one's newest release and the
@@ -58,20 +59,28 @@ async function weeklyDownloads(names, fetchImpl = fetch) {
  * Scoped names one at a time — npm's bulk endpoint refuses them — four in flight at most, and only
  * when asked for (`--scoped N`), because it is one request per package against a public API.
  */
-async function scopedDownloads(names, fetchImpl = fetch) {
+async function scopedDownloads(names, fetchImpl = fetch, sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
   const out = new Map();
   const scoped = names.filter((n) => n.startsWith('@') && !n.startsWith('@types/'));
   let next = 0;
+  // The first run asked four at a time and dropped every 429 without a word: 12 of ~1,700 came back
+  // ranked, and the watch would have looked at those as if they were the most-used. A 429 now waits
+  // and asks again, and how many were ranked out of how many asked is returned, not hidden.
   const worker = async () => {
     while (next < scoped.length) {
       const n = scoped[next++];
-      try {
-        const res = await fetchImpl(`https://api.npmjs.org/downloads/point/last-week/${n}`);
-        if (res.ok) { const j = await res.json(); if (Number.isFinite(j.downloads)) out.set(n, j.downloads); }
-      } catch { /* one package unranked is one package not watched this time */ }
+      for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+          const res = await fetchImpl(`https://api.npmjs.org/downloads/point/last-week/${n}`);
+          if (res.status === 429 || res.status >= 500) { await sleep(1500 * 2 ** attempt); continue; }
+          if (res.ok) { const j = await res.json(); if (Number.isFinite(j.downloads)) out.set(n, j.downloads); }
+          break;
+        } catch { await sleep(1000); }
+      }
     }
   };
-  await Promise.all(Array.from({ length: 4 }, worker));
+  await Promise.all(Array.from({ length: 2 }, worker));
+  out.asked = scoped.length;
   return out;
 }
 
@@ -110,18 +119,25 @@ if (require.main === module) {
       // @types/* is left out: a type declaration has no runtime, so there is nothing to watch.
       const sd = await scopedDownloads(names);
       ranked.push(...[...sd.entries()].sort((a, b) => b[1] - a[1]).slice(0, scopedTop));
-      record.scoped = `top ${scopedTop} scoped packages by weekly downloads, @types/* excluded`;
+      record.scoped = `top ${scopedTop} scoped packages by weekly downloads, @types/* excluded — ${sd.size} of ${sd.asked} scoped names ranked`;
+      console.log(`  ${sd.size} of ${sd.asked} scoped names ranked`);
     }
     console.log(`\n  ${names.length} packages in the index · ${downloads.size} unscoped ranked · watching ${ranked.length}`);
 
+    // Eight registry reads at a time, in rank order, so a thousand packages is a minute, not ten.
+    const metas = new Array(ranked.length);
+    let at = 0;
+    await Promise.all(Array.from({ length: 8 }, async () => {
+      while (at < ranked.length) { const i = at++; metas[i] = await packument(ranked[i][0]).catch(() => null); }
+    }));
     const jobs = [];
-    for (const [name, dl] of ranked) {
-      const two = lastTwo(await packument(name));
-      if (!two) continue;
+    ranked.forEach(([name, dl], i) => {
+      const two = lastTwo(metas[i]);
+      if (!two) return;
       const key = `${name}@${two[0]}→${two[1]}`;
-      if (record.results[key]) continue;
+      if (record.results[key]) return;
       jobs.push({ name, dl, from: two[0], to: two[1], key });
-    }
+    });
     console.log(`  ${jobs.length} pairs to watch (${Object.keys(record.results).length} already recorded)\n`);
 
     const { ConTreeSandboxes } = require('../adapters/contree');
@@ -157,6 +173,47 @@ if (require.main === module) {
       }
     };
     await Promise.all(Array.from({ length: concurrency }, worker));
+
+    /*
+     * `--explain`: the few that moved, read by Nemotron against the public record (Tavily).
+     *
+     * The rules have already decided severity and nothing here changes it — a model explains, it
+     * never escalates. Each moved pair is watched once more so the judge sees the whole diff rather
+     * than the summary kept above, the release is looked up on the open web, and judge/index.js
+     * runs its usual tiers under its usual spend ceiling (judge/budget.js). Verdicts are cached, so
+     * a second --explain costs nothing.
+     */
+    if (args.includes('--explain')) {
+      const { judgeOne } = require('../judge');
+      const { lookUp } = require('../evidence/tavily');
+      const moved = Object.entries(record.results).filter(([, r]) => ['minor', 'notable', 'alarming'].includes(r.severity) && !r.judgement);
+      console.log(`\n  explaining ${moved.length} that moved — Nemotron on Token Factory, public record from Tavily\n`);
+      for (const [key, r] of moved) {
+        try {
+          const { diff: d } = await runPair({ adapter, checkpoint, pkg: r.pkg, from: r.from, to: r.to, strategy });
+          const pub = await lookUp(r.pkg, r.to);
+          const j = await judgeOne(d, pub);
+          r.judgement = {
+            tier: j.tier || null,
+            meaning: j.verdict?.meaning || null,
+            explainedByPublicRecord: j.verdict ? j.verdict.explained : null,
+            worthWaking: j.verdict ? j.verdict.worthWaking : null,
+            confidence: j.verdict?.confidence || null,
+            reason: j.reason,
+            record: { verdict: pub.verdict, sources: (pub.sources || []).slice(0, 3), simulated: Boolean(pub.simulated) },
+            models: (j.spend || []).map((x) => x.model),
+            costUsd: j.costUsd ?? null,
+            severityStill: d.severity,
+          };
+          console.log(`  ${r.severity.padEnd(8)} ${key}  ${j.tier || '-'}: ${(j.verdict?.meaning || j.reason || '').slice(0, 110)}`);
+        } catch (e) {
+          // A budget stop or a failed call is said, and the finding stands on the rules alone.
+          r.judgement = { error: String(e.message).split('\n')[0].slice(0, 200) };
+          console.log(`  ${r.severity.padEnd(8)} ${key}  not explained: ${r.judgement.error.slice(0, 100)}`);
+        }
+        save();
+      }
+    }
     save();
     console.log(`\n  ${JSON.stringify(record.tally)} · recorded in docs/release-watch.json\n`);
   })().catch((e) => { console.error(e); process.exit(1); });

@@ -49,6 +49,15 @@ const it = async (name, fn) => {
     const r = await scopedDownloads(['@babel/core', '@types/node', 'left-pad'], fake);
     assert.deepEqual([...r.keys()], ['@babel/core']);
     assert.equal(asked.length, 1);
+    assert.equal(r.asked, 1);
+  });
+
+  await it('a rate limit is waited out and asked again, not dropped without a word', async () => {
+    let n = 0;
+    const fake = async () => (++n <= 2 ? { ok: false, status: 429 } : { ok: true, status: 200, json: async () => ({ downloads: 9 }) });
+    const r = await scopedDownloads(['@x/y'], fake, async () => {});
+    assert.equal(r.get('@x/y'), 9, 'a 429 lost the package');
+    assert.equal(n, 3);
   });
 
   console.log(`\n${passed} passed`);
