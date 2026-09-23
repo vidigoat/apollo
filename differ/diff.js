@@ -10,7 +10,7 @@
  * these differences *mean* something — and it is never allowed to invent one.
  */
 
-const { quietness } = require('../transcript/schema');
+const { quietness, unobserved } = require('../transcript/schema');
 
 const keyFor = {
   net: (n) => `${n.host}:${n.port ?? ''}/${n.proto}`,
@@ -114,6 +114,15 @@ function diff(before, after) {
     throw new Error(
       `Cannot compare a "${before.strategy}" transcript with a "${after.strategy}" one — the difference would be in how we watched, not in what the package did.`
     );
+  }
+
+  // A side that never installed, or whose probe never reported, was not watched: its empty
+  // channels would diff as "nothing changed" about something nobody saw. Not a comparison at all.
+  const unseen = [before, after].map(unobserved).filter(Boolean);
+  if (unseen.length) {
+    const e = new Error(`Not watched: ${unseen.join('; ')}. That is not the same as clean.`);
+    e.code = 'UNOBSERVED';
+    throw e;
   }
 
   const parts = {};

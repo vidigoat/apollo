@@ -310,4 +310,12 @@ it('only nodert claims to see code built at runtime', () => {
     assert.equal(CAN_SEE[s].exec, false, `${s} must not claim to see runtime code construction`));
 });
 
+it('a side that never installed is not compared — its silence would read as "no change"', () => {
+  const ok = transcript({ pkg: 'utf-8-validate', version: '5.0.9', strategy: 'nodert', raw: { env: ['npm_config_arch'] }, result: { installExit: 0, reported: true } });
+  const broken = transcript({ pkg: 'utf-8-validate', version: '5.0.10', strategy: 'nodert', raw: {}, result: { installExit: 1, reported: false } });
+  assert.throws(() => diff(ok, broken), (e) => e.code === 'UNOBSERVED' && /did not install/.test(e.message) && /not the same as clean/.test(e.message));
+  const silent = transcript({ pkg: 'utf-8-validate', version: '5.0.10', strategy: 'nodert', raw: {}, result: { installExit: 0, reported: false } });
+  assert.throws(() => diff(ok, silent), /never reported/);
+});
+
 console.log(`\n${passed} passed`);

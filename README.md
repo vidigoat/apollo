@@ -47,7 +47,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 32 suites · 428 checks
+npm test            # 32 suites · 430 checks
 ```
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
