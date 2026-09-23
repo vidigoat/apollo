@@ -127,6 +127,32 @@ function behaviours(lock, cap = 40) {
   return out;
 }
 
+/*
+ * The part worth reading first: known packages that, at install or import, read something that
+ * looks like a credential or start a process the differ treats as notable. Named with what they
+ * touched. It is not an accusation — plenty of tools read GITHUB_TOKEN on purpose — it is the list a
+ * person would want in front of them before anything else.
+ */
+/*
+ * Stricter than the differ's SENSITIVE_ENV on purpose. That one decides whether a CHANGE deserves a
+ * look, where a false alarm costs a glance; this one heads a list, and the differ's pattern put
+ * GITHUB_ACTIONS, bamboo_planKey and FAKEROOTKEY there — CI detection, not credentials — which is
+ * how a list teaches people to skip it. A name that holds a secret, then: tokens, secrets,
+ * passwords, private keys, API and access keys.
+ */
+const CREDENTIAL = /(TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_?KEY|API_?KEY|ACCESS_?KEY|CREDENTIALS?$|_AUTH$|^NPM_CONFIG__?AUTH)/i;
+
+function attention(lock) {
+  const { NOTABLE_PROC } = require('./differ/diff');
+  const out = [];
+  for (const [id, rec] of Object.entries(lock.packages)) {
+    const secrets = (rec.env || []).filter((v) => CREDENTIAL.test(String(v)));
+    const procs = (rec.proc || []).map(describe).filter((c) => NOTABLE_PROC.test(c));
+    if (secrets.length || procs.length) out.push({ package: id, reads: secrets, starts: procs.slice(0, 3) });
+  }
+  return out.sort((a, b) => b.reads.length + b.starts.length - (a.reads.length + a.starts.length)).slice(0, 30);
+}
+
 function answerTree(text, from) {
   let tree;
   try {
@@ -147,6 +173,7 @@ function answerTree(text, from) {
     pct: total ? Math.round((built.known / total) * 100) : 0,
     index: idx.manifest(),
     does: behaviours(built.lock),
+    attention: attention(built.lock),
     note: 'Resolved against the published index; nothing was installed or run. Unknown means nobody has watched that version — never that it is clean.',
   };
 }
@@ -323,4 +350,4 @@ const guarded = (fn) => (req, res, deps) => Promise.resolve().then(() => fn(req,
   if (!res.headersSent) json(res, 500, { error: 'Something went wrong on our side. Nothing was run.' });
 });
 
-module.exports = { lockfile: guarded(lockfile), watch: guarded(watch), answerTree, fetchLockfile, behaviours, limited, describe, NAME, VERSION };
+module.exports = { lockfile: guarded(lockfile), watch: guarded(watch), answerTree, fetchLockfile, behaviours, attentionFor: attention, limited, describe, NAME, VERSION };

@@ -122,5 +122,15 @@ const LOCK = JSON.stringify({
     assert.equal(limited('fresh', now + 61 * 60 * 1000), null, 'the window never reopened');
   });
 
+  await it('the "worth reading first" list is credentials and shells, not CI detection', () => {
+    const lock = { packages: {
+      'a@1.0.0': { env: ['GITHUB_ACTIONS', 'bamboo_planKey', 'FAKEROOTKEY', 'CI'] },
+      'b@1.0.0': { env: ['NPM_TOKEN', 'AWS_SECRET_ACCESS_KEY'] },
+      'c@1.0.0': { proc: [{ argv: ['sh', '-c', 'curl https://x.example'] }] },
+    } };
+    const flagged = require('./yours').attentionFor(lock).map((x) => x.package);
+    assert.deepEqual(flagged.sort(), ['b@1.0.0', 'c@1.0.0']);
+  });
+
   console.log(`\n${passed} passed`);
 })();

@@ -1037,3 +1037,5 @@ footer a { color: var(--dim); }
   .yours__row, .yours__row--three { grid-template-columns: minmax(0, 1fr); }
   .yours__nums { grid-template-columns: minmax(0, 1fr); }
 }
+
+.yours__attention { border-left: 3px solid var(--drift); padding-left: 14px; }

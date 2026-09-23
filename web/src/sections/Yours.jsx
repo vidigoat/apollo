@@ -113,6 +113,21 @@ function Lockfile() {
             <i style={{ width: `${pct}%` }} />
           </div>
 
+          {d.attention?.length > 0 ? (
+            <div className="yours__attention">
+              <h3 className="yours__h3">Worth reading first — {d.attention.length} {d.attention.length === 1 ? 'package reads' : 'packages read'} something that looks like a credential, or {d.attention.length === 1 ? 'starts' : 'start'} a shell</h3>
+              {d.attention.map((a) => (
+                <div key={a.package} className="channel">
+                  <span className="channel__name">{a.reads.length ? 'env' : 'proc'}</span>
+                  <span><b>{a.package}</b> <span className="channel__gained">{[...a.reads, ...a.starts].join(' · ')}</span></span>
+                </div>
+              ))}
+              <p className="yours__quiet">Not an accusation — plenty of tools read GITHUB_TOKEN on purpose. It is what to look at before anything else.</p>
+            </div>
+          ) : (
+            <p className="yours__quiet">None of the known part reads anything that looks like a credential, or starts a shell.</p>
+          )}
+
           <h3 className="yours__h3">What the known part does when it is installed and imported</h3>
           <div className="yours__does">
             {Object.entries(d.does).filter(([, v]) => v.packages).map(([c, v]) => (
