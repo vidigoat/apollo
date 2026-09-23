@@ -2,10 +2,10 @@
   "root": null,
   "describes": "six public projects \u2014 undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio",
   "describesNote": "none of which was used to choose what went into the index",
-  "scannedAt": "2026-09-23T07:34:49.970Z",
+  "scannedAt": "2026-09-23T09:05:59.715Z",
   "index": {
-    "packages": 4592,
-    "versions": 7914,
+    "packages": 6231,
+    "versions": 12254,
     "revision": "2026-09-23"
   },
   "repos": [
@@ -13,8 +13,8 @@
       "name": "twbs/bootstrap",
       "dir": "twbs_bootstrap",
       "deps": 1205,
-      "known": 840,
-      "unknown": 365,
+      "known": 968,
+      "unknown": 237,
       "state": "unpinned",
       "drift": []
     },
@@ -22,8 +22,8 @@
       "name": "nodejs/undici",
       "dir": "nodejs_undici",
       "deps": 602,
-      "known": 539,
-      "unknown": 63,
+      "known": 564,
+      "unknown": 38,
       "state": "unpinned",
       "drift": []
     },
@@ -31,8 +31,8 @@
       "name": "ionic-team/ionic-framework",
       "dir": "ionic-team_ionic-framework",
       "deps": 491,
-      "known": 313,
-      "unknown": 178,
+      "known": 343,
+      "unknown": 148,
       "state": "unpinned",
       "drift": []
     },
@@ -40,8 +40,8 @@
       "name": "highlightjs/highlight.js",
       "dir": "highlightjs_highlight.js",
       "deps": 422,
-      "known": 352,
-      "unknown": 70,
+      "known": 360,
+      "unknown": 62,
       "state": "unpinned",
       "drift": []
     },
@@ -49,8 +49,8 @@
       "name": "cheeriojs/cheerio",
       "dir": "cheeriojs_cheerio",
       "deps": 414,
-      "known": 317,
-      "unknown": 97,
+      "known": 327,
+      "unknown": 87,
       "state": "unpinned",
       "drift": []
     },
@@ -58,8 +58,8 @@
       "name": "shelljs/shelljs",
       "dir": "shelljs_shelljs",
       "deps": 414,
-      "known": 344,
-      "unknown": 70,
+      "known": 382,
+      "unknown": 32,
       "state": "unpinned",
       "drift": []
     }
@@ -68,7 +68,7 @@
     "repos": 6,
     "depVersions": 3548,
     "distinct": 2527,
-    "known": 2705,
+    "known": 2944,
     "drifting": 0,
     "pinned": 0
   }
