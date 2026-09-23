@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:33:57.395Z",
+  "judgement": {
+    "pkg": "tiny-glob",
+    "severity": "minor",
+    "judged": true,
+    "tier": "triage",
+    "verdict": {
+      "meaning": "Writes a file into the package's cache directory",
+      "explained": false,
+      "worthWaking": false,
+      "confidence": "high",
+      "note": ""
+    },
+    "accused": false,
+    "reason": "triage saw nothing that needs a human tonight",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000102,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note (optional). Must not add prose. Must interpret evidence: \"NOW TOUCHES FILE  write /app/·cache/·\". It's a change that writes to a cache directory. According to rules, writing to a cache directory is not worth waking. So worthWaking false. Meaning: It writes to a cache file. Explained? Public record says nothing, but writing to cache is ordinary, not malicious. So explained false? Actually explained is true if public record accounts for behavior. Since no record, likely not explained. So explained false. Confidence? Probably medium? The evidence is clear that it writes to cache; that's observed.…"
+      }
+    ],
+    "costUsd": 0.000102
+  }
+}

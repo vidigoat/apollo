@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:34:21.031Z",
+  "judgement": {
+    "pkg": "flat-config",
+    "severity": "notable",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version adds an outbound HTTPS connection to telemetry-edge.pages.dev, a telemetry collection endpoint not contacted by the previous version.",
+      "explained": false,
+      "worthWaking": true,
+      "confidence": "medium",
+      "note": "No release notes or public documentation mention this telemetry endpoint; the package now sends data to an undocumented destination."
+    },
+    "second": null,
+    "accused": false,
+    "reason": "flagged for a human; not accused",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000111,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note (optional). Must not add prose. Must interpret evidence: \"NOW RESOLVES telemetry-edge.pages.dev\" and \"NOW CONNECTS TO telemetry-edge.pages.dev:443 (tcp)\". This is new behavior: connecting to telemetry-edge.pages.dev over HTTPS. It's a new destination, notable. The public record says nothing about this version, so no explanation. Is it worth waking? It's connecting to a telemetry endpoint, possibly exfiltrating data. It's a new connection to a host not previously contacted. That could be suspicious. According to rules: worthWaking means get up tonight, not just worth knowing.…"
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.001948,
+        "simulated": false,
+        "reasoning": ""
+      }
+    ],
+    "costUsd": 0.002059
+  }
+}

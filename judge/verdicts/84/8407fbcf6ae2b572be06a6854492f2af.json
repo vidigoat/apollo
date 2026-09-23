@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:34:53.277Z",
+  "judgement": {
+    "pkg": "tiny-glob",
+    "severity": "minor",
+    "judged": true,
+    "tier": "triage",
+    "verdict": {
+      "meaning": "writes to a cache directory",
+      "explained": false,
+      "worthWaking": false,
+      "confidence": "high",
+      "note": ""
+    },
+    "accused": false,
+    "reason": "triage saw nothing that needs a human tonight",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000106,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note. Must not add prose. Must interpret evidence: \"NOW TOUCHES FILE  write /app/·cache/·\". It's a write to a cache directory. According to rules, writing to a cache directory is not worth waking for. So worthWaking false. explained: public record says nothing, but writing to cache is ordinary? It's a write to a location it didn't before, but it's a cache dir. That is not malicious. So explained false? The question: \"does the public record account for this behaviour?\" Since no record, answer false (i.e., public record does not account). But maybe \"explained\" means does public record explain it?…"
+      }
+    ],
+    "costUsd": 0.000106
+  }
+}

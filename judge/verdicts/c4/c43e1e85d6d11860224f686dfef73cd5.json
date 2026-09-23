@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:34:06.595Z",
+  "judgement": {
+    "pkg": "lru-memo",
+    "severity": "minor",
+    "judged": true,
+    "tier": "triage",
+    "verdict": {
+      "meaning": "It writes to a cache file.",
+      "explained": false,
+      "worthWaking": false,
+      "confidence": "high",
+      "note": ""
+    },
+    "accused": false,
+    "reason": "triage saw nothing that needs a human tonight",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000094,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields meaning, explained, worthWaking, confidence, note. Must not add prose. Must interpret evidence: \"NOW TOUCHES FILE  write /app/·cache/·\". It's a string indicating it writes to a cache file path. According to rules, writing to a cache directory is not worth waking. So worthWaking false. explained: public record says nothing, so false. meaning: appears to be writing to a cache file. explained false. confidence maybe high? The evidence is clear that it writes to a cache file. So confidence high. note maybe empty or one sentence. Must be at most one sentence, or empty. Could be empty string.…"
+      }
+    ],
+    "costUsd": 0.000094
+  }
+}

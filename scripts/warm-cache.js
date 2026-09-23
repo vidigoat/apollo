@@ -53,8 +53,20 @@ const C = process.stdout.isTTY
   const budget = new Budget();
   console.log(`  ${C.dim}budget before: ${budget.summary()}${C.off}`);
 
-  const run = await runAll({ adapter: new SimulatedSandboxes(), changed: CHANGED });
-  const changed = run.results.filter((p) => p.diff.changed);
+  /*
+   * Every strategy the page offers, not only the default.
+   *
+   * The key includes the diff's evidence, and what a strategy can see changes the evidence — so a
+   * verdict warmed under ebpf is no answer under nodert. Recorded footage of the demo showed it:
+   * switching the tab to nodert, the shot this project is built around, put "simulated, no key"
+   * next to the NVIDIA model on the hosted page.
+   */
+  const { STRATEGIES } = require('../transcript/schema');
+  let changed = [];
+  for (const strategy of STRATEGIES) {
+    const run = await runAll({ adapter: new SimulatedSandboxes(), changed: CHANGED, strategy });
+    changed = changed.concat(run.results.filter((p) => p.diff.changed));
+  }
 
   const cache = new JudgementCache();
   let fresh = 0;

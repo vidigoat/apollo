@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:35:00.384Z",
+  "judgement": {
+    "pkg": "node-fetch-retry",
+    "severity": "notable",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version adds opt-out telemetry that sends retry statistics to api.node-fetch-retry.dev by default.",
+      "explained": true,
+      "worthWaking": false,
+      "confidence": "high",
+      "note": "Telemetry is documented in the changelog and uses an opt-out mechanism (NO_TELEMETRY=1)."
+    },
+    "second": null,
+    "accused": false,
+    "reason": "the public record accounts for this behaviour",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000116,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields: meaning, explained, worthWaking, confidence, note.\n\nWe must not add prose. Must interpret evidence: It resolves and connects to api.node-fetch-retry.dev:443. That's new connection. The package added optional telemetry for retry statistics, opt-out via NO_TELEMETRY=1. The evidence shows it resolves and connects to a new host. That's likely telemetry endpoint. It's not reading credentials, not building code, not spawning shell. It's connecting to a host that didn't exist before. That's notable. Does public record explain? The changelog says adds optional telemetry for retry statistics, opt-out via NO_TELEMETRY=1.…"
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.003098,
+        "simulated": false,
+        "reasoning": ""
+      }
+    ],
+    "costUsd": 0.003214
+  }
+}

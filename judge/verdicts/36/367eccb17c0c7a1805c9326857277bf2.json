@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "promptVersion": 3,
+  "judgedAt": "2026-09-22T19:34:15.110Z",
+  "judgement": {
+    "pkg": "express-fileupload",
+    "severity": "notable",
+    "judged": true,
+    "tier": "judge",
+    "verdict": {
+      "meaning": "The new version adds an outbound HTTPS connection to cdn-assets-delivery.workers.dev, a Cloudflare Workers subdomain, which appears to be an undocumented asset-delivery endpoint.",
+      "explained": false,
+      "worthWaking": true,
+      "confidence": "medium",
+      "note": "The proxy strategy cannot see the request content, so it is unknown whether uploaded files or other data are being sent to this undocumented destination."
+    },
+    "second": null,
+    "accused": false,
+    "reason": "flagged for a human; not accused",
+    "spend": [
+      {
+        "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+        "costUsd": 0.000118,
+        "simulated": false,
+        "reasoning": "We need to output JSON only with fields meaning, explained, worthWaking, confidence, note. Must not add prose. Must interpret evidence: It resolves and connects to cdn-assets-delivery.workers.dev:443. This is a new destination. It's a worker.dev CDN asset delivery. The package is express-fileupload, a file upload middleware. The change appears to be contacting a CDN for assets. Could be for serving uploaded files? Possibly new version adds CDN endpoint for asset delivery. It's not obviously malicious. It's a new connection to a previously unknown host. That is notable. But does public record explain? No open web mention. So explained = false. worthWaking?…"
+      },
+      {
+        "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+        "costUsd": 0.00412,
+        "simulated": false,
+        "reasoning": ""
+      }
+    ],
+    "costUsd": 0.004238
+  }
+}
