@@ -135,7 +135,7 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
       (e) => `${e.how} ${e.sample}`
     ),
     timing: { installMs: timing.installMs ?? null, importMs: timing.importMs ?? null },
-    result: { installExit: result.installExit ?? null, importExit: result.importExit ?? null, threw: result.threw ?? null, reported: result.reported ?? null },
+    result: { installExit: result.installExit ?? null, importExit: result.importExit ?? null, threw: result.threw ?? null, reported: result.reported ?? null, installError: result.installError ?? null },
   };
 }
 
@@ -152,7 +152,7 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
 function unobserved(t) {
   const r = t?.result || {};
   if (r.installExit !== null && r.installExit !== undefined && r.installExit !== 0) {
-    return `${t.pkg}@${t.version} did not install (npm exited ${r.installExit}), so nothing about it was seen`;
+    return `${t.pkg}@${t.version} did not install (npm exited ${r.installExit}${r.installError ? `, ${r.installError}` : ''}), so nothing about it was seen`;
   }
   if (r.reported === false) return `the probe never reported for ${t.pkg}@${t.version}, so nothing about it was seen`;
   return null;

@@ -96,6 +96,11 @@ const labels = (strategy) => commandsFor({ pkg: 'p', version: '1', strategy }).m
     assert.deepEqual(silent.env, [], 'the channels are empty, which is exactly why they cannot be trusted alone');
     const broken = await observePackage({ adapter: adapter(1, null), branch: { id: 'b' }, pkg: 'utf-8-validate', version: '5.0.10', strategy: 'nodert' });
     assert.match(unobserved(broken), /did not install \(npm exited 1\)/);
+    const platform = await observePackage({
+      adapter: { run: async (_b, _c, ctx) => (ctx.step === 'install' ? { code: 1, stderr: 'npm error code EBADPLATFORM\nnpm error notsup Unsupported platform' } : { code: 0, observed: null }) },
+      branch: { id: 'b' }, pkg: '@esbuild/darwin-arm64', version: '0.28.1', strategy: 'nodert',
+    });
+    assert.match(unobserved(platform), /npm exited 1, EBADPLATFORM/);
   });
 
   await it('the transcript records the strategy that ran, and what it could not see', async () => {

@@ -76,6 +76,13 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
     if (step.label === 'install') {
       timing.installMs = Date.now() - started;
       result.installExit = out.code;
+      // npm's own word for why, when it gives one — EBADPLATFORM, ETARGET, E404 — so a refusal says
+      // "built for darwin" rather than only "exited 1".
+      if (out.code) {
+        const m = /npm (?:ERR!|error) code (\w+)/.exec(`${out.stderr || ''}\n${out.stdout || ''}`);
+        const gyp = /gyp ERR! (?:find Python|stack Error: `?make`? failed|build error)/.test(`${out.stderr || ''}`);
+        result.installError = m ? m[1] : gyp ? 'native build failed' : null;
+      }
     }
     if (step.label === 'import') {
       timing.importMs = Date.now() - started;
