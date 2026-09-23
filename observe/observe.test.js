@@ -84,6 +84,20 @@ const labels = (strategy) => commandsFor({ pkg: 'p', version: '1', strategy }).m
     assert.equal(bestStrategy({ supports: ['telepathy'] }), 'fsdiff', 'never trust a strategy we cannot run');
   });
 
+  await it('a nodert run whose probe never reported, or that never installed, is not an observation', async () => {
+    const { unobserved } = require('../transcript/schema');
+    const adapter = (installCode, observed) => ({
+      run: async (_b, _cmd, ctx) => (ctx.step === 'install' ? { code: installCode } : { code: 0, observed }),
+    });
+    const seen = await observePackage({ adapter: adapter(0, { env: ['NO_COLOR'] }), branch: { id: 'b' }, pkg: 'p', version: '1', strategy: 'nodert' });
+    assert.equal(unobserved(seen), null);
+    const silent = await observePackage({ adapter: adapter(0, null), branch: { id: 'b' }, pkg: 'p', version: '1', strategy: 'nodert' });
+    assert.match(unobserved(silent), /never reported/);
+    assert.deepEqual(silent.env, [], 'the channels are empty, which is exactly why they cannot be trusted alone');
+    const broken = await observePackage({ adapter: adapter(1, null), branch: { id: 'b' }, pkg: 'utf-8-validate', version: '5.0.10', strategy: 'nodert' });
+    assert.match(unobserved(broken), /did not install \(npm exited 1\)/);
+  });
+
   await it('the transcript records the strategy that ran, and what it could not see', async () => {
     const t = await observePackage({ adapter: recorder(), branch: { id: 'b' }, pkg: 'p', version: '1', strategy: 'fsdiff' });
     assert.equal(t.strategy, 'fsdiff');

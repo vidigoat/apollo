@@ -93,7 +93,10 @@ function work(flags) {
     for (const f of walk(dir)) {
       const rec = JSON.parse(fs.readFileSync(f, 'utf8'));
       for (const [version, e] of Object.entries(rec.versions || {})) {
-        if (only && !(Array.isArray(e[only]) && e[only].length)) continue;
+        // `--with quiet` is the opposite: entries that recorded nothing on any channel — which is
+        // what a version that never installed looked like before index/schema.js refused them.
+        if (only === 'quiet') { if (CHANNELS.some((c) => Array.isArray(e[c]) && e[c].length)) continue; }
+        else if (only && !(Array.isArray(e[only]) && e[only].length)) continue;
         if (on && (e.observedOn || 'local') !== on) continue;
         singles.push({ pkg: rec.name, version, single: true });
       }

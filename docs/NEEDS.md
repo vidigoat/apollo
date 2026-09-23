@@ -17,7 +17,7 @@ Nebius   freeze 20–22 Oct   29–31 build days left
 
 Live and used the same hour: `npm run preflight` passes 10 of 10 including a real package observed
 in a real microVM; `npm run real -- --nebius` runs real pairs there; `index-build --nebius` grows the
-index there, 40 at a time; and 300 of 300 re-observations matched the local ones on every channel.
+index there, 40 at a time; and 299 of 300 re-observations matched the local ones on every channel (the one that did not had failed to install locally).
 
 The original note, kept for the record:
 

@@ -266,6 +266,15 @@ it('and a real observation will not be written into a simulated index', () => {
   assert.throws(() => idx.put('p', transcript('2.0.0')), /Refusing to write a real observation/);
 });
 
+it('a version that never installed is not written — absent is unknown, empty would read as clean', () => {
+  const idx = fresh();
+  assert.throws(() => idx.put('utf-8-validate', { ...transcript('5.0.10'), result: { installExit: 1 } }), /did not install/);
+  assert.throws(() => idx.put('p', { ...transcript('1.0.0'), result: { installExit: 0, reported: false } }), /never reported/);
+  assert.equal(idx.lookup('utf-8-validate', '5.0.10'), null);
+  idx.put('p', { ...transcript('1.0.1'), result: { installExit: 0, reported: true } });
+  assert.ok(idx.lookup('p', '1.0.1'));
+});
+
 it('a simulated index is still perfectly usable on its own', () => {
   // Rehearsing the pipeline without running anything is a supported thing to do. The rule is about
   // MIXING, not about simulation.

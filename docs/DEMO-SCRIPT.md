@@ -64,7 +64,7 @@ Sandboxes beta access landed on 23 Sep, so the twins can be shown running on Neb
 | shot | what | say |
 |---|---|---|
 | N1 | terminal: `npm run real -- --nebius` — three real upgrades, each pair forked into Nebius microVMs from one checkpoint image; picocolors 1.1.1 newly reads `CI`, `FORCE_COLOR`, `NO_COLOR`, and Nemotron explains it; *Machines left open: 0* | "Nothing ran on my machine. Every twin was a Nebius sandbox, forked from the same checkpoint." |
-| N2 | terminal: `npm run crossval -- --dir …` or `docs/crossval.json` — **300 of 300 identical** | "Same packages, watched on Nebius and watched elsewhere. Three hundred of three hundred identical. That's why one observation can answer for everyone." |
+| N2 | terminal: `npm run crossval -- --dir …` or `docs/crossval.json` — **299 of 300 identical** | "Same packages, watched on a Mac and watched on Nebius. Two hundred and ninety-nine of three hundred identical — and the one that wasn't had never installed on the Mac, which is now a rule rather than a quiet entry. That's why one observation can answer for everyone." |
 | N3 | the site's fleet section — **12,254** observations, **83%** of six held-out projects answered | "Forty-one public projects taught it. Six it never saw — and it already knows 83% of what they depend on." |
 
 `docs/images/nebius-real.png` is a still of N1 from a real run, if the live one is slow on the day.

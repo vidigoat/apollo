@@ -113,6 +113,25 @@ const LOCK = JSON.stringify({
     } finally { s.close(); }
   });
 
+  await it('a watched version that did not install is answered as not watched, never as "none"', async () => {
+    const adapter = {
+      supports: ['nodert'],
+      boot: async () => 'checkpoint',
+      fork: async (_c, n) => Array.from({ length: n }, (_, i) => ({ id: `b${i}` })),
+      run: async (_b, _cmd, ctx) => (ctx.step === 'install' ? { code: ctx.version === '5.0.10' ? 1 : 0 } : { code: 0, observed: {} }),
+      discard: async () => {},
+    };
+    const s = await serve((req, res) => watch(req, res, { adapter, skipLimits: true, registry: async () => ({ ok: true }) }));
+    try {
+      const r = await post(`${s.url}/`, { pkg: 'stakeout-never-indexed-pkg', from: '5.0.9', to: '5.0.10' });
+      assert.equal(r.status, 422);
+      const body = await r.json();
+      assert.match(body.error, /did not install/);
+      assert.match(body.error, /not the same as clean/);
+      assert.equal(body.severity, undefined);
+    } finally { s.close(); }
+  });
+
   await it('the hourly limits hold per caller and for the whole deployment', () => {
     const now = 1_000_000;
     for (let i = 0; i < 4; i++) assert.equal(limited('a', now + i), null);

@@ -152,7 +152,7 @@ function crossvalClaims() {
   } catch {
     return [];
   }
-  return [{ what: 'cross-validation: identical of compared', value: `${m.identical} of ${m.compared}`, where: /\*\*(\d+ of \d+)\*\* re-observations/g }];
+  return [{ what: 'cross-validation: identical of compared', value: `${m.identical} of ${m.compared}`, where: /\*\*(\d+ of \d+)\*\* (?:re-observations|entries made|matched)/g }];
 }
 
 const CLAIMS = [

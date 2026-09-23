@@ -67,6 +67,7 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
   const raw = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
   const timing = {};
   const result = {};
+  let reported = false;
 
   for (const step of steps) {
     const started = Date.now();
@@ -84,12 +85,16 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
 
     // An adapter that can observe returns structured behaviour alongside the exit code.
     if (out.observed) {
+      reported = true;
       ['net', 'dns', 'fs', 'env', 'proc', 'exec'].forEach((field) => {
         if (out.observed[field]) raw[field].push(...out.observed[field]);
       });
     }
   }
 
+  // Under nodert the probe's report IS the observation. No report — a crash, a timeout, a package
+  // that never installed — means nothing was seen, and empty channels must not say otherwise.
+  if (strategy === 'nodert') result.reported = reported;
   return transcript({ pkg, version, strategy, raw, timing, result });
 }
 

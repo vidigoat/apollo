@@ -70,9 +70,12 @@ npm run crossval -- --fleet <fleet.json>     # re-observe on Nebius, compare wit
 
 The twins fork from one checkpoint image — a non-disposable run's output image *is* the checkpoint —
 and nothing runs on your machine at all, which is the version of this you can point at a package you
-suspect. `index-build --nebius --concurrency 40` grows the index there. And the index does not
-depend on who built it: **300 of 300** re-observations on Nebius matched the ones made elsewhere on
-every channel it records (`docs/crossval.json`).
+suspect. `index-build --nebius --concurrency 40` grows the index there. And the index barely
+depends on who built it: of 300 entries made on a Mac, re-observed on Nebius, **299 of 300** matched
+on every channel it records (`docs/crossval.json`). The one that did not was a native addon with no
+arm64 build — its install had failed on the Mac, and the old builder wrote the failure down as a
+quiet package. It no longer can: a version that never installed is left out, and left out is
+"unknown".
 
 <img src="docs/images/nebius-real.png" alt="npm run real -- --nebius: left-pad and debug unchanged, picocolors 1.1.1 newly reading CI, FORCE_COLOR and NO_COLOR, explained by Nemotron; machines left open: 0" width="720">
 

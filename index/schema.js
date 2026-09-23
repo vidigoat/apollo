@@ -41,7 +41,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { CAN_SEE } = require('../transcript/schema');
+const { CAN_SEE, unobserved } = require('../transcript/schema');
 
 /**
  * Bump when the shape of an entry changes in a way that would make an old one misread.
@@ -176,6 +176,10 @@ class Index {
 
   /** Write or replace one version's entry. Atomic, so a reader never sees half a file. */
   put(name, transcript) {
+    // A version that never installed, or whose probe never reported, is not written at all: absent
+    // is "unknown", and `stakeout check` says so. Written with empty channels it would read as clean.
+    const why = unobserved(transcript);
+    if (why) throw new Error(`Refusing to index ${why}.`);
     const file = fileFor(this.dir, name);
     const existing = this.package(name) || { schema: SCHEMA, name, versions: {} };
     const entry = entryFor(transcript);

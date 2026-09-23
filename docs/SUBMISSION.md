@@ -10,7 +10,7 @@ Checklist against the stated requirements:
 
 | required | state |
 |---|---|
-| runs on Token Factory or Nebius AI Cloud | **LIVE.** Every judgement is a real chat-completions call to Token Factory — `judge/nemotron.js`. Verified 2026-09-20 by `npm run preflight`. **And the twins run on Nebius too:** Token Factory Sandboxes, live since beta access on 23 Sep — `npm run real -- --nebius` forks real package pairs into microVMs from one checkpoint image, and `index-build --nebius --concurrency 40` observes the index there. **300 of 300** re-observations on Nebius matched the local ones on every channel (`npm run crossval`, `docs/crossval.json`). The hosted demo's corpus is planted packages, so it still runs on the simulated adapter and says so. |
+| runs on Token Factory or Nebius AI Cloud | **LIVE.** Every judgement is a real chat-completions call to Token Factory — `judge/nemotron.js`. Verified 2026-09-20 by `npm run preflight`. **And the twins run on Nebius too:** Token Factory Sandboxes, live since beta access on 23 Sep — `npm run real -- --nebius` forks real package pairs into microVMs from one checkpoint image, and `index-build --nebius --concurrency 40` observes the index there. **299 of 300** entries made on a Mac matched on every channel when re-observed on Nebius (`npm run crossval -- --local 300`, `docs/crossval.json`); the one that did not had never installed on the Mac. The hosted demo's corpus is planted packages, so it still runs on the simulated adapter and says so. |
 | uses at least one NVIDIA open source model | **LIVE, three of them.** `NVIDIA-Nemotron-3-Nano-30B-A3B` triages, `Nemotron-3-Ultra-550b-a55b` judges, `nemotron-3-super-120b-a12b` vetoes. Preflight shows a parsed verdict and a real cost for each. |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |
@@ -172,6 +172,15 @@ colours. The probe now counts a read only when the frame that made it is the pac
 fails on the old probe, and every entry that had recorded an environment read was observed again in
 Nebius Sandboxes with the fixed one. A behavioural lockfile that attributes the runtime's behaviour
 to your dependencies is wrong in exactly the way it exists to prevent.
+
+**A package that never installed was written down as quiet.** The cross-machine check found it:
+299 of 300 entries made on a Mac matched Nebius, and the one that did not, `utf-8-validate@5.0.10`,
+read seven environment variables on Nebius and none on the Mac. On the Mac's arm64 there is no
+prebuilt binary, the image has no Python to compile one, and the install failed — and the builder,
+given empty channels by a package that was never imported, recorded "watched, did nothing". Every
+quiet entry could have been one of those. Now the index refuses a version that did not install or
+whose probe never reported (`index/schema.js`, tested), `/api/watch` answers "not watched" instead
+of "no change", and all 8,940 quiet entries are being observed again with the fixed builder.
 
 **The web search found other products' changelogs, and read that as silence.** The public-record
 lookup asked Tavily for `<pkg> <version> changelog release notes OR security advisory`. For express

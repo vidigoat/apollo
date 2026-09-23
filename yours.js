@@ -33,6 +33,7 @@ const { parseLockfile } = require('./lockfile');
 const { buildLock } = require('./lock');
 const { PublishedIndex } = require('./index/published');
 const { CHANNELS } = require('./index/schema');
+const { unobserved } = require('./transcript/schema');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -322,6 +323,12 @@ async function watch(req, res, deps = {}) {
       throw e;
     }
     const { before, after, diff: d } = pair;
+    // A version that did not install was never watched, and a diff against it would say "nothing
+    // changed" about something nobody saw. Answered in words, and not remembered.
+    const unseen = [before, after].map(unobserved).filter(Boolean);
+    if (unseen.length) {
+      return json(res, 422, { error: `Not watched: ${unseen.join('; ')}. That is not the same as clean.` });
+    }
     const answer = {
       key,
       pkg,

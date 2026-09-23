@@ -135,8 +135,27 @@ function transcript({ pkg, version, strategy, raw = {}, timing = {}, result = {}
       (e) => `${e.how} ${e.sample}`
     ),
     timing: { installMs: timing.installMs ?? null, importMs: timing.importMs ?? null },
-    result: { installExit: result.installExit ?? null, importExit: result.importExit ?? null, threw: result.threw ?? null },
+    result: { installExit: result.installExit ?? null, importExit: result.importExit ?? null, threw: result.threw ?? null, reported: result.reported ?? null },
   };
+}
+
+/**
+ * Why a transcript is not an observation at all, or null when it is one.
+ *
+ * Empty channels are a claim — "watched, and it did nothing". A package whose install failed was
+ * never imported, and a probe that never reported saw nothing; both come back with empty channels,
+ * and both used to be written into the index as quiet. utf-8-validate@5.0.10 was the one that
+ * showed it: no arm64 prebuild, no Python in the image to compile one, the install failed, and the
+ * index said it read no environment — where on x86_64 its loader reads seven variables. A thing
+ * nobody saw is unknown, and unknown must never be stored as clean.
+ */
+function unobserved(t) {
+  const r = t?.result || {};
+  if (r.installExit !== null && r.installExit !== undefined && r.installExit !== 0) {
+    return `${t.pkg}@${t.version} did not install (npm exited ${r.installExit}), so nothing about it was seen`;
+  }
+  if (r.reported === false) return `the probe never reported for ${t.pkg}@${t.version}, so nothing about it was seen`;
+  return null;
 }
 
 /**
@@ -182,4 +201,4 @@ function quietness(t) {
   return { quiet, blindTo, partial, trustworthy: quiet && blindTo.length === 0 };
 }
 
-module.exports = { transcript, observedNothing, quietness, normalisePath, STRATEGIES, STRENGTH, CAN_SEE, empty };
+module.exports = { transcript, unobserved, observedNothing, quietness, normalisePath, STRATEGIES, STRENGTH, CAN_SEE, empty };
