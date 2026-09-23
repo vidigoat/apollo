@@ -54,6 +54,8 @@ function parseLockfile(text) {
   const conflicts = new Map();
   // name@version → the platforms a package says it is for (npm's `os`, `cpu`, `libc`), when it says.
   const platforms = new Map();
+  // name@version of every package whose lockfile entry says it runs an install script.
+  const installScripts = new Set();
   let format;
 
   const record = (name, version) => {
@@ -77,6 +79,7 @@ function parseLockfile(text) {
       const name = node.name || nameFromPath(key);
       record(name, node.version);
       if (node.os || node.cpu || node.libc) platforms.set(`${name}@${node.version}`, { os: node.os, cpu: node.cpu, libc: node.libc });
+      if (node.hasInstallScript && /^\d+\.\d+\.\d+/.test(String(node.version))) installScripts.add(`${name}@${node.version}`);
     }
   } else if (json.dependencies && typeof json.dependencies === 'object') {
     format = 'v1';
@@ -104,6 +107,7 @@ function parseLockfile(text) {
     total: versions.size,
     versions,
     platforms,
+    installScripts,
     conflicts: [...conflicts.entries()].map(([name, set]) => ({ name, versions: [...set] })),
   };
 }

@@ -128,7 +128,23 @@ function Lockfile() {
             <p className="yours__quiet">None of the known part reads anything that looks like a credential, or starts a shell.</p>
           )}
 
-          <h3 className="yours__h3">What the known part does when it is installed and imported</h3>
+          {d.installScripts?.length > 0 && (
+            <div className="yours__attention">
+              <h3 className="yours__h3">
+                {d.installScripts.length} {d.installScripts.length === 1 ? 'package runs' : 'packages run'} code while being installed — which is not watched
+              </h3>
+              <p className="yours__names">
+                {d.installScripts.slice(0, 16).map((id) => <span key={id} className="yours__name">{id}</span>)}
+                {d.installScripts.length > 16 && <span className="yours__name"><i>and {num(d.installScripts.length - 16)} more</i></span>}
+              </p>
+              <p className="yours__quiet">
+                The index watches what a package does when it is imported. Install scripts run before that, and
+                npm before version 12 runs them by default; nothing here says what they do.
+              </p>
+            </div>
+          )}
+
+          <h3 className="yours__h3">What the known part does when it is imported</h3>
           <div className="yours__does">
             {Object.entries(d.does).filter(([, v]) => v.packages).map(([c, v]) => (
               <div key={c} className="channel">

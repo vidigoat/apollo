@@ -13,8 +13,9 @@
  *
  * Runs nothing. It is `stakeout lock` in a browser: every package-version in the tree resolved
  * against `public/index.json`, and the answer split into what is known — with what those packages
- * actually do at install and import — and what nobody has watched, which is reported by name and
- * never as clean.
+ * actually do when imported — and what nobody has watched, which is reported by name and never
+ * as clean. Install scripts are not watched at all; the lockfile says which packages have one, and
+ * the answer names them.
  *
  * A repository is fetched from raw.githubusercontent.com and nowhere else, by a path built here from
  * a validated owner/name — so the URL is not the caller's to choose, and this cannot be pointed at
@@ -175,6 +176,9 @@ function answerTree(text, from) {
     // sandboxes the index is observed in. Still unknown — just not a mystery.
     otherPlatform: elsewhere.length,
     otherPlatformSample: elsewhere.slice(0, 12),
+    // What the index does not watch at all: code a package runs while it is being installed. The
+    // lockfile says which ones have it; npm before 12 runs it by default.
+    installScripts: tree.installScripts ? [...tree.installScripts].sort() : [],
     pct: total ? Math.round((built.known / total) * 100) : 0,
     index: idx.manifest(),
     does: behaviours(built.lock),

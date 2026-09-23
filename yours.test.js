@@ -55,11 +55,13 @@ const LOCK = JSON.stringify({
       'node_modules/@stakeout-test/darwin-arm64': { version: '1.0.0', os: ['darwin'], cpu: ['arm64'], optional: true },
       'node_modules/@stakeout-test/linux-x64-musl': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['musl'], optional: true },
       'node_modules/@stakeout-test/linux-x64-gnu': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['glibc'], optional: true },
+      'node_modules/@stakeout-test/native': { version: '2.0.0', hasInstallScript: true },
     } });
     const s = await serve((req, res) => lockfile(req, res));
     try {
       const r = await (await post(`${s.url}/`, { lockfile: lock })).json();
-      assert.equal(r.unknown, 3, 'a binary for another platform was counted as known');
+      assert.equal(r.unknown, 4, 'a binary for another platform was counted as known');
+      assert.deepEqual(r.installScripts, ['@stakeout-test/native@2.0.0'], 'an install script was not named as unwatched');
       assert.equal(r.otherPlatform, 2);
       assert.deepEqual(r.otherPlatformSample.sort(), ['@stakeout-test/darwin-arm64@1.0.0', '@stakeout-test/linux-x64-musl@1.0.0']);
     } finally { s.close(); }
