@@ -14,9 +14,8 @@
  * is where it shows up — and if none does, that is a baseline with a date on it. Nothing is selected
  * for being interesting. Results land in docs/release-watch.json and a re-run skips pairs it has.
  *
- * Ranking covers unscoped names only: npm's bulk downloads endpoint refuses scoped ones, and a
- * request per scoped package is a load on npm this does not need to impose. That is a stated gap,
- * not a hidden one — the record says so.
+ * npm's bulk downloads endpoint refuses scoped names, so they are ranked only with `--scoped N`,
+ * one request per package, four at a time — and the record says which ranking it used.
  */
 
 require('../env').loadEnv();
@@ -55,6 +54,27 @@ async function weeklyDownloads(names, fetchImpl = fetch) {
   return out;
 }
 
+/**
+ * Scoped names one at a time — npm's bulk endpoint refuses them — four in flight at most, and only
+ * when asked for (`--scoped N`), because it is one request per package against a public API.
+ */
+async function scopedDownloads(names, fetchImpl = fetch) {
+  const out = new Map();
+  const scoped = names.filter((n) => n.startsWith('@') && !n.startsWith('@types/'));
+  let next = 0;
+  const worker = async () => {
+    while (next < scoped.length) {
+      const n = scoped[next++];
+      try {
+        const res = await fetchImpl(`https://api.npmjs.org/downloads/point/last-week/${n}`);
+        if (res.ok) { const j = await res.json(); if (Number.isFinite(j.downloads)) out.set(n, j.downloads); }
+      } catch { /* one package unranked is one package not watched this time */ }
+    }
+  };
+  await Promise.all(Array.from({ length: 4 }, worker));
+  return out;
+}
+
 async function packument(name, fetchImpl = fetch) {
   const res = await fetchImpl(`https://registry.npmjs.org/${name.replace('/', '%2f')}`, { headers: { accept: 'application/vnd.npm.install-v1+json' } });
   return res.ok ? res.json() : null;
@@ -73,7 +93,7 @@ function gained(d) {
   return out;
 }
 
-module.exports = { lastTwo, weeklyDownloads, gained };
+module.exports = { lastTwo, weeklyDownloads, scopedDownloads, gained };
 
 if (require.main === module) {
   (async () => {
@@ -85,7 +105,14 @@ if (require.main === module) {
     const record = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : { results: {} };
     const downloads = await weeklyDownloads(names);
     const ranked = [...downloads.entries()].sort((a, b) => b[1] - a[1]).slice(0, top);
-    console.log(`\n  ${names.length} packages in the index · ${downloads.size} unscoped ranked · watching the top ${ranked.length}`);
+    const scopedTop = Number(flag('scoped', 0));
+    if (scopedTop) {
+      // @types/* is left out: a type declaration has no runtime, so there is nothing to watch.
+      const sd = await scopedDownloads(names);
+      ranked.push(...[...sd.entries()].sort((a, b) => b[1] - a[1]).slice(0, scopedTop));
+      record.scoped = `top ${scopedTop} scoped packages by weekly downloads, @types/* excluded`;
+    }
+    console.log(`\n  ${names.length} packages in the index · ${downloads.size} unscoped ranked · watching ${ranked.length}`);
 
     const jobs = [];
     for (const [name, dl] of ranked) {
