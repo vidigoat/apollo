@@ -174,10 +174,4 @@ function canSeeCaveat(d) {
   return ` (this strategy ${parts.join('; and ')} — silence there means nothing)`;
 }
 
-/**
- * Bumped whenever what the models are shown changes. Verdicts are cached, and a verdict made from
- * an older prompt — one that, say, never showed the install phase — is not an answer to the new one.
- */
-const PROMPT_REVISION = '2026-09-24-install-phase';
-
-module.exports = { buildPrompt, evidenceLines, SYSTEM, PROMPT_REVISION };
+module.exports = { buildPrompt, evidenceLines, SYSTEM };

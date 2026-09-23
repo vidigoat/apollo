@@ -81,6 +81,11 @@ function evidenceOf(d) {
     env: channel(d.env?.added),
     proc: channel(d.proc?.added),
     exec: channel(d.exec?.added),
+    // What the install scripts did, when both sides were watched — it is in the prompt, so it is in
+    // the key. Only when present, so every key made before the install phase existed is unchanged.
+    // Without it, two releases whose install scripts differ shared one answer: ajv 6.12.1, judged
+    // again with the install evidence in front of the models, came straight back from the cache.
+    ...(d.install ? { install: Object.fromEntries(['net', 'dns', 'fs', 'env', 'proc', 'exec'].map((c) => [c, [...channel(d.install[c]?.added), ...channel(d.install[c]?.removed).map((x) => `-${x}`)]])) } : {}),
   });
 }
 
