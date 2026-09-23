@@ -213,7 +213,9 @@ watching, fixed, with a test that fails on the old probe.
 **Install scripts ran unwatched.** The probe was loaded for the import; a `postinstall` ran before
 it and was never seen. Now every Node process the install starts carries the probe (npm itself
 records only which scripts it launches), and the install phase is its own section of every new
-entry. The first ones watched: `commitplease` writes into `.git/hooks`, `@vscode/ripgrep` reads
+entry — and every version in the index that npm's registry marks as having an install script has
+been watched through it (checked against the registry's metadata, 24 September). The first ones
+watched: `commitplease` writes into `.git/hooks`, `@vscode/ripgrep` reads
 `GITHUB_TOKEN` and calls `api.github.com` — at install, where the index could not see before. And
 a release that *adds* an install script — the shape of the classic attack — is now `alarming` by
 the rules, on that one new line in the diff (`differ/diff.test.js`). Checked on real history, in
