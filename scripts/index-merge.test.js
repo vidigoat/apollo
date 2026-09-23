@@ -53,4 +53,31 @@ it('simulated and real observations are never mixed in one package', () => {
   assert.throws(() => merge(b, a), /refusing to mix/);
 });
 
+it('versions a build refused are withdrawn, and only those — a sandbox error is not a refusal', () => {
+  const { withdraw, refusedIn } = require('./index-merge');
+  const { Index } = require('../index/schema');
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'withdraw-'));
+  const idx = new Index({ dir: d });
+  const t = (version) => ({ version, strategy: 'nodert', canSee: {}, net: [], dns: [], fs: [], env: [], proc: [], exec: [] });
+  idx.put('@scope/native', t('1.0.0'));
+  idx.put('@scope/native', t('1.0.1'));
+  idx.put('only-one', t('2.0.0'));
+  idx.put('kept', t('3.0.0'));
+  const log = [
+    '  quiet kept@3.0.0',
+    '  \x1b[31mfail \x1b[0m @scope/native@1.0.0 \x1b[2mRefusing to index @scope/native@1.0.0 did not install (npm exited 1)\x1b[0m',
+    '  fail  only-one@2.0.0 Refusing to index only-one@2.0.0 did not install (npm exited 1)',
+    '  fail  kept@3.0.0 sandbox 503: capacity',
+  ].join('\n');
+  const refused = refusedIn(log);
+  assert.deepEqual(refused.map((r) => `${r.name}@${r.version}`), ['@scope/native@1.0.0', 'only-one@2.0.0']);
+  const x = withdraw(d, refused);
+  assert.deepEqual(x, { withdrawn: 2, packagesRemoved: 1, absent: 0 });
+  const after = new Index({ dir: d });
+  assert.equal(after.lookup('@scope/native', '1.0.0'), null);
+  assert.ok(after.lookup('@scope/native', '1.0.1'));
+  assert.equal(after.lookup('only-one', '2.0.0'), null);
+  assert.ok(after.lookup('kept', '3.0.0'), 'a sandbox error withdrew an entry');
+});
+
 console.log(`\n${passed} passed`);
