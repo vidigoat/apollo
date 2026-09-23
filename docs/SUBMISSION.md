@@ -10,11 +10,11 @@ Checklist against the stated requirements:
 
 | required | state |
 |---|---|
-| runs on Token Factory or Nebius AI Cloud | **LIVE.** Every judgement is a real chat-completions call to Token Factory — `judge/nemotron.js`. Verified 2026-09-20 by `npm run preflight`. (Sandboxes, a separate product, still 404s pending access; the twins run on the simulated adapter and say so.) |
+| runs on Token Factory or Nebius AI Cloud | **LIVE.** Every judgement is a real chat-completions call to Token Factory — `judge/nemotron.js`. Verified 2026-09-20 by `npm run preflight`. (Sandboxes, a separate product: the adapter is written against the real ConTree API and authenticates — the week of 404s was our own guessed URL and a missing `Project` header — but every permission is still off pending beta access, so the hosted twins run on the simulated adapter and say so.) |
 | uses at least one NVIDIA open source model | **LIVE, three of them.** `NVIDIA-Nemotron-3-Nano-30B-A3B` triages, `Nemotron-3-Ultra-550b-a55b` judges, `nemotron-3-super-120b-a12b` vetoes. Preflight shows a parsed verdict and a real cost for each. |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |
-| **a working demo URL** — hosted app or test build | **LIVE: <https://cassandra-nu.vercel.app>** — no login, no key. The verdicts ship committed, so a visitor costs nothing and sees the same five findings every time. |
+| **a working demo URL** — hosted app or test build | **LIVE: <https://cassandra-nu.vercel.app>** — no login, no key. The verdicts ship committed — for all four watching strategies, so switching the tab never falls back to a simulated model — and a visitor costs nothing and sees the same verdicts every time. |
 | 3-min public YouTube video, audio covering Nebius + Nemotron use | `docs/DEMO-SCRIPT.md` |
 | feedback on Token Factory / AI Cloud / NVIDIA tools | `docs/FEEDBACK-NOTES.md` |
 | what changed during the submission window | this project was built in it |
@@ -162,6 +162,14 @@ could not manufacture a clean bill of health: rules set severity, so the package
 throughout. All the model could do was decline to *add* an accusation. "Rules escalate, models only
 explain" turned a successful prompt injection into a non-event, which is a better argument for that
 design than any amount of reasoning about it.
+
+**The web search found other products' changelogs, and read that as silence.** The public-record
+lookup asked Tavily for `<pkg> <version> changelog release notes OR security advisory`. For express
+4.18.2 — one of npm's most-used releases — all six results were n8n's, Instacart's and
+keepachangelog.com's changelog pages, none naming the version, so the lookup reported the web silent
+about it. Silence about a version counts *against* it here. The query is `npm <pkg> <version>` now
+(measured on three packages: results naming the version every time), and silence is heard more than
+once before it counts — one run in four still came back silent after the fix.
 
 **A transcript could contain a channel its own strategy could not see.** The `canSee` contract was
 advisory, so the data and the caveat could disagree and the differ could raise a finding out of an

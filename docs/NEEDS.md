@@ -1,6 +1,6 @@
 # What is needed from Vidit — both projects, one list
 
-Written 21 Sep 2026, revised 23 Sep. Ordered by **what blocks the most work**, not by effort.
+Written 21 Sep 2026, revised 23 Sep (twice). Ordered by **what blocks the most work**, not by effort.
 
 Copy of this file lives in `~/second-set-of-hands/docs/NEEDS.md`; they are kept identical.
 
@@ -28,10 +28,12 @@ free, the limit becomes wall-clock and the documented 50-concurrent cap — so t
 **5,000 packages, stretch 20,000**, which is a genuine map of the part of npm that matters rather
 than a survey.
 
-Verified 21 Sep: the API still returns `404 Not Found` on every sandbox endpoint with a working
-key, so access has **not** been granted yet. The button is the thing.
+Verified 23 Sep: the week of `404 Not Found` was our own guessed URL and a missing `Project` header.
+Against the real API (`api.tokenfactory.nebius.com/sandboxes`) the key **authenticates** — and
+`whoami` reports every permission off, 50 concurrent / 3,600 s limits. So access has **not** been
+granted yet, and the adapter needs no change once it is. The button is the thing.
 
-If it is still 404 in a week, the fallback is already designed — build the index with the local
+If it is still ungranted in a week, the fallback is already designed — build the index with the local
 `nodert` strategy, which really runs real packages, and record the strategy per entry so the weaker
 claim is stated rather than hidden. Not fatal, just smaller.
 
@@ -155,6 +157,19 @@ and I will update the profile. It has been pasted into chat twice.
 
 Not urgent for the build. It is a real exposure and it should not go into December.
 
+### 10. Three new decisions, 23 Sep  ⏱ one reply each
+
+- **AWS credentials on Vercel for the hosted `/talk.html`?** Then a judge can talk to the agent on
+  the demo URL instead of watching the footage (`docs/media/talk.webm`). The catch: the spend
+  ceiling (`mcp/budget.js`) is a file, and serverless instances do not share files, so on Vercel it
+  caps each instance, not the total. A real global cap needs a shared store (a Vercel Marketplace
+  KV) or an AWS Budgets action — say which and it gets wired. Until then: no.
+- **Grow Stakeout's index on your Mac?** That is `STAKEOUT_ALLOW_LOCAL=1` — really installing
+  strangers' packages, install scripts and all, as you. It is how the 2,129 entries were made, and
+  it is the documented fallback if Sandboxes stays closed. I will not run it without a yes.
+- **A Tavily key on Vercel?** Optional. The hosted run's corpus is planted packages, so a live search
+  would only confirm they are unmentioned; and the Tavily prize cannot be won alongside the Overall.
+
 ---
 
 ## Not needed, explicitly
@@ -191,6 +206,7 @@ still yours to decide
   8   ~/cassandra goes PUBLIC at submission — Nebius requires it, and it is private today
       ~/second-set-of-hands may stay private if shared with testing@devpost.com and @AmazonAppDev
   9   rotate the AWS key
+  10  AWS keys on Vercel (needs a global spend cap first) · grow the index on your Mac · Tavily on Vercel (optional)
 
   one thing worth knowing before 8: the git history of ~/cassandra contains an old screenshot of
   a scan of YOUR home directory — repository names, from before that image was replaced. Private
