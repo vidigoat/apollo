@@ -788,8 +788,8 @@ differ's rules decide severity. With `--explain`, the few that moved are looked 
 
 On 23 September: **1,287** pairs, **1,272** exactly the same on every channel, **13**
 that changed only which environment variables they read, and **2** that could not be watched
-because a version did not install — counted as neither. The model's reading of all 13 cost
-$0.0015 in total. The two worth knowing are in the README: jiti 2.7.0 now checks at import whether
+because a version did not install — counted as neither. Nemotron was asked about all 13 for $0.0015 in total; twelve
+answers were usable, and the one that was not leaves that release on the rules alone. The two worth knowing are in the README: jiti 2.7.0 now checks at import whether
 it runs inside an AI coding agent, through the std-env it bundles, and std-env 4.2.0 added JetBrains'
 Junie to that list — both confirmed in the published tarballs, which is the rule for anything
 written about a finding: the watch flags, a person reads the code.
