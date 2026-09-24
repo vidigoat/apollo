@@ -263,11 +263,12 @@ if (require.main === module) {
         const started = Date.now();
         try {
           const { diff: d } = await runPair({ adapter, checkpoint, pkg: j.name, from: j.from, to: j.to, strategy });
-          record.results[j.key] = { pkg: j.name, from: j.from, to: j.to, weeklyDownloads: j.dl, severity: d.severity, reasons: d.reasons || [], gained: gained(d), summary: summarise(d), seconds: Math.round((Date.now() - started) / 1000) };
+          // `at`: when this pair was watched — the feed's "new this week" is the pairs with a recent one.
+          record.results[j.key] = { pkg: j.name, from: j.from, to: j.to, weeklyDownloads: j.dl, severity: d.severity, reasons: d.reasons || [], gained: gained(d), summary: summarise(d), seconds: Math.round((Date.now() - started) / 1000), at: new Date().toISOString() };
           console.log(`  ${d.severity.padEnd(8)} ${j.key}${d.changed ? `  ${(d.reasons || []).join('; ').slice(0, 110)}` : ''}`);
         } catch (e) {
           // Not watched is its own outcome, recorded as such — never folded into "none".
-          record.results[j.key] = { pkg: j.name, from: j.from, to: j.to, weeklyDownloads: j.dl, severity: e.code === 'UNOBSERVED' ? 'unobserved' : 'failed', error: String(e.message).split('\n')[0].slice(0, 200) };
+          record.results[j.key] = { pkg: j.name, from: j.from, to: j.to, weeklyDownloads: j.dl, severity: e.code === 'UNOBSERVED' ? 'unobserved' : 'failed', error: String(e.message).split('\n')[0].slice(0, 200), at: new Date().toISOString() };
           console.log(`  ${(e.code === 'UNOBSERVED' ? 'unseen' : 'failed').padEnd(8)} ${j.key}  ${String(e.message).split('\n')[0].slice(0, 100)}`);
         }
         save();
