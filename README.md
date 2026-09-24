@@ -74,21 +74,24 @@ the sandboxes stay available.
 
 `node scripts/release-watch.js --top 3000 --scoped 300` ranks the packages the index holds by weekly
 downloads, takes each one's newest release and the release before it, and watches both in Nebius
-Sandboxes — import and install. On 23–24 September, **2,456 of 2,488** latest releases
-behaved exactly like the release before on every channel (299 of them scoped packages); 3
+Sandboxes — import and install. On 23–24 September, **3,200 of 3,252** latest releases
+behaved exactly like the release before on every channel (302 of them scoped packages); 4
 could not be watched, because a version did not install, and are counted as neither. Of the
-29 that changed, most read different environment variables; 2 began building code
-at runtime, which the rules call alarming; one stopped running an install script; none started one.
-Every release written about here was read in its published code first, and none of those is
-malicious; the rest are listed on the site with exactly what the probe saw. Two are worth knowing: **jiti 2.7.0**, 130 million downloads a week, now checks at import whether it is running
-inside an AI coding agent (`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen
-more) through the `std-env` it bundles, and **std-env 4.2.0** itself added JetBrains' Junie to that
-list. The two alarming ones are find-versions 6.0.0 (a new dependency that runs regular expressions
-under `vm.Script` with a time limit) and babel-plugin-react-compiler 1.0.0 (it bundles zod 4, which
-compiles its checks at runtime) — flagged, as they should be, and explained. With `--explain`, Nemotron
-read all 29 for $0.0085. Recorded in `docs/release-watch.json`.
+48 that changed, most read different environment variables. Nine came back alarming, and each was
+read in its published code: six build code at runtime for reasons that check out (three reach the
+same regex time-limit in `function-timeout`, one bundles zod 4, one ships the `esm` loader, and one
+is a package called `eval`); two changed what runs at install — ssh-remote-port-forward 1.0.4, whose
+move to ssh2 1.x brings ssh2's optional native build, and edgedriver 7.0.0, whose install command
+changed by one typo; and vite-plugin-singlefile 2.3.3 now reads the name of a CI token among 76
+detection variables, from something installed with it — not traced further, and not called benign.
+Two findings are worth knowing: **jiti 2.7.0**, 130 million downloads a week, now checks at import
+whether it is running inside an AI coding agent (`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`,
+`GEMINI_CLI` and fifteen more) through the `std-env` it bundles, and **std-env 4.2.0** itself added
+JetBrains' Junie to that list. Nothing here is written without the code having been read; the rest
+are on the site with exactly what the probe saw. With `--explain`, Nemotron read all 48 for
+$0.0325. Recorded in `docs/release-watch.json`.
 
-<img src="docs/images/releases.jpg" alt="The release watch on the site: 2,456 of 2,488 newest releases unchanged, and the 29 that changed, each with Nemotron's reading and the public record, jiti 2.7.0 among them" width="720">
+<img src="docs/images/releases.jpg" alt="The release watch on the site: 3,200 of 3,252 newest releases unchanged, and the 48 that changed, each with Nemotron's reading and the public record, jiti 2.7.0 among them" width="720">
 
 ### In Nebius Token Factory Sandboxes
 

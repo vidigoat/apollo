@@ -144,19 +144,22 @@ is the reason a successful prompt injection cost this system nothing (below).
 
 ### Pointed at the newest releases of the most-used packages
 
-On 23–24 September, `scripts/release-watch.js` watched the newest release of the 2,488
-most-downloaded packages the index holds (299 scoped) against the release before it, in Nebius
-Sandboxes, import and install. **2,456 of 2,488 latest releases** behaved exactly as before;
-3 could not be watched and are counted as neither. Of the 29 that changed, one is the
+On 23–24 September, `scripts/release-watch.js` watched the newest release of the 3,252
+most-downloaded packages the index holds (302 scoped) against the release before it, in Nebius
+Sandboxes, import and install. **3,200 of 3,252 latest releases** behaved exactly as before;
+4 could not be watched and are counted as neither. Of the 48 that changed, one is the
 kind of change this project exists to surface: **jiti 2.7.0, 130 million downloads a week, now
 checks at import whether it is running inside an AI coding agent** — `CLAUDECODE`,
 `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more — through the `std-env` it bundles,
-and std-env 4.2.0 went on to add JetBrains' Junie. 2 came back alarming for building code at
-runtime — find-versions 6.0.0 and babel-plugin-react-compiler 1.0.0 — and reading their published
-code showed why: a regular expression run under `vm.Script` with a time limit, and zod 4 compiling
-its checks. Flagged, explained, benign. None of the 2,488 added an install script. Nemotron read
-all 29 for $0.0085; every release named here was confirmed in its published tarball before it was
-written down, and the rest are listed on the site with exactly what the probe saw.
+and std-env 4.2.0 went on to add JetBrains' Junie. Nine came back alarming, and reading each one's
+published code explained it: six build code at runtime (three through the same regex time-limit in
+function-timeout, zod 4 compiling its checks, the esm loader, and a package called eval); two
+changed what runs at install — ssh-remote-port-forward 1.0.4 moved to ssh2 1.x and with it ssh2's
+optional native build, edgedriver 7.0.0 fixed a typo in its install command; and
+vite-plugin-singlefile 2.3.3 now reads the name of a CI token among 76 detection variables, from
+something installed with it, which is recorded as not traced rather than called benign. Nemotron
+read all 48 for $0.0325; every release named here was confirmed in its published tarball before it
+was written down, and the rest are listed on the site with exactly what the probe saw.
 The watch also turned up false positives in the tool itself (below), which is why that rule exists.
 
 ## Challenges we ran into
