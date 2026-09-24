@@ -24,8 +24,11 @@ export default function Releases() {
   const listed = Object.values(data.results || {});
   const total = Number.isFinite(data.total) ? data.total : listed.length;
   const sameCount = Number.isFinite(data.tally?.none) ? data.tally.none : listed.filter((r) => r.severity === 'none').length;
-  const moved = listed.filter((r) => ['minor', 'notable', 'alarming'].includes(r.severity))
-    .sort((a, b) => (b.weeklyDownloads || 0) - (a.weeklyDownloads || 0));
+  // The most severe first, then the most used: an alarming release is the row somebody came for,
+  // and ordering by downloads alone put both of them near the bottom of twenty-nine.
+  const RANK = { alarming: 0, notable: 1, minor: 2 };
+  const moved = listed.filter((r) => r.severity in RANK)
+    .sort((a, b) => RANK[a.severity] - RANK[b.severity] || (b.weeklyDownloads || 0) - (a.weeklyDownloads || 0));
   const unseen = total - sameCount - moved.length;
   const all = { length: total };
   const same = { length: sameCount };
