@@ -264,7 +264,7 @@ function handler(req, res) {
             'application/json'
           );
         })
-        .catch((e) => send(res, 500, JSON.stringify({ error: e.message }), 'application/json'));
+        .catch((e) => { console.error(e); send(res, 500, JSON.stringify({ error: 'The server could not finish that request.' }), 'application/json'); });
     }
 
     /* The same pipeline, live, against the real registry. Slow on purpose: it is really running. */
@@ -277,7 +277,7 @@ function handler(req, res) {
       }
       return realRun()
         .then((r) => send(res, 200, JSON.stringify(r), 'application/json'))
-        .catch((e) => send(res, 500, JSON.stringify({ error: e.message }), 'application/json'));
+        .catch((e) => { console.error(e); send(res, 500, JSON.stringify({ error: 'The server could not finish that request.' }), 'application/json'); });
     }
 
     /*
@@ -441,7 +441,8 @@ function handler(req, res) {
           name: repo.name, deps: deps.length, state: repo.state, packages: deps,
         }), 'application/json');
       } catch (e) {
-        return send(res, 500, JSON.stringify({ error: e.message }), 'application/json');
+        console.error(e);
+        return send(res, 500, JSON.stringify({ error: 'The server could not finish that request.' }), 'application/json');
       }
     }
 

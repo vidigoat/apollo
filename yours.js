@@ -370,7 +370,15 @@ async function watch(req, res, deps = {}) {
     results.set(key, answer);
     return json(res, 200, answer);
   } catch (e) {
-    return json(res, 502, { error: `The sandboxes could not finish that pair: ${String(e.message).split('\n')[0].slice(0, 160)}` });
+    // In words, not the Sandboxes API's own text: "sandboxes POST /v1/instances -> 429: {…}" was
+    // what a visitor saw, exactly when capacity was tight.
+    console.error('watch:', String(e && e.message).split('\n')[0].slice(0, 200));
+    const busy = e && (e.status === 429 || /-> 429|capacity|concurren/i.test(String(e.message)));
+    return json(res, busy ? 503 : 502, {
+      error: busy
+        ? 'Nebius Sandboxes are at capacity right now — try again in a minute. Nothing was run.'
+        : 'The sandboxes could not finish that pair. Nothing about it was recorded.',
+    });
   }
 }
 
