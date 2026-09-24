@@ -233,7 +233,7 @@ export default function Fleet({ data, published }) {
             command that only works if you already did something else is a command that fails the
             first time somebody tries it, which is the only time that matters.
           */}
-          <pre className="offer__cmd">
+          <pre className="offer__cmd" tabIndex={0} aria-label="the command to run">
             <code>
               {'git clone https://github.com/vidigoat/cassandra ~/stakeout\n'}
               {'cd ~/your-project\n'}

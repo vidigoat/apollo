@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import * as Tabs from '@radix-ui/react-tabs';
 import * as Accordion from '@radix-ui/react-accordion';
 import { motion, useReducedMotion } from 'motion/react';
 import Tree from '../components/Tree.jsx';
@@ -94,22 +93,31 @@ export default function Run({ strategies = [], tree = null }) {
       )}
 
       {strategies.length > 1 && (
-        <Tabs.Root
-          className="tabs"
-          value={strategy || strategies[strategies.length - 1]}
-          onValueChange={(v) => {
-            setStrategy(v);
-            if (state.status === 'done') go(v);
-          }}
-        >
-          <Tabs.List aria-label="what was watching">
-            {strategies.map((s) => (
-              <Tabs.Trigger className="tab" key={s} value={s}>
+        /*
+         * A choice of how the run is watched, not a set of panels — so a group of pressed buttons,
+         * not tabs. As tabs, every trigger pointed aria-controls at a panel that did not exist,
+         * which an accessibility audit reports as critical and a screen reader announces as broken.
+         */
+        <div className="tabs" role="group" aria-label="what was watching">
+          {strategies.map((s) => {
+            const on = (strategy || strategies[strategies.length - 1]) === s;
+            return (
+              <button
+                type="button"
+                className="tab"
+                key={s}
+                aria-pressed={on}
+                data-state={on ? 'active' : 'inactive'}
+                onClick={() => {
+                  setStrategy(s);
+                  if (state.status === 'done') go(s);
+                }}
+              >
                 {s}
-              </Tabs.Trigger>
-            ))}
-          </Tabs.List>
-        </Tabs.Root>
+              </button>
+            );
+          })}
+        </div>
       )}
 
       <div className="controls">
