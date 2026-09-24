@@ -166,6 +166,9 @@ if (require.main === module) {
     // `--explain-only`: no ranking and no new pairs — only the recorded ones that moved and have not
     // been read yet, for when a watch was stopped before its explain pass.
     const explainOnly = args.includes('--explain-only');
+    // `--rewatch a@1→2,b@3→4`: watch exactly these pairs again, replacing what the record says —
+    // for pairs recorded under a rule that has since been corrected. No ranking.
+    const rewatch = String(flag('rewatch', '') || '').split(',').map((x) => x.trim()).filter(Boolean);
     /*
      * The ranking is cached for a day. It is minutes of npm's downloads API, which answers 429 after
      * a burst — so a restart used to spend a quarter of an hour asking the same question again,
@@ -173,7 +176,7 @@ if (require.main === module) {
      */
     const scopedTop = Number(flag('scoped', 0));
     const cacheFile = path.join(require('node:os').tmpdir(), `stakeout-release-ranking-${top}-${scopedTop}.json`);
-    let cached = explainOnly ? { ranked: [] } : null;
+    let cached = explainOnly || rewatch.length ? { ranked: [] } : null;
     try {
       const c = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
       if (Date.now() - c.at < 24 * 3600 * 1000 && !args.includes('--rerank')) cached = c;
@@ -205,6 +208,13 @@ if (require.main === module) {
       while (at < ranked.length) { const i = at++; metas[i] = await packument(ranked[i][0]).catch(() => null); }
     }));
     const jobs = [];
+    for (const key of rewatch) {
+      const m = /^(.+)@([^@→]+)→(.+)$/.exec(key);
+      if (!m) { console.log(`  not a pair: ${key}`); continue; }
+      const was = record.results[key];
+      delete record.results[key];
+      jobs.push({ name: m[1], dl: was?.weeklyDownloads ?? null, from: m[2], to: m[3], key });
+    }
     ranked.forEach(([name, dl], i) => {
       const two = lastTwo(metas[i]);
       if (!two) return;

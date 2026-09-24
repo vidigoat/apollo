@@ -42,7 +42,12 @@ const SENSITIVE_ENV = /(TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|AWS_|GITHUB_|NPM_|S
 const readsCredential = (name) => {
   const n = String(name);
   if (/^npm_config_/i.test(n) && !/(auth|token|password|passwd|_key|keyfile|cert)/i.test(n)) return false;
-  return SENSITIVE_ENV.test(n);
+  /*
+   * Words, not letters. SENSITIVE_ENV matches substrings, and two real releases showed what that
+   * costs: global-directory 5.0.0 was called alarming — "reads a credential" — for FAKEROOTKEY
+   * (fakeroot's session variable) and PNPM_HOME (pnpm's install directory; it contains "NPM_").
+   */
+  return /(TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|PRIVATE|(^|_)AWS_|(^|_)GITHUB_|(^|_)GH_|(^|_)NPM_|SSH|(^|_)KEY(_|$)|API_?KEY|ACCESS_?KEY|KEYFILE|(^|_)AUTH(_|$))/i.test(n);
 };
 
 /** Spawning these from a package install is rarely innocent. */
