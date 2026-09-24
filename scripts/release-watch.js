@@ -176,16 +176,33 @@ if (require.main === module) {
      */
     const scopedTop = Number(flag('scoped', 0));
     const cacheFile = path.join(require('node:os').tmpdir(), `stakeout-release-ranking-${top}-${scopedTop}.json`);
+    /*
+     * `--refresh`: the weekly feed. The packages already watched, asked again for their newest
+     * release; a pair not yet in the record is a release published since, and only those are watched.
+     * No downloads ranking — the population stays what it was, which is what makes a week comparable.
+     */
+    const refresh = args.includes('--refresh');
     let cached = explainOnly || rewatch.length ? { ranked: [] } : null;
-    try {
-      const c = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (Date.now() - c.at < 24 * 3600 * 1000 && !args.includes('--rerank')) cached = c;
-    } catch { /* no cache, or an unreadable one: rank */ }
+    if (refresh) {
+      const last = new Map();
+      for (const r of Object.values(record.results)) last.set(r.pkg, r.weeklyDownloads ?? 0);
+      cached = { ranked: [...last.entries()].sort((a, b) => b[1] - a[1]), refresh: true };
+    }
+    // Only when no mode above has already decided what to watch — a cached ranking under --rewatch,
+    // --explain-only or --refresh would quietly turn them back into a full watch.
+    if (!cached) {
+      try {
+        const c = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+        if (Date.now() - c.at < 24 * 3600 * 1000 && !args.includes('--rerank')) cached = c;
+      } catch { /* no cache, or an unreadable one: rank */ }
+    }
     let ranked;
     if (cached) {
       ranked = cached.ranked;
       if (cached.scoped) record.scoped = cached.scoped;
-      console.log(!cached.at ? `  ${rewatch.length ? `rewatching ${rewatch.length} pair(s)` : 'explain only'}: no ranking` : `  ranking reused from ${new Date(cached.at).toISOString()} (--rerank to ask npm again)`);
+      console.log(cached.refresh ? `  refresh: ${ranked.length} packages already watched, asked for anything newer`
+        : !cached.at ? `  ${rewatch.length ? `rewatching ${rewatch.length} pair(s)` : 'explain only'}: no ranking`
+          : `  ranking reused from ${new Date(cached.at).toISOString()} (--rerank to ask npm again)`);
     } else {
       const downloads = await weeklyDownloads(names);
       ranked = [...downloads.entries()].sort((a, b) => b[1] - a[1]).slice(0, top);
