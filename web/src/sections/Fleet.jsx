@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { m, useReducedMotion } from 'motion/react';
 import { num, fleetTotals } from '../lib/api.js';
 
 /**
@@ -172,7 +172,7 @@ export default function Fleet({ data, published }) {
         )}
       </p>
 
-      <motion.div
+      <m.div
         className="band"
         /*
          * Same rule as the pipeline: the band arrives from slightly below, and is never invisible
@@ -189,7 +189,7 @@ export default function Fleet({ data, published }) {
           role="img"
           aria-label={`${readable.length} repositories, ${pct}% of their dependency-versions already observed`}
         />
-      </motion.div>
+      </m.div>
 
       <div className="legend" style={{ marginTop: 14 }}>
         <span><i style={{ background: 'var(--watched)' }} />observed, and unremarkable</span>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { m, AnimatePresence, useReducedMotion } from 'motion/react';
 
 /**
  * The answer, where the decision is actually made.
@@ -89,7 +89,7 @@ export default function Check() {
 
       <div className="check" data-conclusion={shown.conclusion}>
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={shown.key}
             initial={{ opacity: 0, y: still ? 0 : 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export default function Check() {
 
               {shown.foot && <p className="check__foot">{shown.foot}</p>}
             </div>
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 

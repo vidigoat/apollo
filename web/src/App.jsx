@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, useScroll, useSpring } from 'motion/react';
+import { m, useScroll, useSpring } from 'motion/react';
 import Hero from './sections/Hero.jsx';
 import Run from './sections/Run.jsx';
 import Fleet from './sections/Fleet.jsx';
@@ -63,7 +63,7 @@ export default function App() {
   return (
     <>
       {/* How far down the record you have read. One hairline, at the very top. */}
-      <motion.div
+      <m.div
         style={{
           scaleX: progress,
           transformOrigin: '0 50%',

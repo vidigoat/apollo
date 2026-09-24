@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'motion/react';
+import { m, useReducedMotion } from 'motion/react';
 import { num } from '../lib/api.js';
 
 /**
@@ -97,7 +97,7 @@ export default function How({ tree = null, calls = null }) {
 
       <div className="pipe">
         {steps.map((s, i) => (
-          <motion.div
+          <m.div
             className="step"
             key={s.who}
             data-model={s.model ? 'true' : 'false'}
@@ -121,7 +121,7 @@ export default function How({ tree = null, calls = null }) {
             <span className="step__who">{s.who}</span>
             <p className="step__what">{s.what}</p>
             <span className="step__cost">{s.cost}</span>
-          </motion.div>
+          </m.div>
         ))}
       </div>
 

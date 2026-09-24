@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from "motion/react";
+import { m, useReducedMotion } from "motion/react";
 
 /**
  * The first screen.
@@ -79,18 +79,18 @@ export default function Hero() {
         ))}
 
         {/* What the space says while it is being looked at, rather than nothing. */}
-        {!still && <motion.span
+        {!still && <m.span
           className="exhibit__watching"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 1, 0] }}
           transition={{ duration: 1.1, delay: 0.2, times: [0, 0.2, 0.7, 1] }}
         >
           watching
-        </motion.span>}
+        </m.span>}
 
         {/* The look. One pass, top to bottom, and then it is gone. */}
         {!still && (
-          <motion.span
+          <m.span
             className="exhibit__scan"
             initial={{ top: 0, opacity: 0 }}
             animate={{ top: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
@@ -99,7 +99,7 @@ export default function Hero() {
         )}
 
         {FOUND.map((f, i) => (
-          <motion.div
+          <m.div
             className="exhibit__row exhibit__row--found"
             key={f.what}
             initial={{ opacity: 0, x: still ? 0 : -8 }}
@@ -115,10 +115,10 @@ export default function Hero() {
             <span className="exhibit__when">
               {i === 0 ? "not in 2.1.0" : ""}
             </span>
-          </motion.div>
+          </m.div>
         ))}
 
-        <motion.div
+        <m.div
           className="exhibit__verdict"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -128,7 +128,7 @@ export default function Hero() {
             a patch release that now reads three credentials and calls a host{" "}
             <b>nothing on the open web mentions</b>
           </span>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

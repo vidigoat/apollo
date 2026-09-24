@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as Accordion from '@radix-ui/react-accordion';
-import { motion, useReducedMotion } from 'motion/react';
+import { m, useReducedMotion } from 'motion/react';
 import Tree from '../components/Tree.jsx';
 import { run as runApi, usd, num, CHANNELS, describe } from '../lib/api.js';
 
@@ -151,7 +151,7 @@ export default function Run({ strategies = [], tree = null }) {
               return (
                 <span className="pair" key={p.pkg} title={`${p.pkg} ${p.from} → ${p.to}`}>
                   {[0, 1].map((half) => (
-                    <motion.span
+                    <m.span
                       className="twin"
                       key={half}
                       data-state={mark}
