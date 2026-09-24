@@ -37,7 +37,13 @@ writes down what it actually did. Then it does the same for the version you had 
 + net  cdn-assets-delivery.workers.dev:443
 ```
 
-A patch release. The version moved by one digit; the behaviour moved a mile.
+A patch release. The version moved by one digit; the behaviour moved a mile. (That one is from the
+planted corpus the demo runs; the real registry is below.)
+
+Pointed at the newest releases of the most-used packages on npm, in Nebius Sandboxes, it found
+**jiti 2.7.0** — 130 million downloads a week — now checking at import whether it is running inside
+an AI coding agent. It watches install scripts too: a release that adds one is `alarming` by the
+rules, and ajv's and core-js's real ones came back that way. [The newest releases, watched](#the-newest-releases-of-the-most-used-packages-watched).
 
 ## Try it
 
