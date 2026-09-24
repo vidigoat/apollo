@@ -160,6 +160,20 @@ const LOCK = JSON.stringify({
     assert.deepEqual(out['core-js@3.38.1'].proc, ['sh -c node postinstall.js']);
   });
 
+  await it('a Nebius at capacity is said in words — not the Sandboxes API\'s own error text', async () => {
+    const busy = Object.assign(new Error('sandboxes POST /v1/instances -> 429: {"status": 429}'), { status: 429 });
+    const adapter = { supports: ['nodert'], boot: async () => { throw busy; } };
+    const s = await serve((req, res) => watch(req, res, { adapter, skipLimits: true, registry: async () => ({ ok: true }) }));
+    const err = console.error; console.error = () => {};
+    try {
+      const r = await post(`${s.url}/`, { pkg: 'stakeout-never-indexed-pkg', from: '1.0.0', to: '1.0.1' });
+      assert.equal(r.status, 503);
+      const body = await r.json();
+      assert.match(body.error, /at capacity right now/);
+      assert.doesNotMatch(body.error, /v1\/instances|429|\{/);
+    } finally { s.close(); console.error = err; }
+  });
+
   await it('the hourly limits hold per caller and for the whole deployment', () => {
     const now = 1_000_000;
     for (let i = 0; i < 4; i++) assert.equal(limited('a', now + i), null);
