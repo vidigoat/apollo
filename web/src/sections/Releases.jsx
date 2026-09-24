@@ -12,6 +12,23 @@ import { num } from '../lib/api.js';
 
 const CHANNEL = { env: 'env', net: 'net', dns: 'dns', proc: 'proc', exec: 'exec', fs: 'fs' };
 
+/**
+ * One observed thing, as a person reads it. The record keeps processes, connections and code as
+ * JSON strings; shown raw they read as {"argv":["sh","-c","node install.js"],"cmd":"sh"}.
+ */
+function readable(item) {
+  let x = item;
+  if (typeof item === 'string' && item.startsWith('{')) {
+    try { x = JSON.parse(item); } catch { return item; }
+  }
+  if (typeof x === 'string') return x;
+  if (Array.isArray(x.argv)) return x.argv.filter(Boolean).join(' ');
+  if (x.host) return `${x.host}${x.port ? `:${x.port}` : ''}`;
+  if (x.how) return x.sample && x.sample !== '· chars' ? `${x.how}: ${String(x.sample).slice(0, 80)}` : x.how;
+  if (x.path) return `${x.op || ''} ${x.path}`.trim();
+  return JSON.stringify(x);
+}
+
 export default function Releases() {
   const [data, setData] = useState(null);
   useEffect(() => {
@@ -59,8 +76,9 @@ export default function Releases() {
                 <br />
                 {Object.entries(r.gained || {}).map(([c, g]) => (
                   <span key={c} className="channel__gained">
-                    {CHANNEL[c.replace(/^install\./, '')] ? `${c.startsWith('install.') ? 'at install, ' : ''}${c.replace(/^install\./, '')}` : c}: now {g.added.slice(0, 20).join(', ')}
+                    {CHANNEL[c.replace(/^install\./, '')] ? `${c.startsWith('install.') ? 'at install, ' : ''}${c.replace(/^install\./, '')}` : c}: {g.added.length ? `now ${g.added.slice(0, 20).map(readable).join(', ')}` : ''}
                     {g.added.length > 20 ? ` and ${g.added.length - 20} more` : ''}
+                    {g.removed?.length ? `${g.added.length ? ' · ' : ''}no longer ${g.removed.slice(0, 8).map(readable).join(', ')}` : ''}
                     <br />
                   </span>
                 ))}
