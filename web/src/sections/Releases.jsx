@@ -19,7 +19,15 @@ const CHANNEL = { env: 'env', net: 'net', dns: 'dns', proc: 'proc', exec: 'exec'
 function readable(item) {
   let x = item;
   if (typeof item === 'string' && item.startsWith('{')) {
-    try { x = JSON.parse(item); } catch { return item; }
+    try { x = JSON.parse(item); } catch {
+      // The record cuts each item at 120 characters, which can cut the JSON too: read what is there.
+      const how = /"how":"([^"]+)"/.exec(item);
+      const sample = /"sample":"(.*)$/.exec(item);
+      const argv = /"argv":\[(.*)$/.exec(item);
+      if (how) return sample ? `${how[1]}: ${sample[1].replace(/\\n/g, ' ').replace(/\\"/g, '"').slice(0, 80)}…` : how[1];
+      if (argv) return `${argv[1].replace(/","/g, ' ').replace(/^"|"$/g, '').replace(/\\"/g, '"').slice(0, 100)}…`;
+      return item;
+    }
   }
   if (typeof x === 'string') return x;
   if (Array.isArray(x.argv)) return x.argv.filter(Boolean).join(' ');
