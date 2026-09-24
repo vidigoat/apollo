@@ -1,0 +1,431 @@
+{
+  "measured": "2026-09-24",
+  "watchedThroughInstall": 7506,
+  "ranScript": 403,
+  "reachedNetwork": 31,
+  "readCredentialLike": 25,
+  "topHosts": [
+    [
+      "github.com",
+      13
+    ],
+    [
+      "release-assets.githubusercontent.com",
+      12
+    ],
+    [
+      "storage.googleapis.com",
+      10
+    ],
+    [
+      "cdn.cypress.io",
+      3
+    ],
+    [
+      "download.cypress.io",
+      3
+    ],
+    [
+      "api.github.com",
+      2
+    ],
+    [
+      "api.nuget.org",
+      1
+    ],
+    [
+      "cdn.playwright.dev",
+      1
+    ],
+    [
+      "playwright.download.prss.microsoft.com",
+      1
+    ],
+    [
+      "108.177.15.207",
+      1
+    ]
+  ],
+  "network": [
+    {
+      "pkg": "@fails-components/webtransport-transport-http3-quiche@1.5.1",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "@mermaid-js/mermaid-cli@11.17.0",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "@mongodb-js/zstd@7.0.0",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "@playwright/browser-chromium@1.61.1",
+      "hosts": [
+        "108.177.15.207",
+        "150.171.109.197",
+        "150.171.109.35",
+        "151.101.246.172",
+        "2603:1061:14:20::1",
+        "2603:1061:14:c5::1",
+        "2a00:1450:4010:c01::cf",
+        "2a04:4e42:6b::684",
+        "64.233.167.207"
+      ]
+    },
+    {
+      "pkg": "@swagger-api/apidom-reference@0.76.2",
+      "hosts": [
+        "github.com"
+      ]
+    },
+    {
+      "pkg": "@vscode/ripgrep@1.17.1",
+      "hosts": [
+        "api.github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "@vscode/test-web@0.0.81",
+      "hosts": [
+        "cdn.playwright.dev",
+        "playwright.download.prss.microsoft.com",
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "canvas@3.2.3",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "cypress-visual-regression@3.0.0",
+      "hosts": [
+        "cdn.cypress.io",
+        "download.cypress.io"
+      ]
+    },
+    {
+      "pkg": "cypress@15.18.0",
+      "hosts": [
+        "cdn.cypress.io",
+        "download.cypress.io"
+      ]
+    },
+    {
+      "pkg": "cypress@15.21.1",
+      "hosts": [
+        "cdn.cypress.io",
+        "download.cypress.io"
+      ]
+    },
+    {
+      "pkg": "dugite@1.92.0",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "foundry-local-sdk@1.2.3",
+      "hosts": [
+        "api.nuget.org"
+      ]
+    },
+    {
+      "pkg": "fs-admin@0.19.0",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "hugo-bin@0.161.0",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "kerberos@2.1.1",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "mongodb-client-encryption@7.2.1",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "mongodb-memory-server@11.2.0",
+      "hosts": [
+        "fastdl.mongodb.org"
+      ]
+    },
+    {
+      "pkg": "node-qunit-puppeteer@2.2.1",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "pdfjs-dist@3.11.174",
+      "hosts": [
+        "github.com"
+      ]
+    },
+    {
+      "pkg": "puppeteer@1.20.0",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "puppeteer@12.0.1",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "puppeteer@2.1.1",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "puppeteer@24.25.0",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "puppeteer@25.10.0",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "puppeteer@25.11.0",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "puppeteer@25.8.0",
+      "hosts": [
+        "storage.googleapis.com"
+      ]
+    },
+    {
+      "pkg": "sqlite3@6.0.1",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "swagger-client@3.22.3",
+      "hosts": [
+        "github.com"
+      ]
+    },
+    {
+      "pkg": "vscode-ripgrep@1.9.0",
+      "hosts": [
+        "api.github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    },
+    {
+      "pkg": "wasm-pack@0.15.0",
+      "hosts": [
+        "github.com",
+        "release-assets.githubusercontent.com"
+      ]
+    }
+  ],
+  "credentials": [
+    {
+      "pkg": "@fails-components/webtransport-transport-http3-quiche@1.5.1",
+      "reads": [
+        "GH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@lerna/create@8.2.4",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@npmcli/template-oss@5.1.1",
+      "reads": [
+        "LOG_TOKENS"
+      ]
+    },
+    {
+      "pkg": "@nx/devkit@20.8.4",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/devkit@21.6.4",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/devkit@23.1.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/devkit@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/esbuild@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/eslint-plugin@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/eslint@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/jest@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/js@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/vite@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/vitest@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/web@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@nx/workspace@23.2.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@scarf/scarf@1.4.0",
+      "reads": [
+        "SCARF_API_TOKEN"
+      ]
+    },
+    {
+      "pkg": "@vscode/ripgrep@1.17.1",
+      "reads": [
+        "GITHUB_TOKEN"
+      ]
+    },
+    {
+      "pkg": "g11n-pipeline@3.4.1",
+      "reads": [
+        "SCARF_API_TOKEN"
+      ]
+    },
+    {
+      "pkg": "lerna@10.0.1",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "lerna@8.2.4",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "lerna@9.0.7",
+      "reads": [
+        "NX_CLOUD_ACCESS_TOKEN",
+        "NX_CLOUD_AUTH_TOKEN"
+      ]
+    },
+    {
+      "pkg": "strong-globalize-cli@7.1.1",
+      "reads": [
+        "SCARF_API_TOKEN"
+      ]
+    },
+    {
+      "pkg": "swagger-ui-dist@5.33.0",
+      "reads": [
+        "SCARF_API_TOKEN"
+      ]
+    },
+    {
+      "pkg": "vscode-ripgrep@1.9.0",
+      "reads": [
+        "GITHUB_TOKEN"
+      ]
+    }
+  ]
+}

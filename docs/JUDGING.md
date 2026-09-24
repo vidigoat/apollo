@@ -58,8 +58,8 @@ cd ~/anything-with-a-package-lock
 node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
 ```
 
-That reads the **published index** — 5,691 packages, 12,281 versions, about 370 kB over the wire
-— and writes a `stakeout.lock` for your tree. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,825 of their 3,548 dependency-versions are answered (80%)**, up from 56% before the index was grown today; the other 723 come back unknown by name. Most of any tree comes back unknown, because most of
+That reads the **published index** — 7,933 packages, 18,257 versions, about 590 kB over the wire
+— and writes a `stakeout.lock` for your tree. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,969 of their 3,548 dependency-versions are answered (84%)**, up from 56% before the index was grown today; the other 579 come back unknown by name. Most of any tree comes back unknown, because most of
 npm has never been watched by anybody, and that is reported as its own outcome rather than as a
 pass. `scripts/publish-index.js` writes the file; `index/published.js` reads it.
 
@@ -99,7 +99,7 @@ pass. `scripts/publish-index.js` writes the file; `index/published.js` reads it.
 
 ## What is honestly not here
 
-- **An index of any size.** 5,691 packages is published and it is a rounding error against npm.
+- **An index of any size.** 7,933 packages is published and it is a rounding error against npm.
   The ordering work is what makes that useful — the index is built in the order of how many projects
   share each package-version, so the first 500 observations answer far more than the last 500 — but
   a tree pointed at it still comes back mostly unknown, and the tool says so rather than passing.

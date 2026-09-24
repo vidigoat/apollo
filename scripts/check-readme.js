@@ -180,8 +180,21 @@ function holdout46Claims() {
   return [{ what: 'held-out 46: answered of dependency-versions', value: `${f(m.answered)} of their ${f(m.depVersions)}`, where: /\*\*([\d,]+ of their [\d,]+)\*\*/g }];
 }
 
+/** The install-phase summary, from docs/install-phase.json — `node scripts/install-summary.js` re-derives it. */
+function installPhaseClaims() {
+  let m;
+  try {
+    m = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'install-phase.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+  const f = (n) => n.toLocaleString('en-US');
+  return [{ what: 'install phase: ran a script of watched', value: `${f(m.ranScript)} of the ${f(m.watchedThroughInstall)}`, where: /\*\*([\d,]+ of the [\d,]+)\*\* versions watched through/g }];
+}
+
 const CLAIMS = [
   ...crossvalClaims(),
+  ...installPhaseClaims(),
   ...holdout46Claims(),
   ...releaseWatchClaims(),
   // No `where` here: "N packages" is a phrase this README uses for several different counts — the

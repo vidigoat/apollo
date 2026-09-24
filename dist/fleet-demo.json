@@ -2,19 +2,19 @@
   "root": null,
   "describes": "six public projects — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio",
   "describesNote": "none of which was used to choose what went into the index",
-  "scannedAt": "2026-09-23T18:34:15.569Z",
+  "scannedAt": "2026-09-24T04:26:22.638Z",
   "index": {
-    "packages": 5691,
-    "versions": 12281,
-    "revision": "2026-09-23"
+    "packages": 7933,
+    "versions": 18257,
+    "revision": "2026-09-24"
   },
   "repos": [
     {
       "name": "twbs/bootstrap",
       "dir": "twbs_bootstrap",
       "deps": 1205,
-      "known": 908,
-      "unknown": 297,
+      "known": 962,
+      "unknown": 243,
       "otherPlatform": 70,
       "state": "unpinned",
       "drift": []
@@ -23,8 +23,8 @@
       "name": "nodejs/undici",
       "dir": "nodejs_undici",
       "deps": 602,
-      "known": 532,
-      "unknown": 70,
+      "known": 535,
+      "unknown": 67,
       "otherPlatform": 57,
       "state": "unpinned",
       "drift": []
@@ -33,8 +33,8 @@
       "name": "ionic-team/ionic-framework",
       "dir": "ionic-team_ionic-framework",
       "deps": 491,
-      "known": 342,
-      "unknown": 149,
+      "known": 399,
+      "unknown": 92,
       "otherPlatform": 1,
       "state": "unpinned",
       "drift": []
@@ -43,8 +43,8 @@
       "name": "highlightjs/highlight.js",
       "dir": "highlightjs_highlight.js",
       "deps": 422,
-      "known": 362,
-      "unknown": 60,
+      "known": 379,
+      "unknown": 43,
       "otherPlatform": 25,
       "state": "unpinned",
       "drift": []
@@ -53,8 +53,8 @@
       "name": "cheeriojs/cheerio",
       "dir": "cheeriojs_cheerio",
       "deps": 414,
-      "known": 299,
-      "unknown": 115,
+      "known": 308,
+      "unknown": 106,
       "otherPlatform": 62,
       "state": "unpinned",
       "drift": []
@@ -63,8 +63,8 @@
       "name": "shelljs/shelljs",
       "dir": "shelljs_shelljs",
       "deps": 414,
-      "known": 382,
-      "unknown": 32,
+      "known": 386,
+      "unknown": 28,
       "otherPlatform": 0,
       "state": "unpinned",
       "drift": []
@@ -74,7 +74,7 @@
     "repos": 6,
     "depVersions": 3548,
     "distinct": 2527,
-    "known": 2825,
+    "known": 2969,
     "otherPlatform": 215,
     "drifting": 0,
     "pinned": 0

@@ -117,7 +117,7 @@ cd ~/your-project
 node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
 ```
 
-That reads a **published index** — 5,691 packages and 12,281 versions somebody has already run,
+That reads a **published index** — 7,933 packages and 18,257 versions somebody has already run,
 about 390 kB over the wire — and writes a `stakeout.lock` for *your* tree. Some of it will come
 back **unknown**, because most of npm has never been watched by anybody, and the lock says so by
 name rather than pretending to cover it.
@@ -164,17 +164,24 @@ A package's behaviour does not depend on who imported it, so it is observed once
 that. Pointed at a whole machine — 76 projects and 20,897 dependency-versions — 2,120 observations in
 the index answered 12,986 of them, **62%**, from an index you could build in an afternoon.
 
-<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,825 of 3,548 dependency-versions answered" width="100%">
+<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,969 of 3,548 dependency-versions answered" width="100%">
 
 The scan bundled with this repository is of six **held-out** public projects — undici, bootstrap,
 ionic-framework, highlight.js, shelljs and cheerio — none of which was used to choose what went into
 the index, so it measures how well the index generalises rather than how well it remembers: 3,548
 dependency-versions across 6 readable lockfiles, which are only 2,527 distinct package-versions, and
-2,825 of them answered. The index itself was grown to 12,281 versions from the lockfiles of
-forty-one widely used projects (vscode, TypeScript, nest, puppeteer, axios, npm, playwright, lodash,
+2,969 of them answered. The index itself was grown to 18,257 versions from the lockfiles of
+eighty-seven widely used projects (vscode, TypeScript, nest, puppeteer, axios, npm, playwright, lodash,
 three.js, rollup and apollo among them) — first in containers that could see nothing of the machine
-running them, and now every one of the 12,281 in Nebius Token Factory Sandboxes, which each entry
+running them, and now every one of the 18,257 in Nebius Token Factory Sandboxes, which each entry
 records.
+
+What those installs do is in the index too. **403 of the 7,506** versions watched through their
+install ran an install script; 31 reached the network while installing — nearly all fetching prebuilt
+binaries, from GitHub release assets and Google Cloud Storage — and 25 read a variable named
+like a credential — most of them Nx packages checking for `NX_CLOUD_ACCESS_TOKEN`, four through Scarf,
+the install-time usage analytics that `swagger-ui-dist` pulls in (`docs/install-phase.json`,
+`node scripts/install-summary.js`).
 
 A second, larger held-out test, on 24 September: **46 more public projects** with a committed
 `package-lock.json` — pdf.js, echarts, node-red, jitsi-meet, monaco-editor, mapbox-gl-js, plotly.js,
