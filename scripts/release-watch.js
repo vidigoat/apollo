@@ -185,7 +185,7 @@ if (require.main === module) {
     if (cached) {
       ranked = cached.ranked;
       if (cached.scoped) record.scoped = cached.scoped;
-      console.log(explainOnly ? '  explain only: no ranking, no new pairs' : `  ranking reused from ${new Date(cached.at).toISOString()} (--rerank to ask npm again)`);
+      console.log(!cached.at ? `  ${rewatch.length ? `rewatching ${rewatch.length} pair(s)` : 'explain only'}: no ranking` : `  ranking reused from ${new Date(cached.at).toISOString()} (--rerank to ask npm again)`);
     } else {
       const downloads = await weeklyDownloads(names);
       ranked = [...downloads.entries()].sort((a, b) => b[1] - a[1]).slice(0, top);
