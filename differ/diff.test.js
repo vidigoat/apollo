@@ -350,8 +350,11 @@ it('a release that adds an install script is alarming — the shape of the class
 
 it('npm\'s own settings are not credentials; a setting about authentication still is', () => {
   const { readsCredential } = require('./diff');
-  for (const n of ['npm_config_loglevel', 'npm_config_color', 'npm_config_arch', 'CI', 'FAKEROOTKEY', 'MONKEY_PATCH', 'KEYBOARD_LAYOUT', 'PNPM_HOME', 'DESTDIR', 'XDG_CONFIG_HOME']) assert.equal(readsCredential(n), false, n);
-  for (const n of ['API_KEY', 'OPENAI_API_KEY', 'STRIPE_KEY', 'KEY', 'SSH_KEY_PATH', 'GCP_KEYFILE', 'ACCESSKEY', 'NPM_TOKEN', 'MY_NPM_TOKEN', 'AWS_ACCESS_KEY_ID', 'GITHUB_TOKEN', 'GH_TOKEN', 'SSH_AUTH_SOCK', 'DB_PASSWORD']) assert.equal(readsCredential(n), true, n);
+  for (const n of ['npm_config_loglevel', 'npm_config_color', 'npm_config_arch', 'CI', 'FAKEROOTKEY', 'MONKEY_PATCH', 'KEYBOARD_LAYOUT', 'PNPM_HOME', 'DESTDIR', 'XDG_CONFIG_HOME',
+    'npm_package_from', 'npm_package_resolved', 'npm_command', 'npm_execpath', 'npm_lifecycle_event', 'npm_package_config_port',
+    'GITHUB_ACTIONS', 'SSH_CLIENT', 'SSH_CONNECTION', 'SSH_TTY', 'AWS_REGION', 'AWS_PROFILE']) assert.equal(readsCredential(n), false, n);
+  for (const n of ['API_KEY', 'OPENAI_API_KEY', 'STRIPE_KEY', 'KEY', 'SSH_KEY_PATH', 'GCP_KEYFILE', 'ACCESSKEY', 'NPM_TOKEN', 'MY_NPM_TOKEN', 'AWS_ACCESS_KEY_ID', 'GITHUB_TOKEN', 'GH_TOKEN', 'SSH_AUTH_SOCK', 'DB_PASSWORD',
+    'NODE_AUTH_TOKEN', 'NX_CLOUD_ACCESS_TOKEN', 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN', 'GOOGLE_APPLICATION_CREDENTIALS', 'GITHUB_PAT', 'npm_config__authToken']) assert.equal(readsCredential(n), true, n);
   for (const n of ['NPM_TOKEN', 'npm_config__authToken', 'npm_config_//registry.npmjs.org/:_authToken', 'npm_config__password', 'AWS_SECRET_ACCESS_KEY', 'GITHUB_TOKEN']) assert.equal(readsCredential(n), true, n);
   // ajv 6.12.1's funding postinstall, as watched on Nebius: a new script, not a credential read.
   const e = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };

@@ -41,13 +41,22 @@ const SENSITIVE_ENV = /(TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL|AWS_|GITHUB_|NPM_|S
  */
 const readsCredential = (name) => {
   const n = String(name);
-  if (/^npm_config_/i.test(n) && !/(auth|token|password|passwd|_key|keyfile|cert)/i.test(n)) return false;
   /*
-   * Words, not letters. SENSITIVE_ENV matches substrings, and two real releases showed what that
-   * costs: global-directory 5.0.0 was called alarming — "reads a credential" — for FAKEROOTKEY
-   * (fakeroot's session variable) and PNPM_HOME (pnpm's install directory; it contains "NPM_").
+   * npm's own lifecycle environment is settings: every install script is handed npm_config_*,
+   * npm_package_*, npm_lifecycle_event, npm_command, npm_execpath … and reading them is how a script
+   * knows where it is. Only a name that is about authentication among them is a credential.
    */
-  return /(TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|PRIVATE|(^|_)AWS_|(^|_)GITHUB_|(^|_)GH_|(^|_)NPM_|SSH|(^|_)KEY(_|$)|API_?KEY|ACCESS_?KEY|KEYFILE|(^|_)AUTH(_|$))/i.test(n);
+  if (/^npm_(config|package|lifecycle)_|^npm_(command|execpath|node_execpath|user_agent)$/i.test(n)) {
+    return /(auth|token|password|passwd|secret|_key|keyfile|cert)/i.test(n);
+  }
+  /*
+   * Words, not families. SENSITIVE_ENV matches substrings, and real releases showed what that costs:
+   * global-directory 5.0.0 was "reads a credential" for FAKEROOTKEY (fakeroot's session variable) and
+   * PNPM_HOME (it contains "NPM_"); GITHUB_ACTIONS is a CI flag, SSH_CLIENT and SSH_TTY describe a
+   * session, AWS_REGION is a region. What names a secret still counts: NPM_TOKEN, NODE_AUTH_TOKEN,
+   * GITHUB_TOKEN, AWS_SECRET_ACCESS_KEY, AWS_ACCESS_KEY_ID, API_KEY, SSH_AUTH_SOCK, a *_PAT.
+   */
+  return /(TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|PRIVATE_?KEY|(^|_)KEY(_|$)|API_?KEY|ACCESS_?KEY|KEYFILE|(^|_)AUTH(_|$)|SSH_AUTH_SOCK|_PAT$)/i.test(n);
 };
 
 /** Spawning these from a package install is rarely innocent. */
