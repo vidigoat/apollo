@@ -144,16 +144,20 @@ is the reason a successful prompt injection cost this system nothing (below).
 
 ### Pointed at the newest releases of the most-used packages
 
-On 23 September, `scripts/release-watch.js` watched the newest release of the 1,287 most-downloaded
-packages the index holds (299 scoped) against the release before it, in Nebius Sandboxes, import and
-install. **1,272 of 1,287 latest releases** behaved exactly as before; 2 could not be watched and
-are counted as neither. The other 13 changed only which environment variables they read — and one of
-those is the kind of change this project exists to surface: **jiti 2.7.0, 130 million downloads a
-week, now checks at import whether it is running inside an AI coding agent** — `CLAUDECODE`,
+On 23–24 September, `scripts/release-watch.js` watched the newest release of the 2,488
+most-downloaded packages the index holds (299 scoped) against the release before it, in Nebius
+Sandboxes, import and install. **2,456 of 2,488 latest releases** behaved exactly as before;
+3 could not be watched and are counted as neither. Of the 29 that changed, one is the
+kind of change this project exists to surface: **jiti 2.7.0, 130 million downloads a week, now
+checks at import whether it is running inside an AI coding agent** — `CLAUDECODE`,
 `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more — through the `std-env` it bundles,
-and std-env 4.2.0 went on to add JetBrains' Junie. Both confirmed in the published tarballs.
-Benign — and not something the version number tells you. The watch also turned up a false positive
-in the tool itself (below), which is why a hit is read by hand before it is claimed.
+and std-env 4.2.0 went on to add JetBrains' Junie. 2 came back alarming for building code at
+runtime — find-versions 6.0.0 and babel-plugin-react-compiler 1.0.0 — and reading their published
+code showed why: a regular expression run under `vm.Script` with a time limit, and zod 4 compiling
+its checks. Flagged, explained, benign. None of the 2,488 added an install script. Nemotron read
+all 29 for $0.0085; every release named here was confirmed in its published tarball before it was
+written down, and the rest are listed on the site with exactly what the probe saw.
+The watch also turned up false positives in the tool itself (below), which is why that rule exists.
 
 ## Challenges we ran into
 

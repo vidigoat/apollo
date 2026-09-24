@@ -53,7 +53,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 33 suites · 458 checks
+npm test            # 34 suites · 460 checks
 npm run smoke:live  # every route of the deployed site, after a deploy
 ```
 
@@ -72,18 +72,23 @@ the sandboxes stay available.
 
 ### The newest releases of the most-used packages, watched
 
-`node scripts/release-watch.js --top 1000` ranks the packages the index holds by weekly downloads,
-takes each one's newest release and the release before it, and watches both in Nebius Sandboxes —
-import and install. On 23 September, **1,272 of 1,287** latest releases behaved exactly like the
-release before on every channel (299 of them scoped packages); 2 could not be watched and
-are counted as neither. The other 13 changed only which environment variables they read — no new connection, process or runtime code anywhere — and two of them are worth knowing: **jiti 2.7.0**,
-130 million downloads a week, now checks at import whether it is running inside an AI coding agent
-(`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen more) through the `std-env`
-it bundles, and **std-env 4.2.0** itself added JetBrains' Junie to that list. Nothing malicious, and
-nothing a version number would tell you — which is the kind of change this exists to put in front
-of somebody. Recorded in `docs/release-watch.json`; no model is called.
+`node scripts/release-watch.js --top 3000 --scoped 300` ranks the packages the index holds by weekly
+downloads, takes each one's newest release and the release before it, and watches both in Nebius
+Sandboxes — import and install. On 23–24 September, **2,456 of 2,488** latest releases
+behaved exactly like the release before on every channel (299 of them scoped packages); 3
+could not be watched, because a version did not install, and are counted as neither. Of the
+29 that changed, most read different environment variables; 2 began building code
+at runtime, which the rules call alarming; one stopped running an install script; none started one.
+Every release written about here was read in its published code first, and none of those is
+malicious; the rest are listed on the site with exactly what the probe saw. Two are worth knowing: **jiti 2.7.0**, 130 million downloads a week, now checks at import whether it is running
+inside an AI coding agent (`CLAUDECODE`, `CODEX_SANDBOX`, `CURSOR_AGENT`, `GEMINI_CLI` and fifteen
+more) through the `std-env` it bundles, and **std-env 4.2.0** itself added JetBrains' Junie to that
+list. The two alarming ones are find-versions 6.0.0 (a new dependency that runs regular expressions
+under `vm.Script` with a time limit) and babel-plugin-react-compiler 1.0.0 (it bundles zod 4, which
+compiles its checks at runtime) — flagged, as they should be, and explained. With `--explain`, Nemotron
+read all 29 for $0.0085. Recorded in `docs/release-watch.json`.
 
-<img src="docs/images/releases.jpg" alt="The release watch on the site: 1,272 of 1,287 newest releases unchanged; the 13 that read different environment variables, each with Nemotron's reading and the public record, jiti 2.7.0 among them" width="720">
+<img src="docs/images/releases.jpg" alt="The release watch on the site: 2,456 of 2,488 newest releases unchanged, and the 29 that changed, each with Nemotron's reading and the public record, jiti 2.7.0 among them" width="720">
 
 ### In Nebius Token Factory Sandboxes
 
