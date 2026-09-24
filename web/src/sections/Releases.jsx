@@ -19,11 +19,16 @@ export default function Releases() {
   }, []);
   if (!data) return null;
 
-  const all = Object.values(data.results || {});
-  const same = all.filter((r) => r.severity === 'none');
-  const moved = all.filter((r) => r.severity !== 'none' && r.severity !== 'failed' && r.severity !== 'unobserved')
+  // The site's copy is slim (scripts/release-watch.js slim()): the counts, and only the pairs that
+  // did not stay the same. An older full copy still reads right.
+  const listed = Object.values(data.results || {});
+  const total = Number.isFinite(data.total) ? data.total : listed.length;
+  const sameCount = Number.isFinite(data.tally?.none) ? data.tally.none : listed.filter((r) => r.severity === 'none').length;
+  const moved = listed.filter((r) => ['minor', 'notable', 'alarming'].includes(r.severity))
     .sort((a, b) => (b.weeklyDownloads || 0) - (a.weeklyDownloads || 0));
-  const unseen = all.length - same.length - moved.length;
+  const unseen = total - sameCount - moved.length;
+  const all = { length: total };
+  const same = { length: sameCount };
   const when = data.measured ? new Date(data.measured).toISOString().slice(0, 10) : null;
 
   return (

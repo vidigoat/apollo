@@ -70,5 +70,17 @@ const it = async (name, fn) => {
     await assert.rejects(() => weeklyDownloads(['a'], dead, async () => {}), /refusing to call a partial ranking/);
   });
 
+  await it('the site gets the counts and the pairs that moved, not every unchanged pair', () => {
+    const { slim } = require('./release-watch');
+    const record = { measured: 'm', notes: { a: 'n' }, results: {
+      'a@1→2': { severity: 'minor', pkg: 'a' }, 'b@1→2': { severity: 'none', pkg: 'b' }, 'c@1→2': { severity: 'none', pkg: 'c' }, 'd@1→2': { severity: 'unobserved', pkg: 'd' },
+    } };
+    const s = slim(record);
+    assert.equal(s.total, 4);
+    assert.deepEqual(s.tally, { minor: 1, none: 2, unobserved: 1 });
+    assert.deepEqual(Object.keys(s.results).sort(), ['a@1→2', 'd@1→2']);
+    assert.deepEqual(s.notes, { a: 'n' });
+  });
+
   console.log(`\n${passed} passed`);
 })();

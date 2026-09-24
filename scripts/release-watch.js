@@ -122,7 +122,35 @@ function gained(d) {
   return out;
 }
 
-module.exports = { lastTwo, weeklyDownloads, scopedDownloads, gained };
+/**
+ * What the site needs from the record: how many were watched and stayed the same, and every pair
+ * that did not. The full record — every unchanged pair too — stays in docs/release-watch.json; the
+ * page was downloading all of it (325 kB at 1,287 pairs) to draw thirteen rows.
+ */
+function slim(record) {
+  const all = Object.values(record.results || {});
+  const tally = all.reduce((t, r) => ((t[r.severity] = (t[r.severity] || 0) + 1), t), {});
+  return {
+    measured: record.measured,
+    strategy: record.strategy,
+    ranking: record.ranking,
+    scoped: record.scoped,
+    notes: record.notes,
+    total: all.length,
+    tally,
+    results: Object.fromEntries(Object.entries(record.results || {}).filter(([, r]) => r.severity !== 'none')),
+  };
+}
+
+module.exports = { lastTwo, weeklyDownloads, scopedDownloads, gained, slim };
+
+// `--publish-only`: rewrite the site's slim copy from the full record, and nothing else.
+if (require.main === module && args.includes('--publish-only')) {
+  const record = JSON.parse(fs.readFileSync(OUT, 'utf8'));
+  fs.writeFileSync(path.join(ROOT, 'public', 'release-watch.json'), `${JSON.stringify(slim(record))}\n`);
+  console.log(`  public/release-watch.json: ${Object.keys(slim(record).results).length} of ${Object.keys(record.results).length} pairs`);
+  process.exit(0);
+}
 
 if (require.main === module) {
   (async () => {
@@ -172,8 +200,8 @@ if (require.main === module) {
       record.ranking = 'weekly npm downloads, unscoped packages the published index holds';
       record.tally = all.reduce((t, r) => ((t[r.severity] = (t[r.severity] || 0) + 1), t), {});
       fs.writeFileSync(OUT, `${JSON.stringify(record, null, 2)}\n`);
-      // The site reads the same record; one file, written twice, so the two cannot disagree.
-      fs.writeFileSync(path.join(ROOT, 'public', 'release-watch.json'), `${JSON.stringify(record)}\n`);
+      // The site gets the slim copy — counts, and only the pairs that moved or could not be watched.
+      fs.writeFileSync(path.join(ROOT, 'public', 'release-watch.json'), `${JSON.stringify(slim(record))}\n`);
     };
 
     let next = 0;
