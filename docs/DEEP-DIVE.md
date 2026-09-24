@@ -356,7 +356,7 @@ projects — undici, bootstrap, ionic-framework, highlight.js, shelljs, cheerio 
 dependency-versions, 2,825 of them already answered (80%). Held out means none of them was used to
 choose what went into the index, which was grown from forty-one other public projects' lockfiles, so
 the figure is generalisation rather than recall; it was 56% before the index was grown. A second
-held-out test, eight times the size, came on 24 September: 46 more public projects with a
+held-out test, nine times the size, came on 24 September: 46 more public projects with a
 committed lockfile, 32,052 dependency-versions, 74% already answered before any of them was used
 (`docs/holdout-46.json`) — and then they were used, so that figure is recorded once and not
 re-measured. The page says whose tree it is rather than
