@@ -160,6 +160,9 @@ if (require.main === module) {
     const names = Object.keys(pub.packages);
 
     const record = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : { results: {} };
+    // `--explain-only`: no ranking and no new pairs — only the recorded ones that moved and have not
+    // been read yet, for when a watch was stopped before its explain pass.
+    const explainOnly = args.includes('--explain-only');
     /*
      * The ranking is cached for a day. It is minutes of npm's downloads API, which answers 429 after
      * a burst — so a restart used to spend a quarter of an hour asking the same question again,
@@ -167,7 +170,7 @@ if (require.main === module) {
      */
     const scopedTop = Number(flag('scoped', 0));
     const cacheFile = path.join(require('node:os').tmpdir(), `stakeout-release-ranking-${top}-${scopedTop}.json`);
-    let cached = null;
+    let cached = explainOnly ? { ranked: [] } : null;
     try {
       const c = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
       if (Date.now() - c.at < 24 * 3600 * 1000 && !args.includes('--rerank')) cached = c;
@@ -176,7 +179,7 @@ if (require.main === module) {
     if (cached) {
       ranked = cached.ranked;
       if (cached.scoped) record.scoped = cached.scoped;
-      console.log(`  ranking reused from ${new Date(cached.at).toISOString()} (--rerank to ask npm again)`);
+      console.log(explainOnly ? '  explain only: no ranking, no new pairs' : `  ranking reused from ${new Date(cached.at).toISOString()} (--rerank to ask npm again)`);
     } else {
       const downloads = await weeklyDownloads(names);
       ranked = [...downloads.entries()].sort((a, b) => b[1] - a[1]).slice(0, top);
@@ -251,7 +254,7 @@ if (require.main === module) {
      * runs its usual tiers under its usual spend ceiling (judge/budget.js). Verdicts are cached, so
      * a second --explain costs nothing.
      */
-    if (args.includes('--explain')) {
+    if (args.includes('--explain') || explainOnly) {
       const { judgeOne } = require('../judge');
       const { lookUp } = require('../evidence/tavily');
       const moved = Object.entries(record.results).filter(([, r]) => ['minor', 'notable', 'alarming'].includes(r.severity) && !r.judgement);
