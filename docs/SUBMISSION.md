@@ -144,9 +144,9 @@ is the reason a successful prompt injection cost this system nothing (below).
 
 ### Pointed at the newest releases of the most-used packages
 
-On 23–24 September, `scripts/release-watch.js` watched the newest release of the 3,252
-most-downloaded packages the index holds (302 scoped) against the release before it, in Nebius
-Sandboxes, import and install. **3,200 of 3,252 latest releases** behaved exactly as before;
+On 23–24 September, `scripts/release-watch.js` watched the newest release of the 3,259
+most-downloaded packages the index holds (304 scoped) against the release before it, in Nebius
+Sandboxes, import and install. **3,207 of 3,259 latest releases** behaved exactly as before;
 4 could not be watched and are counted as neither. Of the 48 that changed, one is the
 kind of change this project exists to surface: **jiti 2.7.0, 130 million downloads a week, now
 checks at import whether it is running inside an AI coding agent** — `CLAUDECODE`,

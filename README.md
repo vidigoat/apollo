@@ -74,8 +74,8 @@ the sandboxes stay available.
 
 `node scripts/release-watch.js --top 3000 --scoped 300` ranks the packages the index holds by weekly
 downloads, takes each one's newest release and the release before it, and watches both in Nebius
-Sandboxes — import and install. On 23–24 September, **3,200 of 3,252** latest releases
-behaved exactly like the release before on every channel (302 of them scoped packages); 4
+Sandboxes — import and install. On 23–24 September, **3,207 of 3,259** latest releases
+behaved exactly like the release before on every channel (304 of them scoped packages); 4
 could not be watched, because a version did not install, and are counted as neither. Of the
 48 that changed, most read different environment variables. Nine came back alarming, and each was
 read in its published code: six build code at runtime for reasons that check out (three reach the
@@ -89,9 +89,11 @@ whether it is running inside an AI coding agent (`CLAUDECODE`, `CODEX_SANDBOX`, 
 `GEMINI_CLI` and fifteen more) through the `std-env` it bundles, and **std-env 4.2.0** itself added
 JetBrains' Junie to that list. Nothing here is written without the code having been read; the rest
 are on the site with exactly what the probe saw. With `--explain`, Nemotron read all 48 for
-$0.0325. Recorded in `docs/release-watch.json`.
+$0.0325. Recorded in `docs/release-watch.json`. `--refresh` makes it a feed:
+the same packages, asked for anything newer, and only the new releases watched — the first refresh,
+half a day later, found 7 (vite 8.3.1 and rolldown 1.2.11 among them), all unchanged.
 
-<img src="docs/images/releases.jpg" alt="The release watch on the site: 3,200 of 3,252 newest releases unchanged, and the 48 that changed, each with Nemotron's reading and the public record, jiti 2.7.0 among them" width="720">
+<img src="docs/images/releases.jpg" alt="The release watch on the site: 3,207 of 3,259 newest releases unchanged, and the 48 that changed, each with Nemotron's reading and the public record, jiti 2.7.0 among them" width="720">
 
 ### In Nebius Token Factory Sandboxes
 

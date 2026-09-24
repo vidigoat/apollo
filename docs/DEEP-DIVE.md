@@ -790,7 +790,7 @@ it, and watches both in two Nebius Sandboxes forked from one checkpoint, import 
 differ's rules decide severity. With `--explain`, the few that moved are looked up on the open web
 (Tavily) and read by Nemotron on Token Factory, which explains and never escalates.
 
-On 23–24 September: **3,252** pairs (302 scoped), **3,200** exactly the same on every
+On 23–24 September: **3,259** pairs (304 scoped), **3,207** exactly the same on every
 channel, **48** that changed — most in which environment variables they read; nine alarming — six building
 code at runtime, two changing what runs at install, one reading a CI token's name — every one read
 in its published code, and one of them (vite-plugin-singlefile 2.3.3) left recorded as not traced — and **4** that could not be watched

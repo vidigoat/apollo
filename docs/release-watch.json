@@ -841,7 +841,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.3e-05,
+        "costUsd": 0.000093,
         "severityStill": "minor"
       }
     },
@@ -7398,7 +7398,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.6e-05,
+        "costUsd": 0.000096,
         "severityStill": "minor"
       }
     },
@@ -22090,7 +22090,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.9e-05,
+        "costUsd": 0.000099,
         "severityStill": "minor"
       }
     },
@@ -22985,7 +22985,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.1e-05,
+        "costUsd": 0.000091,
         "severityStill": "minor"
       }
     },
@@ -24427,7 +24427,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.7e-05,
+        "costUsd": 0.000097,
         "severityStill": "minor"
       }
     },
@@ -28701,7 +28701,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.8e-05,
+        "costUsd": 0.000098,
         "severityStill": "minor"
       }
     },
@@ -31687,7 +31687,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9e-05,
+        "costUsd": 0.00009,
         "severityStill": "minor"
       }
     },
@@ -32035,7 +32035,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.7e-05,
+        "costUsd": 0.000097,
         "severityStill": "minor"
       }
     },
@@ -35356,7 +35356,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.7e-05,
+        "costUsd": 0.000097,
         "severityStill": "minor"
       }
     },
@@ -35429,7 +35429,7 @@
         "models": [
           "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
         ],
-        "costUsd": 9.4e-05,
+        "costUsd": 0.000094,
         "severityStill": "minor"
       }
     },
@@ -37924,13 +37924,90 @@
       },
       "summary": "semver-greatest-satisfied-range 1.1.0 → 2.0.0: ",
       "seconds": 43
+    },
+    "string-width@8.2.2→8.3.0": {
+      "pkg": "string-width",
+      "from": "8.2.2",
+      "to": "8.3.0",
+      "weeklyDownloads": 374902821,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "string-width 8.2.2 → 8.3.0: no change in what nodert can see",
+      "seconds": 10
+    },
+    "browserslist@4.29.0→4.29.1": {
+      "pkg": "browserslist",
+      "from": "4.29.0",
+      "to": "4.29.1",
+      "weeklyDownloads": 148013476,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "browserslist 4.29.0 → 4.29.1: no change in what nodert can see",
+      "seconds": 10
+    },
+    "@mswjs/interceptors@0.45.0→0.45.1": {
+      "pkg": "@mswjs/interceptors",
+      "from": "0.45.0",
+      "to": "0.45.1",
+      "weeklyDownloads": 15572040,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "@mswjs/interceptors 0.45.0 → 0.45.1: no change in what nodert can see",
+      "seconds": 12
+    },
+    "@rolldown/binding-linux-x64-gnu@1.2.10→1.2.11": {
+      "pkg": "@rolldown/binding-linux-x64-gnu",
+      "from": "1.2.10",
+      "to": "1.2.11",
+      "weeklyDownloads": 60059190,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "@rolldown/binding-linux-x64-gnu 1.2.10 → 1.2.11: no change in what nodert can see",
+      "seconds": 12
+    },
+    "rolldown@1.2.10→1.2.11": {
+      "pkg": "rolldown",
+      "from": "1.2.10",
+      "to": "1.2.11",
+      "weeklyDownloads": 68940932,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "rolldown 1.2.10 → 1.2.11: no change in what nodert can see",
+      "seconds": 12
+    },
+    "vite@8.3.0→8.3.1": {
+      "pkg": "vite",
+      "from": "8.3.0",
+      "to": "8.3.1",
+      "weeklyDownloads": 131207416,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "vite 8.3.0 → 8.3.1: no change in what nodert can see",
+      "seconds": 18
+    },
+    "minimizer-webpack-plugin@5.11.0→5.12.0": {
+      "pkg": "minimizer-webpack-plugin",
+      "from": "5.11.0",
+      "to": "5.12.0",
+      "weeklyDownloads": 9595009,
+      "severity": "none",
+      "reasons": [],
+      "gained": {},
+      "summary": "minimizer-webpack-plugin 5.11.0 → 5.12.0: no change in what nodert can see",
+      "seconds": 18
     }
   },
-  "measured": "2026-09-24T11:20:27.840Z",
+  "measured": "2026-09-24T15:15:58.311Z",
   "strategy": "nodert",
   "ranking": "weekly npm downloads, unscoped packages the published index holds",
   "tally": {
-    "none": 3200,
+    "none": 3207,
     "minor": 39,
     "unobserved": 4,
     "alarming": 9
