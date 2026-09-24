@@ -362,4 +362,15 @@ it('npm\'s own settings are not credentials; a setting about authentication stil
   assert.equal(d.severity, 'alarming', 'the new install script itself must still be alarming');
 });
 
+it('a write that stopped is not called a new write — vite-node 6.0.0, as watched on Nebius', () => {
+  const e = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
+  const before = transcript({ pkg: 'vite-node', version: '5.3.0', strategy: 'nodert', result: { installExit: 0, reported: true },
+    raw: { install: { ...e, fs: [{ path: '/twin/node_modules/esbuild/bin-esbuild', op: 'delete' }] } } });
+  const after = transcript({ pkg: 'vite-node', version: '6.0.0', strategy: 'nodert', raw: { install: e }, result: { installExit: 0, reported: true } });
+  const d = diff(before, after);
+  assert.deepEqual(d.reasons, ['at install: stopped writing or deleting somewhere it did before']);
+  const { gained } = require('../scripts/release-watch');
+  assert.equal(gained(d)['install.fs'].removed.length, 1, 'the evidence was dropped from the record');
+});
+
 console.log(`\n${passed} passed`);

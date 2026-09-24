@@ -85,7 +85,10 @@ function severityOf(input) {
   if (d.dns.added.length && !d.net.added.length) reasons.push('resolves a name it did not resolve before');
   if (reasons.length) return { level: 'notable', reasons };
 
-  if (d.fs.added.length || d.fs.removed.length) reasons.push('writes somewhere it did not write before');
+  // A write that stopped is a change too, but it is not a new write: vite-node 6.0.0 no longer runs
+  // esbuild's install, which deleted a file, and this line used to call that "writes somewhere new".
+  if (d.fs.added.length) reasons.push('writes somewhere it did not write before');
+  else if (d.fs.removed.length) reasons.push('stopped writing or deleting somewhere it did before');
   if (d.proc.added.length) reasons.push('spawns a process it did not spawn before');
   // Reading a non-sensitive variable is usually a feature flag — picocolors@1.1.1 picks up NO_COLOR
   // and FORCE_COLOR, which is exactly what you would want it to do. It is still a change, and a

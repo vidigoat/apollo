@@ -59,7 +59,8 @@ const it = (name, fn) => {
 const VARIANTS = {
   net: [[], [{ host: 'a.example', port: 443, proto: 'tls' }]],
   dns: [[], ['a.example']],
-  fs: [[], [{ op: 'write', path: '/tmp/x' }]],
+  // A channel can also change by losing something — a write that stopped is its own rule.
+  fs: [[], [{ op: 'write', path: '/tmp/x' }], { removed: [{ op: 'delete', path: '/tmp/x' }] }],
   env: [[], ['NO_COLOR'], ['AWS_SECRET_ACCESS_KEY']],
   proc: [[], [{ argv: ['ls'] }], [{ argv: ['sh', '-c', 'x'] }]],
   exec: [[], [{ how: 'atob', sample: 'x' }], [{ how: 'Function', sample: 'x' }]],
@@ -84,8 +85,9 @@ function walk() {
       reasons.forEach((r) => produced.add(`${level} :: ${shape(r)}`));
       return;
     }
-    for (const added of VARIANTS[keys[i]]) {
-      recurse(i + 1, { ...acc, [keys[i]]: { added, removed: [] } });
+    for (const v of VARIANTS[keys[i]]) {
+      const part = Array.isArray(v) ? { added: v, removed: [] } : { added: [], removed: v.removed };
+      recurse(i + 1, { ...acc, [keys[i]]: part });
     }
   };
 
@@ -110,6 +112,7 @@ const ALLOWED = [
   'notable :: talks to N destination it did not talk to before',
   'notable :: resolves a name it did not resolve before',
   'minor :: writes somewhere it did not write before',
+  'minor :: stopped writing or deleting somewhere it did before',
   'minor :: spawns a process it did not spawn before',
   'minor :: reads N environment variable it did not read before',
   'minor :: decodes something it did not decode before',

@@ -116,8 +116,11 @@ function gained(d) {
     const added = (d[c]?.added || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x)).slice(0, 120));
     const removed = (d[c]?.removed || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x)).slice(0, 120));
     if (added.length || removed.length) out[c] = { added, removed };
+    // Install-time changes that are only removals count too — vite-node 6.0.0's was one, and the
+    // record showed a finding with no evidence under it.
     const ia = (d.install?.[c]?.added || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x)).slice(0, 120));
-    if (ia.length) out[`install.${c}`] = { added: ia, removed: (d.install[c].removed || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x)).slice(0, 120)) };
+    const ir = (d.install?.[c]?.removed || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x)).slice(0, 120));
+    if (ia.length || ir.length) out[`install.${c}`] = { added: ia, removed: ir };
   }
   return out;
 }
