@@ -409,6 +409,12 @@ On six public projects that were not used to choose what was indexed — undici,
 anybody, and `check` reports that as its own outcome rather than as a pass. That is the point of
 publishing it — the claim is now a thing that can be wrong.
 
+A second held-out test, bigger: **46 more public projects** with a committed lockfile (pdf.js,
+echarts, node-red, jitsi-meet, monaco-editor, mapbox-gl-js, plotly.js, meteor and others), none used
+to build the index. Before being grown from them, it answered 23,596 of their 32,052
+dependency-versions — **74%** (`docs/holdout-46.json`). They are in the index now, so that is the
+held-out figure and the last one that can honestly be taken from them.
+
 **Every one of the 2,129 entries was overclaiming, and publishing them found it.** Each entry stores
 a copy of the `CAN_SEE` row it was observed under, and every one was written while `nodert` was
 recorded as `fs: true`. It is not — the probe hooks writes, so a package that only *reads* a file is

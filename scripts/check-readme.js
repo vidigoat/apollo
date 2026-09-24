@@ -168,8 +168,21 @@ function releaseWatchClaims() {
   return [{ what: 'release watch: unchanged of watched', value: `${same.toLocaleString('en-US')} of ${all.length.toLocaleString('en-US')}`, where: /\*\*([\d,]+ of [\d,]+)\*\* latest releases/g }];
 }
 
+/** The 46-project held-out scan, from its recording — measured once, before those projects were indexed. */
+function holdout46Claims() {
+  let m;
+  try {
+    m = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'holdout-46.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+  const f = (n) => n.toLocaleString('en-US');
+  return [{ what: 'held-out 46: answered of dependency-versions', value: `${f(m.answered)} of their ${f(m.depVersions)}`, where: /\*\*([\d,]+ of their [\d,]+)\*\*/g }];
+}
+
 const CLAIMS = [
   ...crossvalClaims(),
+  ...holdout46Claims(),
   ...releaseWatchClaims(),
   // No `where` here: "N packages" is a phrase this README uses for several different counts — the
   // tree, the ones that moved, the ones in a survey — so matching it in context would be matching

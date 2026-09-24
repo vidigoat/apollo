@@ -53,7 +53,7 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 33 suites · 456 checks
+npm test            # 33 suites · 457 checks
 npm run smoke:live  # every route of the deployed site, after a deploy
 ```
 
@@ -170,6 +170,13 @@ forty-one widely used projects (vscode, TypeScript, nest, puppeteer, axios, npm,
 three.js, rollup and apollo among them) — first in containers that could see nothing of the machine
 running them, and now every one of the 12,281 in Nebius Token Factory Sandboxes, which each entry
 records.
+
+A second, larger held-out test, on 24 September: **46 more public projects** with a committed
+`package-lock.json` — pdf.js, echarts, node-red, jitsi-meet, monaco-editor, mapbox-gl-js, plotly.js,
+meteor, reveal.js, octokit and thirty-six others — none of them used to build the index. Before it
+was grown from them, it already answered **23,596 of their 32,052** dependency-versions, 74%
+(`docs/holdout-46.json`). They have been added to the index since, so that figure is the held-out
+one; measured again it would be the index remembering, not generalising.
 Unobserved surface is **hatched, never filled** — a fill is a quantity, and this is the absence of
 one.
 
