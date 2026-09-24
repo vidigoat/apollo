@@ -176,7 +176,7 @@ Not urgent for the build. It is a real exposure and it should not go into Decemb
   IAM user that can only call Nova 2 Lite and touch that one table, a free-tier table, keys piped
   into Vercel unprinted, $5 ceiling for everything together. The same step turns on household
   memory across sessions on the hosted server (a second item in that table — nothing more to
-  provision); today it lasts one conversation and says so. `--undo` takes it all away.
+  provision); today it is not kept, and says so. `--undo` takes it all away.
 - **Grow Stakeout's index on your Mac?** Done — in Colima containers that see only
   `~/stakeout-index-work`, then on Nebius once Sandboxes opened: 12,281 versions, every one of
   them observed on Nebius by now.
