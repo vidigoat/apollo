@@ -160,18 +160,37 @@ if (require.main === module) {
     const names = Object.keys(pub.packages);
 
     const record = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, 'utf8')) : { results: {} };
-    const downloads = await weeklyDownloads(names);
-    const ranked = [...downloads.entries()].sort((a, b) => b[1] - a[1]).slice(0, top);
+    /*
+     * The ranking is cached for a day. It is minutes of npm's downloads API, which answers 429 after
+     * a burst — so a restart used to spend a quarter of an hour asking the same question again,
+     * and two restarts in a morning were enough to be throttled for the rest of it.
+     */
     const scopedTop = Number(flag('scoped', 0));
-    if (scopedTop) {
-      // @types/* is left out: a type declaration has no runtime, so there is nothing to watch.
-      const held = Object.fromEntries(Object.entries(pub.packages).map(([n, r]) => [n, Object.keys(r.versions || r).length]));
-      const sd = await scopedDownloads(names, fetch, undefined, { candidates: Math.ceil(scopedTop * 1.5), heldVersions: held });
-      ranked.push(...[...sd.entries()].sort((a, b) => b[1] - a[1]).slice(0, scopedTop));
-      record.scoped = `top ${scopedTop} scoped packages by weekly downloads, among the ${sd.asked} the index holds most versions of (@types/* excluded) — ${sd.size} ranked`;
-      console.log(`  ${sd.size} of ${sd.asked} scoped names ranked`);
+    const cacheFile = path.join(require('node:os').tmpdir(), `stakeout-release-ranking-${top}-${scopedTop}.json`);
+    let cached = null;
+    try {
+      const c = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+      if (Date.now() - c.at < 24 * 3600 * 1000 && !args.includes('--rerank')) cached = c;
+    } catch { /* no cache, or an unreadable one: rank */ }
+    let ranked;
+    if (cached) {
+      ranked = cached.ranked;
+      if (cached.scoped) record.scoped = cached.scoped;
+      console.log(`  ranking reused from ${new Date(cached.at).toISOString()} (--rerank to ask npm again)`);
+    } else {
+      const downloads = await weeklyDownloads(names);
+      ranked = [...downloads.entries()].sort((a, b) => b[1] - a[1]).slice(0, top);
+      if (scopedTop) {
+        // @types/* is left out: a type declaration has no runtime, so there is nothing to watch.
+        const held = Object.fromEntries(Object.entries(pub.packages).map(([n, r]) => [n, Object.keys(r.versions || r).length]));
+        const sd = await scopedDownloads(names, fetch, undefined, { candidates: Math.ceil(scopedTop * 1.5), heldVersions: held });
+        ranked.push(...[...sd.entries()].sort((a, b) => b[1] - a[1]).slice(0, scopedTop));
+        record.scoped = `top ${scopedTop} scoped packages by weekly downloads, among the ${sd.asked} the index holds most versions of (@types/* excluded) — ${sd.size} ranked`;
+        console.log(`  ${sd.size} of ${sd.asked} scoped names ranked`);
+      }
+      try { fs.writeFileSync(cacheFile, JSON.stringify({ at: Date.now(), ranked, scoped: record.scoped || null })); } catch { /* a cache is a convenience */ }
     }
-    console.log(`\n  ${names.length} packages in the index · ${downloads.size} unscoped ranked · watching ${ranked.length}`);
+    console.log(`\n  ${names.length} packages in the index · watching ${ranked.length}`);
 
     // Eight registry reads at a time, in rank order, so a thousand packages is a minute, not ten.
     const metas = new Array(ranked.length);
