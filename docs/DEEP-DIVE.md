@@ -354,8 +354,12 @@ from real installs, and came out at exactly 11,242. The 2,120 row is where the b
 The hosted demo has no filesystem to read, so a real scan is committed: six **held-out** public
 projects — undici, bootstrap, ionic-framework, highlight.js, shelljs, cheerio — 3,548
 dependency-versions, 2,825 of them already answered (80%). Held out means none of them was used to
-choose what went into the index, which was grown from nineteen other public projects' lockfiles, so
-the figure is generalisation rather than recall; it was 56% before the index was grown. The page says whose tree it is rather than
+choose what went into the index, which was grown from forty-one other public projects' lockfiles, so
+the figure is generalisation rather than recall; it was 56% before the index was grown. A second
+held-out test, eight times the size, came on 24 September: 46 more public projects with a
+committed lockfile, 32,052 dependency-versions, 74% already answered before any of them was used
+(`docs/holdout-46.json`) — and then they were used, so that figure is recorded once and not
+re-measured. The page says whose tree it is rather than
 letting it read as yours, and `GET /api/project?at=<n>` there says plainly that the lockfile is not
 on this machine instead of doing nothing. The hundredth repo is a lookup, not a hundredth sandbox run.
 
