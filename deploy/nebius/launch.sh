@@ -25,6 +25,9 @@ PREFIX=live
 ENDPOINT="https://storage.$REGION.nebius.cloud"
 STATE_FILE=deploy/nebius/.launch-state   # ids of what this script made; gitignored, no secrets in it
 
+# The CLI installs to ~/.nebius/bin; found there without anybody's shell profile having to change.
+[[ -x "$HOME/.nebius/bin/nebius" ]] && PATH="$HOME/.nebius/bin:$PATH"
+
 say() { printf '  %s\n' "$*"; }
 need() { command -v "$1" >/dev/null || { say "needs \`$1\` — $2"; exit 1; }; }
 need nebius "install: https://docs.nebius.com/cli/install, then \`nebius profile create\`"
