@@ -27,12 +27,12 @@ const WAVE = 50; // Sandboxes caps simultaneous operations. Not a number to rais
  * version path was briefly written inline in the index builder and the test caught it immediately,
  * which is exactly what it is for.
  */
-async function runOne({ adapter, checkpoint, pkg, version, strategy }) {
+async function runOne({ adapter, checkpoint, pkg, version, strategy, provocation = null }) {
   const chosen = strategy || bestStrategy(adapter);
   const [branch] = await adapter.fork(checkpoint, 1);
 
   try {
-    return await observePackage({ adapter, branch, pkg, version, strategy: chosen });
+    return await observePackage({ adapter, branch, pkg, version, strategy: chosen, provocation });
   } finally {
     // Whatever happened, give the machine back.
     await adapter.discard(branch);

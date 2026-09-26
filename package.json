@@ -30,7 +30,8 @@
     "index:publish": "node scripts/publish-index.js",
     "crossval": "node scripts/cross-validate.js",
     "smoke:live": "node scripts/smoke-live.js",
-    "live": "node scripts/firehose.js"
+    "live": "node scripts/firehose.js",
+    "interrogate": "node scripts/interrogate.js"
   },
   "keywords": [
     "supply-chain",

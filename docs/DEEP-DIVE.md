@@ -807,6 +807,45 @@ packages "the most-downloaded". Both are fixed, and each has a test that fails o
 
 ---
 
+## Interrogation: catching a stealer that waits
+
+A package that steals does it when it thinks the coast is clear — on a CI runner with a publish
+token in the environment, on a box with cloud keys or a crypto wallet, after a dormancy date has
+passed. Watched once in a bare sandbox it does nothing and reports clean. So it is watched again
+under each **provocation** (`interrogate/provocations.js`): a fixed catalogue of decoy environments.
+Anything a package does under one that it did not do bare is the thing it was hiding, and the
+provocation that drew it out is the condition — "it exfiltrates, but only on CI".
+
+Every value planted is a decoy carrying a fixed marker (the AWS example key, an `npm_` token that is
+all canary, an empty wallet). Every run is **contained**: the probe records a connection attempt and
+a request body, and forwards neither (`observe/probe.js`, `STAKEOUT_CONTAINED`). So a package that
+reads a planted token and tries to POST it is caught with the token in its hand — recorded doing it,
+stopped before a byte leaves. The catch is proven end to end on a synthetic sample:
+
+```
+$ npm run interrogate -- --demo
+  CAUGHT under ci-with-npm-token
+         tried to send a planted decoy — and nothing left the box
+         + net: {"host":"exfil.example.com","port":80,"proto":"tcp"}, {"exfil":true,"marker":"canary"}
+         + env: NPM_TOKEN
+```
+
+Nemotron does the agent's part — given the package and its bare behaviour, it orders the catalogue
+by what is worth trying and why (`interrogate/rank.js`) — over a **closed list of ids**: it never
+invents a provocation and nothing it returns is executed. That an in-process contained run reaches a
+live listener zero times is a test, and forwarding the connection turns it red
+(`observe/probe.test.js`).
+
+**Where this runs, and where it does not.** Interrogation runs locally and contained, never on
+Nebius. Nebius's Acceptable Use Policy forbids running code that operates in conjunction with
+malware and any network egress or attack, with no carve-out for sandboxed research. So suspected
+code (a lookalike) and the interrogation's synthetic samples run on a local machine with egress
+blocked; the Nebius sandboxes run only the benign, popular packages of the ordinary watch. Running
+real known-malware samples anywhere is a separate decision with its own containment (a local
+`--network none` container), taken deliberately, not folded in here.
+
+---
+
 ## What this cannot do
 
 Six real limitations — one of them now mostly closed. They are listed here rather than discovered later, and the first four have a
@@ -1110,7 +1149,7 @@ npm test
 ```
 
 ```
-36 suites · 483 checks
+37 suites · 496 checks
 all green
 ```
 

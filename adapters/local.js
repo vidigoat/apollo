@@ -94,7 +94,23 @@ class LocalMachines {
       // Outside the branch directory, so a package rummaging through its own cwd does not find it.
       const out = path.join(this.root, `report-${path.basename(branch.dir)}.json`);
       fs.writeFileSync(runner, runnerSource(ctx.pkg, out, PROBE, this.installDir(branch)));
-      const r = await this.sh(process.execPath, [runner], branch.dir);
+      /*
+       * A provocation (interrogate/provocations.js): a decoy environment to draw out hidden
+       * behaviour, always CONTAINED so nothing it does can leave the box. Planted files go under a
+       * fake HOME inside the branch, so `~/.aws/credentials` and a wallet path resolve to decoys and
+       * a stealer looks where it expects. Never applied without containment.
+       */
+      let env;
+      if (ctx.provocation) {
+        const home = path.join(branch.dir, '.home');
+        for (const [rel, content] of Object.entries(ctx.provocation.files || {})) {
+          const full = path.join(home, rel);
+          fs.mkdirSync(path.dirname(full), { recursive: true });
+          fs.writeFileSync(full, content);
+        }
+        env = { ...process.env, ...(ctx.provocation.env || {}), HOME: home, STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: require('../interrogate/provocations').CANARY };
+      }
+      const r = await this.sh(process.execPath, [runner], branch.dir, env);
       // readReport returns null when the probe never reported — a crash, a timeout, a process that
       // called process.exit() itself. Null means "we did not see", never "it did nothing".
       const observed = readReport(out);

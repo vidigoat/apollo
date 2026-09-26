@@ -62,7 +62,7 @@ function commandsFor({ pkg, version, strategy }) {
  * The adapter decides what actually happens; this decides what we ask it to do and how the result
  * is written down. Nothing here interprets behaviour — that is the differ's job, and then a model's.
  */
-async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdiff' }) {
+async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdiff', provocation = null }) {
   const steps = commandsFor({ pkg, version, strategy });
   const raw = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
   const timing = {};
@@ -71,7 +71,7 @@ async function observePackage({ adapter, branch, pkg, version, strategy = 'fsdif
 
   for (const step of steps) {
     const started = Date.now();
-    const out = await adapter.run(branch, step.cmd, { pkg, version, strategy, step: step.label });
+    const out = await adapter.run(branch, step.cmd, { pkg, version, strategy, step: step.label, provocation });
 
     if (step.label === 'install') {
       timing.installMs = Date.now() - started;

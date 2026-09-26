@@ -1,0 +1,2 @@
+{ "name": "sample-stealer", "version": "0.0.0", "private": true, "main": "index.js",
+  "description": "SYNTHETIC test fixture for interrogation — NOT real malware. See index.js." }

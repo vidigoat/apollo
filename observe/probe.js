@@ -24,6 +24,42 @@ function install() {
   const seen = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
   const push = (k, v) => { if (seen[k].length < 500) seen[k].push(v); };
 
+  /*
+   * Contained mode: record what the package reaches for, and let NONE of it out.
+   *
+   * Set by STAKEOUT_CONTAINED. Normal observation forwards the real call — a popular, benign
+   * package doing legitimate network things is fine, and blocking it would hide behaviour. But
+   * SUSPECTED code (a lookalike) and the interrogation agent's probes must never actually egress:
+   * Nebius's AUP forbids running malicious code and any network egress/attack, and the whole point
+   * of interrogation is to see a stealer TRY to send a planted token, not to help it. So here the
+   * attempt is recorded and then failed, without the real socket, DNS or TLS ever being touched.
+   * `contained` also travels in the report, so a transcript can never be mistaken for one where the
+   * package was actually allowed to reach the network.
+   */
+  const CONTAINED = Boolean(process.env.STAKEOUT_CONTAINED);
+  seen.contained = CONTAINED;
+  const HARNESS_ENV = new Set(['STAKEOUT_CONTAINED', 'STAKEOUT_CANARY', 'STAKEOUT_CLOCK_OFFSET_DAYS', 'STAKEOUT_INSTALL_DIR', 'STAKEOUT_NPM_ROOT']);
+
+  /* ── clock ───────────────────────────────────────────────────────────
+   * A payload that waits for a date before it acts sees nothing wrong in a sandbox opened today. So
+   * STAKEOUT_CLOCK_OFFSET_DAYS moves the clock the PACKAGE sees forward, without touching the real
+   * one: Date.now() and `new Date()` with no argument return the future, and a read of the shifted
+   * clock is recorded, so a dormancy check is itself a signal. Timers are left alone — they run on
+   * the real clock, so the probe still writes its report on time.
+   */
+  const offsetDays = Number(process.env.STAKEOUT_CLOCK_OFFSET_DAYS) || 0;
+  if (offsetDays) {
+    const shiftMs = offsetDays * 86400000;
+    const RealDate = Date;
+    const realNow = RealDate.now;
+    const shifted = class extends RealDate {
+      constructor(...a) { if (a.length === 0) { super(realNow() + shiftMs); push('proc', 'read shifted clock'); } else { super(...a); } }
+      static now() { push('proc', 'read shifted clock'); return realNow() + shiftMs; }
+    };
+    // eslint-disable-next-line no-global-assign
+    Date = shifted;
+  }
+
   /* ── environment ─────────────────────────────────────────────────── */
   // A read is the signal. Which variable was read matters; the value must never leave this process.
   /*
@@ -48,7 +84,9 @@ function install() {
   const realEnv = process.env;
   process.env = new Proxy(realEnv, {
     get(target, prop) {
-      if (typeof prop === 'string' && !fromRuntime()) push('env', prop);
+      // Never our own instrumentation: these exact vars are the harness talking to itself. Only
+      // these, not every STAKEOUT_* name, so a package's own read of such a var is still its read.
+      if (typeof prop === 'string' && !HARNESS_ENV.has(prop) && !fromRuntime()) push('env', prop);
       return target[prop];
     },
   });
@@ -62,14 +100,62 @@ function install() {
     const first = Array.isArray(args[0]) ? args[0][0] : args[0];
     const o = first && typeof first === 'object' ? first : { port: first, host: args[1] };
     push('net', { host: String(o.host || o.path || 'localhost'), port: Number(o.port) || null, proto: 'tcp' });
+    if (CONTAINED) {
+      // Fail like a refused connection, without the real socket ever leaving the box. The last
+      // callback argument, if any, is the caller's 'connect' listener — never called, so nothing
+      // downstream believes it connected.
+      process.nextTick(() => { try { this.destroy(Object.assign(new Error('stakeout: egress blocked (contained)'), { code: 'ECONNREFUSED' })); } catch { /* already gone */ } });
+      return this;
+    }
     return realConnect.apply(this, args);
   };
+
+  /*
+   * Only when contained: watch what is WRITTEN to a socket, for the decoy's marker. The connect
+   * patch shows it tried to reach out; this shows it put the planted secret on the wire — a stealer
+   * caught with the token in its hand, and stopped, because contained means the bytes never left.
+   * Off outside containment: reading every package's socket writes in the normal watch is neither
+   * needed nor wanted.
+   */
+  const CANARY = process.env.STAKEOUT_CANARY || null;
+  if (CONTAINED && CANARY) {
+    // The request body is handed to ClientRequest.write / .end, which is BEFORE the socket — so it
+    // is seen even though containment fails the socket a tick later and the bytes never leave. This
+    // is the moment a stealer is caught with the token in its hand. http, https, and a raw socket
+    // write (some code builds the request by hand) are all covered.
+    const scan = (chunk) => {
+      try {
+        const b = typeof chunk === 'string' ? chunk : Buffer.isBuffer(chunk) ? chunk.toString('latin1') : '';
+        if (b && b.includes(CANARY)) push('net', { exfil: true, marker: 'canary' });
+      } catch { /* never let instrumentation throw into the package */ }
+    };
+    for (const modName of ['node:http', 'node:https']) {
+      const mod = require(modName);
+      const CR = mod.ClientRequest && mod.ClientRequest.prototype;
+      if (!CR) continue;
+      for (const fn of ['write', 'end']) {
+        const real = CR[fn];
+        if (typeof real !== 'function') continue;
+        CR[fn] = function (chunk, ...rest) { scan(chunk); return real.apply(this, [chunk, ...rest]); };
+      }
+    }
+    const realWrite = net.Socket.prototype.write;
+    net.Socket.prototype.write = function (chunk, ...rest) { scan(chunk); return realWrite.apply(this, [chunk, ...rest]); };
+  }
 
   const tls = require('node:tls');
   const realTls = tls.connect;
   tls.connect = function (...args) {
     const o = typeof args[0] === 'object' ? args[0] : { port: args[0], host: args[1] };
     push('net', { host: String(o.host || o.servername || 'unknown'), port: Number(o.port) || 443, proto: 'tls' });
+    if (CONTAINED) {
+      // A socket that never connects: record, then error. A stub rather than a real TLSSocket,
+      // because a real one would open the underlying TCP connection this is here to prevent.
+      const s = new net.Socket();
+      process.nextTick(() => { try { s.destroy(Object.assign(new Error('stakeout: egress blocked (contained)'), { code: 'ECONNREFUSED' })); } catch { /* already gone */ } });
+      const cb = args.find((a) => typeof a === 'function');
+      return s;
+    }
     return realTls.apply(this, args);
   };
 
@@ -81,6 +167,14 @@ function install() {
       const real = mod[fn].bind(mod);
       mod[fn] = function (name, ...rest) {
         push('dns', String(name));
+        if (CONTAINED) {
+          // No resolution leaves the box. A callback caller gets ENOTFOUND; a promise caller a
+          // rejection — the same shape a real failed lookup has, so the package handles it normally.
+          const err = Object.assign(new Error(`stakeout: DNS blocked (contained): ${String(name)}`), { code: 'ENOTFOUND' });
+          const cb = rest[rest.length - 1];
+          if (typeof cb === 'function') { process.nextTick(() => cb(err)); return undefined; }
+          return Promise.reject(err);
+        }
         return real(name, ...rest);
       };
     }
@@ -266,6 +360,10 @@ function parseReport(raw) {
   if (i && typeof i === 'object' && !Array.isArray(i) && ['net', 'dns', 'fs', 'env', 'proc', 'exec'].every((k) => Array.isArray(i[k]))) {
     out.install = Object.fromEntries(['net', 'dns', 'fs', 'env', 'proc', 'exec'].map((k) => [k, i[k]]));
   }
+  // Whether egress was blocked is a property of the observation, not decoration: a transcript that
+  // does not say whether the package was allowed to reach the network is one nobody can weigh. Kept
+  // only as a real boolean, like the channels — never coerced.
+  if (typeof parsed.contained === 'boolean') out.contained = parsed.contained;
   return out;
 }
 

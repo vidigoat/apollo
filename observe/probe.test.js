@@ -33,7 +33,7 @@ const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'probe-test-'));
 process.on('exit', () => fs.rmSync(ROOT, { recursive: true, force: true }));
 
 /** Write a fake package and run it under the probe, exactly as the local adapter does. */
-function watch(name, source) {
+function watch(name, source, env) {
   const dir = path.join(ROOT, name);
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'index.js'), source);
@@ -41,7 +41,7 @@ function watch(name, source) {
   const runner = path.join(ROOT, `run-${name}.js`);
   fs.writeFileSync(runner, runnerSource(path.join(dir, 'index.js'), out));
   try {
-    execFileSync(process.execPath, [runner], { cwd: ROOT, stdio: 'pipe', timeout: 20_000 });
+    execFileSync(process.execPath, [runner], { cwd: ROOT, stdio: 'pipe', timeout: 20_000, env: env ? { ...process.env, ...env } : process.env });
   } catch { /* the package may exit non-zero; the report is what we came for */ }
   return readReport(out);
 }
@@ -192,7 +192,7 @@ it('sees a file being written', () => {
 it('a package that does nothing produces an empty report, not a missing one', () => {
   const r = watch('quiet', `module.exports = 1;`);
   assert.ok(r, 'a quiet package must still report');
-  assert.deepEqual(r, { net: [], dns: [], fs: [], env: [], proc: [], exec: [] });
+  assert.deepEqual(r, { net: [], dns: [], fs: [], env: [], proc: [], exec: [], contained: false });
 });
 
 it('a package that throws on import still reports what it did first', () => {
@@ -285,6 +285,56 @@ it('a read Node makes while loading the package is Node\'s, not the package\'s',
   assert.ok(r.env.includes('STAKEOUT_DIRECT_READ'), `a direct read was missed: ${JSON.stringify(r.env)}`);
   assert.ok(!r.env.includes('NODE_V8_COVERAGE'), `Node's source-map read was credited to the package: ${JSON.stringify(r.env)}`);
   assert.ok(!r.env.includes('NODE_DEBUG'), `Node's debuglog read was credited to the package: ${JSON.stringify(r.env)}`);
+});
+
+it('contained mode records a connection and a decoy on the wire, and never forwards it', () => {
+  // No live listener here (a synchronous child would deadlock one); that a contained run reaches
+  // nothing is measured in scripts/interrogate.js --demo. This pins the recording and the flag.
+  const r = watch('contained-egress', [
+    `const http = require('node:http');`,
+    `const req = http.request({ host: '127.0.0.1', port: 59999, method: 'POST', path: '/x' });`,
+    `req.on('error', () => {});`,
+    `req.end('stolen=' + process.env.LOOT);`,
+    `module.exports = 1;`,
+  ].join('\n'), { STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: 'DECOY-MARK', LOOT: 'DECOY-MARK-secret' });
+  assert.ok(r, 'no report');
+  assert.equal(r.contained, true);
+  assert.ok(r.net.some((n) => n && n.host === '127.0.0.1'), 'the connection attempt was not recorded');
+  assert.ok(r.net.some((n) => n && n.exfil), 'the decoy on the wire was not caught');
+});
+
+it('outside contained mode a run is not decoy-scanned and is not marked contained', () => {
+  const r = watch('normal-nocontain', [
+    `try { require('node:dns').lookup('localhost', () => {}); } catch {}`,
+    `module.exports = 1;`,
+  ].join('\n'));
+  assert.equal(r.contained, false);
+  assert.ok(!r.net.some((n) => n && n.exfil), 'a normal run was scanned for a decoy it was never given');
+});
+
+it('contained mode really blocks egress: a live listener gets nothing', () => {
+  // Measured against a real listener, in a single child so its event loop can accept while it
+  // connects (a synchronous child spawned from here could not). The child prints the hit count and
+  // what the probe recorded; egress blocked means the listener was never touched.
+  const child = `
+    const http = require('node:http');
+    const { install } = require(${JSON.stringify(path.join(__dirname, 'probe.js'))});
+    let hits = 0;
+    const server = http.createServer((req, res) => { hits++; res.end('ok'); });
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port;
+      const probe = install();
+      const req = http.request({ host: '127.0.0.1', port, method: 'POST', path: '/x' });
+      req.on('error', () => {});
+      req.end('loot=EGRESS-CANARY');
+      setTimeout(() => { server.close(); console.log(JSON.stringify({ hits, net: probe.seen.net, contained: probe.seen.contained })); process.exit(0); }, 250);
+    });`;
+  const out = execFileSync(process.execPath, ['-e', child], { encoding: 'utf8', env: { ...process.env, STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: 'EGRESS-CANARY' }, timeout: 10000 });
+  const r = JSON.parse(out.trim().split('\n').pop());
+  assert.equal(r.hits, 0, 'a contained run reached the listener — a byte left the box');
+  assert.equal(r.contained, true);
+  assert.ok(r.net.some((n) => n && n.host === '127.0.0.1'), 'the blocked attempt was not recorded');
+  assert.ok(r.net.some((n) => n && n.exfil), 'the decoy was not caught on the wire');
 });
 
 console.log(`\n${passed} passed`);
