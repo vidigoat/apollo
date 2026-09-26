@@ -4,6 +4,7 @@
  *
  *   node scripts/firehose-audit.js                      # the live watch in local/firehose/
  *   node scripts/firehose-audit.js --state /tmp/fh-back
+ *   node scripts/firehose-audit.js --repair            # and hand what was missed back to the watcher
  *
  * The watcher reads npm's change feed a batch at a time and says what it found. This does not trust
  * that. It re-reads the same stretch of the feed in one pass — from where the watch began to where
@@ -100,5 +101,12 @@ const DIR = path.resolve(flag('state', path.join(ROOT, 'local', 'firehose')));
     duplicateResultLines: results.length - byKey.size,
   };
   console.log(JSON.stringify(outcome, null, 2));
+  // `--repair`: hand the packages of what was missed to the watcher, which re-reads them on its next
+  // poll (recheck.json — the running watcher owns its state, so this never writes into it).
+  if (args.includes('--repair') && missing.length) {
+    const names = [...new Set(missing.map((k) => k.replace(/@[^@]*→.*$/, '')))];
+    fs.writeFileSync(path.join(DIR, 'recheck.json'), JSON.stringify(names));
+    console.log(`  asked the watcher to re-read ${names.join(', ')}`);
+  }
   process.exitCode = missing.length ? 1 : 0;
 })().catch((e) => { console.error(e); process.exit(2); });

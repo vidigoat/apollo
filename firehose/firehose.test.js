@@ -235,6 +235,57 @@ function pk(name, versions, extra = {}) {
     assert.equal(q.state.counts['lookalike-scope-plain'], 2, 'the filtered packages were not counted — a missing repository field alone listed one');
   });
 
+  await it('a registry document older than the revision the feed announced is stale: asked again later, never believed', async () => {
+    // mailauth 6.0.0: read the moment the feed announced it, answered with the pre-publish document,
+    // recorded as "no release", and never looked at again. The first live audit found it missing.
+    const dir = tmp();
+    const q = new Queue(dir);
+    q.state.seq = 0;
+    q.state.startedAt = iso(T0);
+    const old = { ...pk('mailauth', [['5.0.3', T0 - 86400000]]), _rev: '41-aaa' };
+    const fresh = { ...pk('mailauth', [['5.0.3', T0 - 86400000], ['6.0.0', T0 + 60000]]), _rev: '42-bbb' };
+    let serve = old;
+    const npm = fakeNpm({ changes: [{ seq: 1, id: 'mailauth', changes: [{ rev: '42-bbb' }] }], packuments: { get mailauth() { return serve; } } });
+    const population = new Map([['mailauth', 5e5]]);
+    await pollOnce(q, { population, lookIdx: null, fetchImpl: npm.fetchImpl, sleep: noSleep, now: T0 + 70000 });
+    assert.equal(q.state.pending.length, 0);
+    assert.ok(q.state.stale.mailauth, 'the stale document was believed');
+    assert.equal(q.state.watermarks.mailauth, undefined, 'a stale document moved the watermark past the release');
+    serve = fresh;
+    await pollOnce(q, { population, lookIdx: null, fetchImpl: npm.fetchImpl, sleep: noSleep, now: T0 + 70000 + 30000 });
+    assert.equal(q.state.pending.length, 0, 'retried before its time');
+    await pollOnce(q, { population, lookIdx: null, fetchImpl: npm.fetchImpl, sleep: noSleep, now: T0 + 70000 + 61000 });
+    assert.deepEqual(q.state.pending.map((j) => j.key), ['mailauth@5.0.3→6.0.0']);
+    assert.deepEqual(q.state.stale, {});
+  });
+
+  await it('a document that stays stale ends as "not watched" with the reason — in the evidence, not in silence', async () => {
+    const dir = tmp();
+    const q = new Queue(dir);
+    q.state.seq = 0;
+    q.state.startedAt = iso(T0);
+    const old = { ...pk('x-lib', [['1.0.0', T0 - 86400000]]), _rev: '3-a' };
+    const npm = fakeNpm({ changes: [{ seq: 1, id: 'x-lib', changes: [{ rev: '4-b' }] }], packuments: { 'x-lib': old } });
+    let t = T0;
+    for (let i = 0; i < 8; i++) { await pollOnce(q, { population: new Map([['x-lib', 1]]), lookIdx: null, fetchImpl: npm.fetchImpl, sleep: noSleep, now: t }); t += 30 * 60000; }
+    const lines = fs.readFileSync(path.join(dir, 'results.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+    assert.equal(lines.length, 1);
+    assert.equal(lines[0].outcome, 'unobserved');
+    assert.match(lines[0].error, /kept serving revision 3-a after the feed announced 4-b/);
+  });
+
+  await it('a re-check asked for from outside is picked up by the watcher that owns the state', async () => {
+    const dir = tmp();
+    const q = new Queue(dir);
+    q.state.seq = 0;
+    q.state.startedAt = iso(T0);
+    fs.writeFileSync(path.join(dir, 'recheck.json'), JSON.stringify(['left-pad']));
+    const npm = fakeNpm({ changes: [], packuments: { 'left-pad': pk('left-pad', [['1.0.0', T0 - 5000], ['1.0.1', T0 + 1000]]) } });
+    const r = await pollOnce(q, { population: new Map([['left-pad', 9]]), lookIdx: null, fetchImpl: npm.fetchImpl, sleep: noSleep, now: T0 + 5000 });
+    assert.equal(r.jobs, 1);
+    assert.ok(!fs.existsSync(path.join(dir, 'recheck.json')), 'the request was left to be read again');
+  });
+
   await it('a watched pair records publish, seen and verdict times; "not watched" is its own outcome, never "no change"', async () => {
     const dir = tmp();
     const q = new Queue(dir);

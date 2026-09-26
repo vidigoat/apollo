@@ -81,9 +81,35 @@ const latestTime = (pk) => Object.entries(pk?.time || {})
  * A watched package changed: find what it published since we last looked, and queue each stable
  * release. Returns how many jobs were added.
  */
-async function consider(q, name, { population, fetchImpl, sleep, now }) {
+/*
+ * The first 2.7 hours of the live watch owed four releases and queued two: mailauth 6.0.0 and
+ * @simple-git/argv-parser 2.0.1 were read when the feed announced them — and the registry answered
+ * with the document from BEFORE the publish. No new version in it, so "no release", and nothing
+ * looks at a package again unless the feed mentions it again. The feed says which revision it
+ * announced; the document says which revision it is. Older than announced is stale, and is asked
+ * again later instead of believed.
+ */
+const revNumber = (rev) => Number(String(rev || '').split('-')[0]) || 0;
+const STALE_RETRY_MS = [60e3, 2 * 60e3, 5 * 60e3, 10 * 60e3, 20 * 60e3];
+
+async function consider(q, name, { population, fetchImpl, sleep, now, rev = null }) {
   const pk = await packument(name, { fetchImpl, sleep });
   if (!pk) { q.count('watched-gone'); return 0; }
+  if (rev && revNumber(pk._rev) < revNumber(rev)) {
+    const was = q.state.stale[name];
+    const attempts = was ? was.attempts + 1 : 0;
+    if (attempts >= STALE_RETRY_MS.length) {
+      delete q.state.stale[name];
+      q.count('stale-gave-up');
+      // Not silent: a line in the evidence says this package's release could not be read.
+      q.finish(`${name}@stale:${rev}`, { key: `${name}@stale:${rev}`, pkg: name, outcome: 'unobserved', error: `the registry kept serving revision ${pk._rev} after the feed announced ${rev}`, doneAt: new Date(now).toISOString() });
+      return 0;
+    }
+    q.state.stale[name] = { rev, attempts, retryAt: new Date(now + STALE_RETRY_MS[attempts]).toISOString() };
+    q.count('stale-packument');
+    return 0;
+  }
+  if (q.state.stale[name]) delete q.state.stale[name];
   const after = q.state.watermarks[name] || q.state.startedAt;
   const found = newReleases(pk, { after });
   q.count('prerelease-skipped', found.prerelease);
@@ -121,6 +147,27 @@ async function pollOnce(q, { population, lookIdx, fetchImpl = fetch, sleep = def
   if (!Number.isFinite(q.state.seq)) throw new Error('the queue has no feed position; start it with a seq');
   const stats = { changes: 0, watched: 0, jobs: 0, lookalikes: 0 };
 
+  // Packages named for a re-check from outside (scripts/firehose-audit.js --repair writes them):
+  // read here, by the process that owns the state, rather than written into it by a second one.
+  const recheck = require('node:path').join(q.dir, 'recheck.json');
+  if (require('node:fs').existsSync(recheck)) {
+    try {
+      for (const name of JSON.parse(require('node:fs').readFileSync(recheck, 'utf8'))) {
+        if (!q.state.unread[name]) q.state.unread[name] = { since: new Date(now).toISOString(), attempts: 0, recheck: true };
+      }
+    } catch { /* an unreadable request is dropped, and says so below */ q.count('recheck-unreadable'); }
+    require('node:fs').rmSync(recheck, { force: true });
+  }
+  // Stale documents whose retry is due, before the new batch.
+  for (const [name, st] of Object.entries(q.state.stale)) {
+    if (Date.parse(st.retryAt) > now) continue;
+    try {
+      stats.jobs += await consider(q, name, { population, fetchImpl, sleep, now, rev: st.rev });
+    } catch (e) {
+      if (e.code !== 'UNREADABLE') throw e;
+    }
+  }
+
   for (const name of Object.keys(q.state.unread)) {
     try {
       stats.jobs += await consider(q, name, { population, fetchImpl, sleep, now });
@@ -141,7 +188,7 @@ async function pollOnce(q, { population, lookIdx, fetchImpl = fetch, sleep = def
       stats.watched++;
       q.count('watched-changed');
       try {
-        stats.jobs += await consider(q, name, { population, fetchImpl, sleep, now });
+        stats.jobs += await consider(q, name, { population, fetchImpl, sleep, now, rev: change.changes?.[0]?.rev || null });
       } catch (e) {
         if (e.code !== 'UNREADABLE') throw e;
         q.state.unread[name] = { since: new Date(now).toISOString(), attempts: 1, seq: change.seq };

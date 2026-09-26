@@ -28,6 +28,7 @@ const EMPTY = () => ({
   running: {},
   done: {},
   unread: {},
+  stale: {},
   lookalikes: {},
   counts: {},
 });
@@ -131,6 +132,7 @@ class Queue {
       running: Object.keys(this.state.running).length,
       done: Object.keys(this.state.done).length,
       unread: Object.keys(this.state.unread).length,
+      stale: Object.keys(this.state.stale || {}).length,
       oldestPendingMinutes: pending.length ? Math.round((now - oldest) / 60000) : 0,
       counts: this.state.counts,
     };
