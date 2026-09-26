@@ -154,7 +154,7 @@ Two things that were true when this was written and still are:
 - **Does `~/cassandra` go public at submission?** Nebius *requires* it. MIT is already in place. I
   assume yes unless you say otherwise.
 - **Does `~/second-set-of-hands` stay private?** Amazon allows private if shared with
-  `testing@devpost.com` and `@AmazonAppDev`. I assume private unless you say otherwise.
+  `testing@devpost.com` and the six Amazon DevRel GitHub accounts (chris-trag, knmeiss, giolaq, anishamalde, mosesroth, emersonsklar) — invitations expire after 7 days, so send them in the last week. I assume private unless you say otherwise.
 
 ### 9. Rotate the AWS key  ⏱ 5 minutes
 
@@ -218,7 +218,7 @@ not blocking — resolves during recording week
 
 still yours to decide
   8   ~/cassandra goes PUBLIC at submission — Nebius requires it, and it is private today
-      ~/second-set-of-hands may stay private if shared with testing@devpost.com and @AmazonAppDev
+      ~/second-set-of-hands may stay private if shared with testing@devpost.com and the six Amazon DevRel GitHub accounts (chris-trag, knmeiss, giolaq, anishamalde, mosesroth, emersonsklar) — invitations expire after 7 days, so send them in the last week
   9   rotate the AWS key
   10  hosted agent: run scripts/hosted-setup.sh ($5 global cap, built and tested) · Tavily on Vercel (optional)
 
