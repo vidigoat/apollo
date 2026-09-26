@@ -20,3 +20,6 @@ local/
 
 # web/ is the website's own package. `stakeout` still installs nothing.
 web/node_modules/
+
+# What deploy/nebius/launch.sh created (ids only, no secrets) — this machine's, not the repo's.
+deploy/nebius/.launch-state

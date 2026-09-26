@@ -27,12 +27,14 @@ const { Queue } = require('../firehose/queue');
 const { currentSeq } = require('../firehose/feed');
 const { pollOnce, workOnce } = require('../firehose');
 const { lookalikeIndex } = require('../firehose/select');
+const { Mirror } = require('../firehose/mirror');
 
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
 const flag = (n, d) => { const i = args.indexOf(`--${n}`); return i > -1 ? args[i + 1] : d; };
 const DIR = path.resolve(flag('state', path.join(ROOT, 'local', 'firehose')));
-const q = new Queue(DIR);
+const mirror = Mirror.fromEnv();
+let q = new Queue(DIR);
 
 /** The watched population and how much each is downloaded — the index's names, the release watch's counts. */
 function population() {
@@ -57,6 +59,12 @@ if (args.includes('--status')) {
 }
 
 (async () => {
+  // On a Serverless Job the directory starts empty: bring the watch back before anything else, so a
+  // new job continues the old one rather than starting a second watch from "now".
+  if (mirror) {
+    const got = await mirror.restore(DIR);
+    if (got) { q = new Queue(DIR); console.log(`  restored ${got} file(s) of the watch from ${process.env.STAKEOUT_STATE_S3}`); }
+  }
   const dry = args.includes('--dry');
   const hours = Number(flag('hours', 24));
   const concurrency = Math.max(1, Math.min(12, Number(flag('concurrency', 10))));
@@ -99,6 +107,25 @@ if (args.includes('--status')) {
     lastCounts = { ...q.state.counts };
   };
 
+  /*
+   * A heartbeat after every poll: when, where in the feed, how far behind npm, and the queue. It is
+   * what scripts/firehose-health.js reads — a watcher that has quietly stopped looks exactly like a
+   * quiet day on npm, and the only difference is the time on this file.
+   */
+  let head = null;
+  let headAt = 0;
+  const beat = async () => {
+    if (Date.now() - headAt > 5 * 60 * 1000) {
+      try { head = await currentSeq(); headAt = Date.now(); } catch { /* the next beat asks again */ }
+    }
+    const st = q.status();
+    fs.writeFileSync(path.join(DIR, 'heartbeat.json'), `${JSON.stringify({ at: new Date().toISOString(), pid: process.pid, host: require('node:os').hostname(), dry, seq: st.seq, head, behind: head === null ? null : Math.max(0, head - st.seq), pending: st.pending, due: st.due, running: st.running, done: st.done, unread: st.unread, oldestPendingMinutes: st.oldestPendingMinutes, watchingSince: q.state.startedAt })}\n`);
+    if (mirror) {
+      const r = await mirror.push(DIR);
+      if (r.failed?.length) console.log(`  mirror: ${r.failed.join('; ').slice(0, 200)} — trying again next minute`);
+    }
+  };
+
   const poller = (async () => {
     let failures = 0;
     while (!stopping && Date.now() < stopAt) {
@@ -106,6 +133,7 @@ if (args.includes('--status')) {
         const r = await pollOnce(q, { population: pop, lookIdx });
         failures = 0;
         hourly();
+        await beat();
         if (!r.full) await new Promise((res) => setTimeout(res, 15000));
       } catch (e) {
         // The feed or the registry being down is waited out and said; the position is untouched.
@@ -156,4 +184,9 @@ if (args.includes('--status')) {
   hourly();
   printStatus();
   q.save();
+  await beat().catch(() => {});
+  if (mirror) {
+    const r = await mirror.push(DIR, { force: true });
+    console.log(`  mirror: ${r.failed?.length ? `FAILED ${r.failed.join('; ')}` : `pushed ${r.pushed?.length || 0} file(s)`}`);
+  }
 })().catch((e) => { console.error(e); process.exit(1); });

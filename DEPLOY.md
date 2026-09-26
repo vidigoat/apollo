@@ -54,3 +54,30 @@ curl -s https://<your-url>/api/run | head -c 200     # should return the run, no
 ```
 
 Then put the URL in the Devpost submission, and in `docs/SUBMISSION.md` next to the demo-URL row.
+
+## Stakeout Live, always on — Nebius Serverless Jobs
+
+The npm watcher (`scripts/firehose.js`) runs until the deadline as a chain of week-long Serverless
+Jobs. A job's disk dies with it, so the watch's state is mirrored to Nebius Object Storage
+(`firehose/mirror.js`) and each new job restores it before its first poll: it continues the same
+watch from the saved feed position, and nothing published between two jobs is missed.
+
+```
+bash deploy/nebius/launch.sh             # once: registry, bucket, key, secret, image, first job
+bash deploy/nebius/launch.sh --health    # alive, and keeping up with npm?
+bash deploy/nebius/launch.sh --relaunch  # each week, after the last job ends (refused while one is alive)
+```
+
+- **Cost:** one `cpu-e2` `2vcpu-8gb` VM, $0.05–0.06/h — about $1.40 a day. The sandboxes it
+  uses are Token Factory Sandboxes, free in beta. The script shows this and asks before starting.
+- **Inside the job:** `scripts/firehose-supervise.js` restarts a watcher that dies (5 s, doubling
+  to 5 min); the watcher writes `heartbeat.json` every poll; `scripts/firehose-health.js` calls it
+  unhealthy when the heartbeat is 10 minutes old, it is 20,000 changes behind npm, or a due release
+  has waited an hour.
+- **Keys:** NEBIUS_API_KEY, NEBIUS_PROJECT_ID and the bucket's S3 key live in MysteryBox and reach
+  the job as `--env-secret`. The image carries none (`.dockerignore` is an allow-list without `.env`).
+- **Rehearsed without Nebius:** the image run locally against real Sandboxes; and two containers
+  in a row against a local object store — the second started on an empty disk, restored the
+  watch, and resumed at the first one's position with the first one's start time.
+- **Not yet run against a real Nebius account.** The first launch is where a flag the docs did not
+  show would surface; `--health` five minutes later is the check.

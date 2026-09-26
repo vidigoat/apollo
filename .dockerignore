@@ -1,0 +1,23 @@
+# The image is Stakeout Live's watcher and nothing else. Everything is excluded, then the files it
+# needs are let back in — the list is short on purpose, and it never contains .env: keys go in as
+# job environment variables from MysteryBox (deploy/nebius/launch.sh), never baked into an image.
+*
+!package.json
+!env.js
+!runPair.js
+!adapters/contree.js
+!differ/diff.js
+!firehose/feed.js
+!firehose/index.js
+!firehose/mirror.js
+!firehose/queue.js
+!firehose/select.js
+!observe/index.js
+!observe/probe.js
+!transcript/schema.js
+!scripts/firehose.js
+!scripts/firehose-supervise.js
+!scripts/firehose-health.js
+!scripts/release-watch.js
+!public/index.json
+!docs/release-watch.json
