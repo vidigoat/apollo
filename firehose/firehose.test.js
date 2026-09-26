@@ -226,11 +226,13 @@ function pk(name, versions, extra = {}) {
     adapter.versions['0.1.6'].repository = { url: 'https://github.com/zuhaib-dev/traceora.git' };
     const squat = pk('@someone/express', [['1.0.0', T0 - 1000, { scripts: { postinstall: 'node x' } }]]);
     squat.time.created = iso(T0 - 3600000);
-    const npm = fakeNpm({ changes: [{ seq: 1, id: '@traceora/express', changes: [] }, { seq: 2, id: '@someone/express', changes: [] }], packuments: { '@traceora/express': adapter, '@someone/express': squat, express: { description: 'Fast web framework' } } });
+    const kit = pk('@streetui/express', [['0.1.0', T0 - 1000]]);
+    kit.time.created = iso(T0 - 3600000);
+    const npm = fakeNpm({ changes: [{ seq: 1, id: '@traceora/express', changes: [] }, { seq: 2, id: '@someone/express', changes: [] }, { seq: 3, id: '@streetui/express', changes: [] }], packuments: { '@traceora/express': adapter, '@someone/express': squat, '@streetui/express': kit, express: { description: 'Fast web framework' } } });
     await pollOnce(q, { population: new Map([['express', 9e7]]), lookIdx: lookalikeIndex(['express']), fetchImpl: npm.fetchImpl, sleep: noSleep, now: T0 });
     const found = fs.readFileSync(path.join(dir, 'lookalikes.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l).name);
     assert.deepEqual(found, ['@someone/express']);
-    assert.equal(q.state.counts['lookalike-scope-plain'], 1, 'the filtered adapter was not counted');
+    assert.equal(q.state.counts['lookalike-scope-plain'], 2, 'the filtered packages were not counted — a missing repository field alone listed one');
   });
 
   await it('a watched pair records publish, seen and verdict times; "not watched" is its own outcome, never "no change"', async () => {

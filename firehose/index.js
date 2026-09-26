@@ -161,7 +161,11 @@ async function pollOnce(q, { population, lookIdx, fetchImpl = fetch, sleep = def
     // Express integration, and the first four minutes against the live feed found two of those and
     // nothing else. So a scope match is a candidate only when the metadata gives a reason on top;
     // the plain ones are counted, so the filter is visible, and not listed.
-    if (match.kind === 'scope' && !described.signals.length) {
+    // "Names no source repository" alone is not a reason: the first three hours of backfill listed
+    // eleven scoped UI-kit packages on it (`@streetui/router`) and nothing else. It still appears
+    // on a listed candidate; it just cannot list one.
+    const strong = described.signals.filter((x) => x !== 'names no source repository');
+    if (match.kind === 'scope' && !strong.length) {
       q.state.lookalikes[name] = 'plain';
       q.count('lookalike-scope-plain');
       continue;

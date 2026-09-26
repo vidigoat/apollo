@@ -6,6 +6,7 @@
  *   node scripts/firehose.js --dry --hours 1          # follow the feed and select; run nothing
  *   node scripts/firehose.js --hours 24               # and watch each release (10 pairs at once)
  *   node scripts/firehose.js --status                 # where it is, what it has found
+ *   node scripts/firehose.js --since <seq> --published-since <ISO> --state <dir>   # a backfill
  *
  * State lives in local/firehose/ (gitignored): the feed position, the queue, and two append-only
  * logs — results.jsonl and lookalikes.jsonl. Stop it any time and start it again: it resumes from
@@ -68,7 +69,11 @@ if (args.includes('--status')) {
   if (!Number.isFinite(q.state.seq)) {
     const since = flag('since', 'now');
     q.state.seq = since === 'now' ? await currentSeq() : Number(since);
-    q.state.startedAt = new Date().toISOString();
+    // `--published-since <ISO>` with `--since <seq>`: a backfill — catching up on what was published
+    // while nothing was watching. Without it, only what is published from now on counts.
+    const from = flag('published-since', null);
+    if (from && !Number.isFinite(Date.parse(from))) throw new Error(`--published-since is not a date: ${from}`);
+    q.state.startedAt = from ? new Date(from).toISOString() : new Date().toISOString();
     q.save();
     console.log(`  new watch from seq ${q.state.seq} — releases published from ${q.state.startedAt} on`);
   } else {
