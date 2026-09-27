@@ -836,6 +836,24 @@ invents a provocation and nothing it returns is executed. That an in-process con
 live listener zero times is a test, and forwarding the connection turns it red
 (`observe/probe.test.js`).
 
+**Does it actually catch more, without crying wolf?** `npm run malware:proof` runs a labelled corpus,
+each sample inside a locked-down container (`proof/harden.js`: `--network none`, read-only, all
+capabilities dropped, no host mount but the sample), and scores two detectors. The naive one flags
+any package that touches the network at all; interrogation flags only what a package does under a
+provocation that it did not do bare. On the synthetic corpus (`proof/corpus`):
+
+```
+detection    bare 0/4   interrogated 3/4   (+3)
+false alarms bare 1/3   interrogated 0/3   (-1)
+missed (honest): dormant-quiet — a stealer that never acted under any provocation tried
+```
+
+The three conditional stealers — a token grabber that wakes only on CI, a wallet reader, a
+clock-triggered time-bomb — are invisible to a single run and caught by interrogation; the benign
+package that legitimately fetches a CDN trips the naive detector and not this one. `dormant-quiet`,
+a sample that never acts under anything tried, is a miss, and is recorded as one: interrogation
+raises the bar, it does not claim to be a wall. `proof/malware-eval.json` carries the run.
+
 **Where this runs, and where it does not.** Interrogation runs locally and contained, never on
 Nebius. Nebius's Acceptable Use Policy forbids running code that operates in conjunction with
 malware and any network egress or attack, with no carve-out for sandboxed research. So suspected
@@ -1149,7 +1167,7 @@ npm test
 ```
 
 ```
-37 suites · 496 checks
+38 suites · 500 checks
 all green
 ```
 

@@ -23,3 +23,6 @@ web/node_modules/
 
 # What deploy/nebius/launch.sh created (ids only, no secrets) — this machine's, not the repo's.
 deploy/nebius/.launch-state
+
+# Ephemeral container work dirs for the malware proof.
+proof/.work/
