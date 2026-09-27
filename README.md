@@ -53,10 +53,12 @@ git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
 npm start           # the same run in a browser, localhost:8791
-npm test            # 38 suites · 500 checks
+npm test            # 39 suites · 503 checks
 npm run smoke:live  # every route of the deployed site, after a deploy
 npm run live -- --dry   # follow npm's change feed as it publishes; selects, runs nothing
 npm run interrogate -- --demo   # catch a planted stealer red-handed, contained, nothing leaves
+npm run live:publish            # the live watch → the site's catch page (public/live-watch.json)
+npm run live:report -- --demo    # draft an npm report from a catch (never sends it)
 npm run malware:proof   # the proof: interrogation vs a single run, on a labelled corpus, in --network none
 ```
 

@@ -7,6 +7,7 @@ import How from './sections/How.jsx';
 import Check from './sections/Check.jsx';
 import Yours from './sections/Yours.jsx';
 import Releases from './sections/Releases.jsx';
+import Live from './sections/Live.jsx';
 import Limits from './sections/Limits.jsx';
 import { tree, fleet, published, run, num } from './lib/api.js';
 
@@ -140,6 +141,7 @@ export default function App() {
         )}
 
         <Yours />
+        <Live />
         <Releases />
         <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />
