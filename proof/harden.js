@@ -54,6 +54,10 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
   return new Promise((resolve) => {
     fs.mkdirSync(WORK_BASE, { recursive: true });
     const work = fs.mkdtempSync(path.join(WORK_BASE, 'run-'));
+    // The container runs as the unprivileged `node` user; on a native-Linux host the bind-mounted
+    // work dir is root-owned, so `node` cannot write its report into it and the observation comes
+    // back empty. The dir is ephemeral and deleted below, so opening it up is safe here.
+    try { fs.chmodSync(work, 0o777); } catch { /* best effort */ }
     // The runner and any planted decoy files are written into the sample dir's sibling work area,
     // mounted writable via tmpfs inside the container. The sample itself is mounted read-only.
     const home = path.join(work, 'home');
