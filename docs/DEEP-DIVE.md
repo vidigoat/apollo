@@ -858,6 +858,17 @@ newly draws out, clears both. `dormant-quiet`, a sample that never acts under an
 miss and is recorded as one: interrogation raises the bar, it does not claim to be a wall.
 `proof/malware-eval.json` carries the run.
 
+**What a run against the real dataset showed — and its limit.** The harness was stood up on a
+throwaway cloud VM and pointed at DataDog's real npm corpus (25,767 samples). The honest result is a
+finding about the instrument: today's npm malware — the November 2025 bun-based worms in that set,
+for one — detonates at INSTALL, in a `postinstall`/setup script, while this proof harness observes
+IMPORT (`require`). So an import-time run reports most real samples as clean, which measures the
+wrong thing. The main watcher already observes the install phase (observe/probe.js's install
+machinery); wiring that into the interrogation harness — and reconciling it with `--network none`,
+which blocks the dependency fetch a real `npm install` wants — is the next step for a real-corpus
+number. Until then the proof stands on the synthetic corpus, which exercises exactly the class
+interrogation targets: conditional behaviour at import.
+
 **Where this runs, and where it does not.** Interrogation runs locally and contained, never on
 Nebius. Nebius's Acceptable Use Policy forbids running code that operates in conjunction with
 malware and any network egress or attack, with no carve-out for sandboxed research. So suspected
