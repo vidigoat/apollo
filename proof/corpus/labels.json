@@ -2,8 +2,12 @@
   "stealer-ci": "malicious",
   "stealer-wallet": "malicious",
   "stealer-clock": "malicious",
+  "stealer-cloud": "malicious",
+  "stealer-immediate": "malicious",
   "dormant-quiet": "malicious",
   "benign-cdn": "benign",
   "benign-env": "benign",
-  "benign-quiet": "benign"
+  "benign-quiet": "benign",
+  "benign-telemetry": "benign",
+  "benign-config": "benign"
 }

@@ -843,16 +843,20 @@ any package that touches the network at all; interrogation flags only what a pac
 provocation that it did not do bare. On the synthetic corpus (`proof/corpus`):
 
 ```
-detection    bare 0/4   interrogated 3/4   (+3)
-false alarms bare 1/3   interrogated 0/3   (-1)
+detection    bare 1/6   interrogated 5/6   (+4)
+false alarms bare 2/5   interrogated 0/5   (-2)
 missed (honest): dormant-quiet — a stealer that never acted under any provocation tried
 ```
 
-The three conditional stealers — a token grabber that wakes only on CI, a wallet reader, a
-clock-triggered time-bomb — are invisible to a single run and caught by interrogation; the benign
-package that legitimately fetches a CDN trips the naive detector and not this one. `dormant-quiet`,
-a sample that never acts under anything tried, is a miss, and is recorded as one: interrogation
-raises the bar, it does not claim to be a wall. `proof/malware-eval.json` carries the run.
+Eleven samples across the families real npm attacks use. Four are patient — a token grabber that
+wakes only on CI, a wallet reader, a cloud-credential stealer, a clock-triggered time-bomb — and are
+invisible to a single run; interrogation catches all four. One is blunt, grabbing a token on every
+load: a single run catches it and so does interrogation, so raising the bar for the patient ones
+does not drop the easy one. Two benign packages legitimately use the network — a CDN fetch, a usage
+ping — and trip the naive "any egress" detector; interrogation, which flags only what a provocation
+newly draws out, clears both. `dormant-quiet`, a sample that never acts under anything tried, is a
+miss and is recorded as one: interrogation raises the bar, it does not claim to be a wall.
+`proof/malware-eval.json` carries the run.
 
 **Where this runs, and where it does not.** Interrogation runs locally and contained, never on
 Nebius. Nebius's Acceptable Use Policy forbids running code that operates in conjunction with
