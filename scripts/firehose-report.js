@@ -26,8 +26,11 @@ const flag = (n, d) => { const i = args.indexOf(`--${n}`); return i > -1 ? args[
 const OUTDIR = path.join(ROOT, 'proof', 'reports');
 
 const readResults = () => {
-  try { return fs.readFileSync(path.join(ROOT, 'local', 'firehose', 'results.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)); }
-  catch { return []; }
+  let text;
+  try { text = fs.readFileSync(path.join(ROOT, 'local', 'firehose', 'results.jsonl'), 'utf8'); } catch { return []; }
+  const out = [];
+  for (const l of text.split('\n')) { if (!l.trim()) continue; try { out.push(JSON.parse(l)); } catch { /* skip a partial line */ } }
+  return out;
 };
 
 /** The evidence a change carries, as lines a reader (and npm) can check against the tarballs. */

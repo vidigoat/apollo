@@ -183,6 +183,34 @@ const json = async (p) => (await get(p)).json();
     }
   });
 
+  await it('every asset the built page references is committed, not just built and left untracked', async () => {
+    // The bug this guards: a rebuild produces fresh content-hashed bundle names, index.html is
+    // committed with the new names, and the bundles themselves are never `git add`ed. Every suite
+    // and the dev server read the working tree, where the files exist, so everything is green — but
+    // a fresh clone serves an index.html whose one <script> 404s. The built site is committed on
+    // purpose (see the note in .gitignore), so "referenced" must mean "tracked", not "on disk".
+    const distDir = path.join(__dirname, 'dist');
+    if (!fs.existsSync(path.join(distDir, 'index.html'))) return; // nothing built to check
+    const tracked = new Set(
+      execFileSync('git', ['-C', __dirname, 'ls-files', 'dist'], { encoding: 'utf8' })
+        .split('\n').filter(Boolean),
+    );
+    // index.html names its entry bundle and stylesheet; the entry bundle then imports further
+    // chunks at runtime. Both must ship, so the invariant is the whole built asset dir is tracked.
+    const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+      const full = path.join(dir, e.name);
+      return e.isDirectory() ? walk(full) : [path.relative(__dirname, full)];
+    });
+    const untracked = walk(path.join(distDir, 'assets')).filter((f) => !tracked.has(f));
+    assert.deepEqual(untracked, [], `built bundles were left uncommitted: ${untracked.join(', ')}`);
+    // And what index.html names by hand must actually serve, not just exist as a file.
+    const html = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
+    for (const ref of [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+)"/g)].map((m) => m[1])) {
+      const r = await get(`/${ref}`);
+      assert.equal(r.status, 200, `index.html references /${ref}, which the server returned ${r.status} for`);
+    }
+  });
+
   await it('it will not serve files outside the roots it was given', async () => {
     for (const p of ['/../server.js', '/../../etc/passwd', '/..%2fserver.js']) {
       const r = await get(p);
