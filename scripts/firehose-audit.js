@@ -33,6 +33,7 @@ const path = require('node:path');
 const { readChanges } = require('../firehose/feed');
 const { packument } = require('../firehose');
 const { newReleases } = require('../firehose/select');
+const { readLines } = require('./firehose-publish');
 
 const ROOT = path.join(__dirname, '..');
 const args = process.argv.slice(2);
@@ -80,9 +81,10 @@ const DIR = path.resolve(flag('state', path.join(ROOT, 'local', 'firehose')));
 
   // 3. What the watcher has: results (deduplicated by key — a crash between writing a result and
   //    saving state can repeat one) and its queue.
-  const results = fs.existsSync(path.join(DIR, 'results.jsonl'))
-    ? fs.readFileSync(path.join(DIR, 'results.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l))
-    : [];
+  // The same resilient reader the publisher uses: the watcher appends to results.jsonl live, and an
+  // audit run while it is mid-append would otherwise throw on the one truncated last line and lose
+  // the whole record — the exact crash-between-write case noted just above.
+  const results = readLines(DIR, 'results.jsonl');
   const byKey = new Map(results.map((r) => [r.key, r]));
   const queued = new Set([...state.pending.map((j) => j.key), ...Object.keys(state.running)]);
 
