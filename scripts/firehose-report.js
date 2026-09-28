@@ -34,14 +34,19 @@ const readResults = () => {
 };
 
 /** The evidence a change carries, as lines a reader (and npm) can check against the tarballs. */
-function evidenceLines(gained = {}) {
+function evidenceLines(gained) {
+  // A default param only fills `undefined`; a record can carry `gained: null` (a differ that found
+  // no change), and Object.entries(null) throws. This drafts a report for a person to send, so a
+  // missing or malformed diff must produce no evidence lines, never a crash mid-draft.
+  if (!gained || typeof gained !== 'object') return [];
   const lines = [];
   for (const [channel, g] of Object.entries(gained)) {
+    if (!g || typeof g !== 'object') continue;
     const at = channel.startsWith('install.') ? ' (at install time)' : '';
     const ch = channel.replace(/^install\./, '');
     const show = (x) => (typeof x === 'string' ? x : JSON.stringify(x));
-    if (g.added?.length) lines.push(`  - ${ch}${at}: now ${g.added.slice(0, 20).map(show).join(', ')}${g.added.length > 20 ? `, and ${g.added.length - 20} more` : ''}`);
-    if (g.removed?.length) lines.push(`  - ${ch}${at}: no longer ${g.removed.slice(0, 10).map(show).join(', ')}`);
+    if (Array.isArray(g.added) && g.added.length) lines.push(`  - ${ch}${at}: now ${g.added.slice(0, 20).map(show).join(', ')}${g.added.length > 20 ? `, and ${g.added.length - 20} more` : ''}`);
+    if (Array.isArray(g.removed) && g.removed.length) lines.push(`  - ${ch}${at}: no longer ${g.removed.slice(0, 10).map(show).join(', ')}`);
   }
   return lines;
 }
@@ -49,7 +54,9 @@ function evidenceLines(gained = {}) {
 /** A report for one watched-and-moved release. */
 function reportForRelease(r) {
   const ev = evidenceLines(r.gained);
-  const sigs = (r.signals || []).map((s) => `  - ${s.signal}: ${s.detail}`);
+  const sigs = (Array.isArray(r.signals) ? r.signals : [])
+    .filter((s) => s && typeof s === 'object')
+    .map((s) => `  - ${s.signal}: ${s.detail}`);
   return `Subject: ${r.pkg}@${r.to} — behaviour changed from ${r.from}, observed in a sandbox
 
 Package: ${r.pkg}
