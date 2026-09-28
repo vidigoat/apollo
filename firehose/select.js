@@ -146,7 +146,11 @@ function lookalikeIndex(targets) {
  * output is a description for a person, never an accusation.
  */
 function lookalike(name, index) {
-  if (!name || index.targets.has(name)) return null;
+  // `name` is a change-feed id — untrusted, and read on every change for days. npm's feed is all
+  // string ids, but a malformed record (a design doc, a corrupt batch) can carry a non-string one,
+  // and squash() would call .toLowerCase() on it and take the whole poll loop down. A name that is
+  // not a usable string is simply not a lookalike.
+  if (typeof name !== 'string' || !name || index.targets.has(name)) return null;
   const scoped = /^@([^/]+)\/(.+)$/.exec(name);
   if (scoped) {
     if (scoped[1] === 'types') return null;
@@ -178,7 +182,7 @@ function describeLookalike(packument, match, targetDescription = null) {
     createdAt: packument?.time?.created || null,
     publisher: publisher(v),
     installScripts: installScripts(v),
-    dependencies: Object.keys(v.dependencies || {}).slice(0, 20),
+    dependencies: (v.dependencies && typeof v.dependencies === 'object' ? Object.keys(v.dependencies) : []).slice(0, 20),
     unpackedSize: v.dist?.unpackedSize ?? null,
     fileCount: v.dist?.fileCount ?? null,
     repository: v.repository?.url || (typeof v.repository === 'string' ? v.repository : null),

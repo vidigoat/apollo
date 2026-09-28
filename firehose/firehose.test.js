@@ -104,6 +104,20 @@ function pk(name, versions, extra = {}) {
     assert.equal(distance('chalk', 'chlak'), 1, 'an adjacent swap is one edit');
   });
 
+  await it('a malformed change-feed id does not crash the watch: a non-string name is simply not a lookalike', () => {
+    // `name` is `change.id` off the feed, read on every change for days, and the call is outside the
+    // loop's try/catch. npm sends string ids, but a design doc or a corrupt batch can carry another
+    // shape, and squash() calling .toLowerCase() on it would take the whole poll loop down.
+    const idx = lookalikeIndex(['lodash', 'express']);
+    for (const bad of [42, true, ['lodash'], { toString: () => 'lodash' }, null, undefined, '']) {
+      assert.equal(lookalike(bad, idx), null, `a ${typeof bad} name should be no match, not a throw`);
+    }
+    // And a hostile packument whose dependencies field is a string, not an object, is described with
+    // no dependencies rather than the characters of that string counted as package names.
+    const d = describeLookalike({ name: 'x', 'dist-tags': { latest: '1' }, versions: { 1: { dependencies: 'not-an-object' } } }, { target: 'lodash', kind: 'typo' });
+    assert.deepEqual(d.dependencies, []);
+  });
+
   await it('a lookalike is described from its metadata — install script, no repository, copied description', () => {
     const p = { ...pk('lodahs', [['1.0.0', T0 - 1000, { scripts: { preinstall: 'node x.js' } }]]), description: 'Lodash modular utilities.' };
     p.time.created = iso(T0 - 86400000);
