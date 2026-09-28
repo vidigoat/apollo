@@ -85,6 +85,22 @@ it('the root project is not a dependency of itself', () => {
   assert.equal(parseLockfile(V3).versions.has('app'), false);
 });
 
+it('a v1 tree nested thousands deep is walked, not a stack overflow on the paste box', () => {
+  // A v1 lockfile nests `dependencies`, and this parser reads whatever is pasted into the public
+  // box. A hostile tree a few thousand levels deep — a small payload — is still valid JSON that
+  // JSON.parse accepts, so it sails past the "not a lockfile" catch and used to overflow the call
+  // stack in a recursive walk, crashing the request. The walk is iterative now; depth is bounded
+  // by memory, not the stack.
+  let open = '{"dependencies":{';
+  let close = '';
+  for (let i = 0; i < 40000; i++) { open += `"p${i}":{"version":"1.0.0","dependencies":{`; close = `}}${close}`; }
+  open += '"leaf":{"version":"1.0.0"}';
+  const g = parseLockfile(open + close + '}}');
+  assert.equal(g.format, 'v1');
+  assert.equal(g.versions.size, 40001, 'every level of a deep tree is a package, and all were counted');
+  assert.equal(g.versions.get('leaf'), '1.0.0');
+});
+
 it('a package path is read to a package name', () => {
   assert.equal(nameFromPath('node_modules/left-pad'), 'left-pad');
   assert.equal(nameFromPath('node_modules/chalk/node_modules/ansi-styles'), 'ansi-styles');

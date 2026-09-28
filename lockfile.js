@@ -88,14 +88,20 @@ function parseLockfile(text) {
     }
   } else if (json.dependencies && typeof json.dependencies === 'object') {
     format = 'v1';
-    const walk = (deps) => {
-      for (const [name, node] of Object.entries(deps || {})) {
+    // Iterative, not recursive. A v1 lockfile nests `dependencies` arbitrarily deep, and a hostile
+    // one only a few thousand levels deep — a payload of a few hundred kB — overflowed the call
+    // stack with a RangeError that the JSON.parse try/catch above never covers, taking the request
+    // down. This is the public paste box, so the walk must be bounded by memory, not stack depth.
+    const stack = [json.dependencies];
+    while (stack.length) {
+      const deps = stack.pop();
+      if (!deps || typeof deps !== 'object') continue;
+      for (const [name, node] of Object.entries(deps)) {
         if (!node) continue;
         record(name, node.version);
-        if (node.dependencies) walk(node.dependencies);
+        if (node.dependencies) stack.push(node.dependencies);
       }
-    };
-    walk(json.dependencies);
+    }
   } else {
     // Not "no packages" — *unreadable*. An empty tree would read as "nothing to check", and there
     // is no answer here more dangerous than that one.
