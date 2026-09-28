@@ -12,12 +12,20 @@
 
 const { quietness, unobserved } = require('../transcript/schema');
 
+// A proc entry is usually { argv: [...] }, but the probe also pushes bare strings onto this channel
+// (e.g. 'read shifted clock' when a package reads the clock under the date provocation). Keying or
+// severity-testing that as if it had .argv threw. transcript() normalises those strings to an empty
+// argv before diff() sees them today, so the production path is safe — but diff/severityOf are
+// exported as the pure arithmetic this repository invites anyone to check, and a pure function that
+// throws on a shape its own sibling probe emits is a sharp edge left for the next caller. Read both.
+const procText = (p) => (p && typeof p === 'object' && Array.isArray(p.argv) ? p.argv.join(' ') : String(p));
+
 const keyFor = {
   net: (n) => `${n.host}:${n.port ?? ''}/${n.proto}`,
   dns: (d) => d,
   fs: (f) => `${f.op} ${f.path}`,
   env: (e) => e,
-  proc: (p) => p.argv.join(' '),
+  proc: (p) => procText(p),
   exec: (e) => `${e.how} ${e.sample}`,
 };
 
@@ -85,7 +93,7 @@ function severityOf(input) {
   const reasons = [];
 
   if (d.env.added.some(readsCredential)) reasons.push('reads a credential it did not read before');
-  if (d.proc.added.some((p) => NOTABLE_PROC.test(p.argv.join(' ')))) reasons.push('spawns a shell or a downloader it did not spawn before');
+  if (d.proc.added.some((p) => NOTABLE_PROC.test(procText(p)))) reasons.push('spawns a shell or a downloader it did not spawn before');
   // Building code at runtime that the old version did not build. A library that starts doing this
   // between a patch release has changed in kind, not degree — and decode-then-execute is the shape
   // of every import-time compromise of 2026, precisely because the payload is never in the source.
