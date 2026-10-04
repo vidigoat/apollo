@@ -1,0 +1,8 @@
+{
+  "worm-postinstall": "malicious",
+  "curl-pipe-preinstall": "malicious",
+  "ci-gated-postinstall": "malicious",
+  "benign-native-build": "benign",
+  "benign-binary-download": "benign",
+  "benign-no-script": "benign"
+}

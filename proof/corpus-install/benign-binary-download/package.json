@@ -1,0 +1,1 @@
+{"name":"benign-binary-download","version":"1.0.0","main":"index.js","scripts":{"postinstall":"node fetch-binary.js"}}

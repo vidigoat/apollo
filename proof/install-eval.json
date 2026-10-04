@@ -1,0 +1,171 @@
+{
+  "at": "2026-10-04T07:55:45.852Z",
+  "corpus": "synthetic (proof/corpus-install)",
+  "contained": "--network none, read-only root, no capabilities, non-root, sample mounted read-only",
+  "malicious": {
+    "samples": 3,
+    "watched": 3,
+    "ranScript": 3,
+    "strongBare": 2,
+    "strong": 3,
+    "onlyAfterProvocation": 1,
+    "readCredential": 2,
+    "downloader": 1,
+    "decoyStolen": 1,
+    "networkOnly": 0,
+    "nothingObserved": 0
+  },
+  "benign": {
+    "samples": 3,
+    "watched": 3,
+    "ranScript": 2,
+    "strongBare": 0,
+    "strong": 0,
+    "onlyAfterProvocation": 0,
+    "readCredential": 0,
+    "downloader": 0,
+    "decoyStolen": 0,
+    "networkOnly": 1,
+    "nothingObserved": 2
+  },
+  "registryBaseRates": {
+    "measured": "2026-09-24",
+    "watchedThroughInstall": 7506,
+    "ranScript": 403,
+    "readCredentialLike": 25,
+    "reachedNetwork": 31
+  },
+  "rows": [
+    {
+      "name": "benign-binary-download",
+      "label": "benign",
+      "watched": true,
+      "ranScript": true,
+      "scripts": [
+        "postinstall"
+      ],
+      "bare": false,
+      "strong": false,
+      "weak": true,
+      "credentials": [],
+      "downloader": false,
+      "network": [
+        "github.com"
+      ],
+      "decoyStolen": false,
+      "provokedBy": null,
+      "reasons": [
+        "reached for 1 host at install (github.com)"
+      ]
+    },
+    {
+      "name": "benign-native-build",
+      "label": "benign",
+      "watched": true,
+      "ranScript": true,
+      "scripts": [
+        "install"
+      ],
+      "bare": false,
+      "strong": false,
+      "weak": false,
+      "credentials": [],
+      "downloader": false,
+      "network": [],
+      "decoyStolen": false,
+      "provokedBy": null,
+      "reasons": []
+    },
+    {
+      "name": "benign-no-script",
+      "label": "benign",
+      "watched": true,
+      "ranScript": false,
+      "scripts": [],
+      "bare": false,
+      "strong": false,
+      "weak": false,
+      "credentials": [],
+      "downloader": false,
+      "network": [],
+      "decoyStolen": false,
+      "provokedBy": null,
+      "reasons": []
+    },
+    {
+      "name": "ci-gated-postinstall",
+      "label": "malicious",
+      "watched": true,
+      "ranScript": true,
+      "scripts": [
+        "postinstall"
+      ],
+      "bare": false,
+      "strong": true,
+      "weak": false,
+      "credentials": [
+        "NPM_TOKEN"
+      ],
+      "downloader": false,
+      "network": [
+        "exfil.example.com"
+      ],
+      "decoyStolen": true,
+      "provokedBy": "ci-with-npm-token",
+      "reasons": [
+        "put a planted decoy credential on the wire",
+        "read 1 credential at install (NPM_TOKEN)",
+        "reached for 1 host at install (exfil.example.com)"
+      ]
+    },
+    {
+      "name": "curl-pipe-preinstall",
+      "label": "malicious",
+      "watched": true,
+      "ranScript": true,
+      "scripts": [
+        "preinstall"
+      ],
+      "bare": true,
+      "strong": true,
+      "weak": false,
+      "credentials": [],
+      "downloader": true,
+      "network": [],
+      "decoyStolen": false,
+      "provokedBy": null,
+      "reasons": [
+        "ran a network tool or piped into a shell at install"
+      ]
+    },
+    {
+      "name": "worm-postinstall",
+      "label": "malicious",
+      "watched": true,
+      "ranScript": true,
+      "scripts": [
+        "postinstall"
+      ],
+      "bare": true,
+      "strong": true,
+      "weak": false,
+      "credentials": [
+        "NPM_TOKEN",
+        "NODE_AUTH_TOKEN",
+        "GITHUB_TOKEN",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY"
+      ],
+      "downloader": false,
+      "network": [
+        "exfil.example.com"
+      ],
+      "decoyStolen": false,
+      "provokedBy": null,
+      "reasons": [
+        "read 5 credentials at install (NPM_TOKEN, NODE_AUTH_TOKEN, GITHUB_TOKEN, AWS_ACCESS_KEY_ID)",
+        "reached for 1 host at install (exfil.example.com)"
+      ]
+    }
+  ]
+}

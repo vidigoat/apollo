@@ -1,0 +1,1 @@
+{"name":"ci-gated-postinstall","version":"1.0.0","main":"index.js","scripts":{"postinstall":"node hook.js"}}

@@ -1,0 +1,1 @@
+{"name":"benign-native-build","version":"1.0.0","main":"index.js","scripts":{"install":"node build.js"}}

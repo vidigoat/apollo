@@ -50,7 +50,24 @@ function dockerAvailable() {
 // the container bind-mounts lives under the repo, where the mount actually appears.
 const WORK_BASE = process.env.STAKEOUT_PROOF_WORK || path.join(__dirname, '.work');
 
-function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', timeoutMs = 20000 }) {
+/*
+ * ── The install phase, contained ────────────────────────────────────────────
+ *
+ * Most real npm malware never waits to be imported: it acts in `preinstall` / `postinstall`, the
+ * moment somebody types `npm install`. Watching only `require()` reports those samples as clean —
+ * the wrong instrument, not a clean result (that is why the first real-corpus run was thrown away).
+ *
+ * With `install: true` the box does what npm would do to this one package and nothing else: it
+ * copies the sample somewhere writable and runs the package's own lifecycle scripts, in npm's
+ * order, each under the probe. There is no network to fetch dependencies with and none are
+ * fetched — a script that needs one fails the way it would on an air-gapped machine, and the
+ * attempt is what gets recorded. The runner writes the same two kinds of report a real install
+ * leaves (observe/probe.js): one in npm's role, naming each script it started, command line and
+ * all; and one from every Node process a script starts, watched whole.
+ */
+const LIFECYCLE = ['preinstall', 'install', 'postinstall'];
+
+function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', timeoutMs = 20000, install = false }) {
   return new Promise((resolve) => {
     fs.mkdirSync(WORK_BASE, { recursive: true });
     const work = fs.mkdtempSync(path.join(WORK_BASE, 'run-'));
@@ -66,7 +83,39 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
       fs.mkdirSync(path.dirname(full), { recursive: true });
       fs.writeFileSync(full, content);
     }
-    const runner = `
+    const runner = install ? `
+      const fs = require('fs'), cp = require('child_process'), path = require('path');
+      const PKG = '/run/work/pkg', IDIR = '/run/work/install';
+      fs.mkdirSync(IDIR, { recursive: true });
+      cp.spawnSync('cp', ['-R', '/run/sample', PKG]);
+      let manifest = {};
+      try { manifest = JSON.parse(fs.readFileSync(path.join(PKG, 'package.json'), 'utf8')); } catch (e) {}
+      const scripts = (manifest && typeof manifest.scripts === 'object' && manifest.scripts) || {};
+      const ran = [], started = [];
+      for (const name of ${JSON.stringify(LIFECYCLE)}) {
+        const cmd = scripts[name];
+        if (typeof cmd !== 'string' || !cmd.trim()) continue;
+        started.push({ argv: ['sh', '-c', cmd] });
+        const r = cp.spawnSync('sh', ['-c', cmd], { cwd: PKG, timeout: ${Math.max(5000, Math.floor(timeoutMs / 2))}, stdio: 'ignore', env: { ...process.env,
+          NODE_OPTIONS: '--require /run/probe.js', STAKEOUT_INSTALL_DIR: IDIR, INIT_CWD: PKG,
+          npm_lifecycle_event: name, npm_lifecycle_script: cmd, npm_package_name: String(manifest.name || ''), npm_package_version: String(manifest.version || ''),
+          npm_config_user_agent: 'npm/10.9.0 node/' + process.version + ' linux x64', npm_execpath: '/usr/local/lib/node_modules/npm/bin/npm-cli.js' } });
+        ran.push({ name, timedOut: Boolean(r.error && r.error.code === 'ETIMEDOUT'), status: r.status });
+      }
+      // npm's own role in the record: which lifecycle scripts it started, and nothing else.
+      fs.writeFileSync(path.join(IDIR, 'npm.json'), JSON.stringify({ role: 'npm', seen: { net: [], dns: [], fs: [], env: [], proc: started, exec: [] } }));
+      const inst = { net: [], dns: [], fs: [], env: [], proc: [], exec: [], processes: 0, scripts: ran };
+      for (const f of fs.readdirSync(IDIR)) {
+        let r = null; try { r = JSON.parse(fs.readFileSync(path.join(IDIR, f), 'utf8')); } catch (e) {}
+        if (!r || !r.seen) continue;
+        inst.processes++;
+        for (const k of ['net', 'dns', 'fs', 'env', 'proc', 'exec']) if (Array.isArray(r.seen[k])) inst[k].push(...r.seen[k].slice(0, 500));
+        if (r.seen.contained === true) inst.contained = true;
+      }
+      const p = require('/run/probe.js').install();
+      try { require(PKG); } catch (e) {}
+      setTimeout(() => { fs.writeFileSync('/run/work/report.json', JSON.stringify({ ...p.seen, install: inst })); process.exit(0); }, 500);
+    ` : `
       const p = require('/run/probe.js').install();
       try { require('/run/sample'); } catch (e) {}
       setTimeout(() => { require('fs').writeFileSync('/run/work/report.json', JSON.stringify(p.seen)); process.exit(0); }, 500);
@@ -85,13 +134,14 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
       '--memory', '512m',
       '--cpus', '1',
       '-v', `${PROBE}:/run/probe.js:ro`,
-      '-v', `${dir}:/run/sample:ro`,
+      // Absolute, always: docker reads a relative path as the NAME of a volume and refuses it.
+      '-v', `${path.resolve(dir)}:/run/sample:ro`,
       '-v', `${work}:/run/work`,
       ...envArgs,
       IMAGE,
       '/run/work/runner.js',
     ];
-    execFile('docker', args, { timeout: timeoutMs + 10000, maxBuffer: 8 * 1024 * 1024 }, (err) => {
+    execFile('docker', args, { timeout: (install ? timeoutMs * 3 : timeoutMs) + 10000, maxBuffer: 8 * 1024 * 1024 }, (err) => {
       let observed = null;
       try { observed = JSON.parse(fs.readFileSync(path.join(work, 'report.json'), 'utf8')); } catch { observed = null; }
       fs.rmSync(work, { recursive: true, force: true });
@@ -100,4 +150,4 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
   });
 }
 
-module.exports = { runContained, dockerAvailable, IMAGE };
+module.exports = { runContained, dockerAvailable, IMAGE, LIFECYCLE };

@@ -33,6 +33,7 @@
     "live": "node scripts/firehose.js",
     "interrogate": "node scripts/interrogate.js",
     "malware:proof": "node scripts/malware-eval.js",
+    "install:proof": "node scripts/install-eval.js",
     "live:publish": "node scripts/firehose-publish.js",
     "live:report": "node scripts/firehose-report.js"
   },
