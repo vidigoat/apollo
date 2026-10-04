@@ -383,15 +383,22 @@ then the day it has something real to say, nobody is listening.
 
 It installs nothing and executes nobody's code. For a supply-chain tool that is not a detail.
 
-**Not registered yet**, and that is the one thing in this project that cannot be done from a
-terminal: GitHub has no REST endpoint for creating an App, only the web form or a browser manifest
-flow. `node scripts/register-app.js` drives the manifest flow end to end — it opens the page, captures
-the code GitHub redirects back with, exchanges it, writes the app id, private key and webhook
-secret to `.env`, pushes those three to the live deployment's production environment and rebuilds
-it. One human press on GitHub's own page, and the App is registered, configured and live.
+**It also reads what the pull request upgrades.** A dependency bot's pull request moves a version,
+and the lock has nothing to say about a version that moved. So the App reads the lockfile at the
+base commit as well, and for every package the pull request upgrades it answers from two sources,
+neither of which runs anything: the live watch (that exact pair, old against new, run from one
+checkpoint when the release was published — `public/watched-releases.json`) and, failing that, the
+index (both versions observed, diffed by the same pure differ). An upgrade the rules call notable
+or alarming fails the check with the evidence on the pull request; one that starts reading
+`NO_COLOR` gets a line and stays neutral; one nobody compared is named as unknown, never counted as
+"the same". `npm run check-run` shows it on a real release: source-map-js 1.2.1 → 1.2.2, 137 million
+downloads a week, which the watcher saw start calling `Function("return 0")` at import.
 
-`POST /apps` returns 404 — there is no endpoint, whatever the token. That press is the only thing
-in this project that cannot be done from a terminal.
+**Registered** as [`stakeout-behaviour`](https://github.com/apps/stakeout-behaviour) — pull-request
+events, `checks: write`, `contents: read`. GitHub has no REST endpoint for creating an App, so
+`node scripts/register-app.js` drove the manifest flow: one human press on GitHub's own page, and
+the app id, private key and webhook secret went to `.env` and to the live deployment. It is **not
+installed on a repository yet**; installing is the same kind of press, on the App's page.
 
 ## The index is published, so the claim can be checked by somebody else
 

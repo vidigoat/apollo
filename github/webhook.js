@@ -84,7 +84,57 @@ function interesting(event, body) {
  * @param {object} result  from lock.js `checkLock`
  * @param {object} meta    `{ total }` — how many packages were in the tree
  */
-function checkRun(result, { total } = {}) {
+function checkRun(result, { total, bumps = null } = {}) {
+  const run = lockRun(result, { total });
+  return bumps ? withBumps(run, bumps) : run;
+}
+
+/**
+ * The upgrades, laid over the lock verdict.
+ *
+ * A pull request from a dependency bot moves versions, and the lock check has nothing to say about
+ * a version that moved — it is "added", recorded rather than compared. This is the other half: for
+ * each package the pull request upgrades, whether the new release behaves like the one it replaces.
+ *
+ * Red only for what the rules call notable or alarming. A release that starts reading NO_COLOR is
+ * a change worth a line and not worth a red check; a check that goes red on every colour library
+ * is one somebody turns off before the release that matters.
+ */
+function withBumps(run, bumps) {
+  const { changed = [], same = [], unknown = [] } = bumps;
+  if (!changed.length && !same.length && !unknown.length) return run;
+  const { evidence } = require('./bump');
+  const loud = changed.filter((c) => c.severity === 'alarming' || c.severity === 'notable');
+
+  const lines = changed.slice(0, 15).map((c) => {
+    const ev = evidence(c.gained).map((l) => `  - ${l}`);
+    return [`- **${c.pkg}** ${c.from} → ${c.to} — ${c.severity}: ${(c.reasons || []).join('; ') || 'behaviour changed'}`, ...ev,
+      ...(c.explained ? [`  - what that is: ${c.explained}`] : []), `  - _${c.source}_`].join('\n');
+  });
+  const parts = ['### What this pull request upgrades'];
+  if (lines.length) parts.push(`${changed.length === 1 ? 'One upgrade does' : `${changed.length} upgrades do`} something the version it replaces did not:\n\n${lines.join('\n')}` + (changed.length > 15 ? `\n\n…and ${changed.length - 15} more.` : ''));
+  if (same.length) parts.push(`**${same.length}** upgrade${same.length === 1 ? ' was' : 's were'} compared and behave${same.length === 1 ? 's' : ''} the same as before: ${same.slice(0, 12).map((x) => `${x.pkg} ${x.to}`).join(', ')}${same.length > 12 ? `, and ${same.length - 12} more` : ''}.`);
+  if (unknown.length) {
+    parts.push(`**${unknown.length}** upgrade${unknown.length === 1 ? ' has' : 's have'} not been compared by anything, so nothing is claimed about ${unknown.length === 1 ? 'it' : 'them'}:\n\n` +
+      unknown.slice(0, 12).map((u) => `- ${u.pkg} ${u.from} → ${u.to}${u.nearest ? ` — ${u.to} itself was watched against ${u.nearest.against}: ${u.nearest.severity}${u.nearest.reasons.length ? ` (${u.nearest.reasons.join('; ')})` : ''}` : ''}`).join('\n') +
+      (unknown.length > 12 ? `\n- …and ${unknown.length - 12} more` : ''));
+  }
+  if (loud.length) parts.push('"Alarming" means *read this before merging*, never *this is malicious*. The lines above are what was observed; the judgement is yours.');
+
+  const n = loud.length;
+  const bumpTitle = `${n} upgrade${n === 1 ? ' behaves' : 's behave'} differently than the version ${n === 1 ? 'it replaces' : 'they replace'}`;
+  let { conclusion, title } = run;
+  if (n) {
+    title = conclusion === 'failure' ? `${title}, and ${bumpTitle}` : bumpTitle;
+    conclusion = 'failure';
+  } else if (changed.length && conclusion === 'success') {
+    conclusion = 'neutral';
+    title = `${changed.length} upgrade${changed.length === 1 ? '' : 's'} changed behaviour in a small way`;
+  }
+  return { conclusion, title, summary: `${parts.join('\n\n')}\n\n---\n\n### Against the lock\n\n${run.summary}` };
+}
+
+function lockRun(result, { total } = {}) {
   const { drift = [], unknown = [], added = [], checked = 0 } = result || {};
 
   if (drift.length) {

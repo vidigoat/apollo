@@ -24,7 +24,8 @@
 
 const { verify, interesting, checkRun } = require('./webhook');
 const { installationToken, filesIn, fileAt, postCheck } = require('./api');
-const { parseLockfile } = require('../lockfile');
+const { parseLockfile, whatMoved } = require('../lockfile');
+const { bumpReport } = require('./bump');
 const { checkLock } = require('../lock');
 const { Index } = require('../index/schema');
 
@@ -131,7 +132,27 @@ async function handle(req, env, wired = {}) {
   }
 
   const result = checkLock(lock, tree, index);
-  const run = checkRun(result, { total: tree.size });
+
+  /*
+   * What the pull request upgrades: the same lockfile at the base commit, against the head.
+   *
+   * One more read, and only for a pull request that already touched a lockfile. A base that cannot
+   * be read or parsed — a new lockfile, a first commit — means there is nothing to have upgraded
+   * FROM, and the lock verdict stands on its own exactly as before.
+   */
+  let bumps = null;
+  const baseSha = body.pull_request?.base?.sha;
+  if (baseSha) {
+    try {
+      const baseText = await getFile({ token, owner, repo, path: which, ref: baseSha });
+      if (baseText) {
+        const moved = whatMoved(parseLockfile(baseText), { versions: tree }).moved;
+        if (moved.length) bumps = bumpReport(moved, { index, ledger: env.ledger || null });
+      }
+    } catch { bumps = null; }
+  }
+
+  const run = checkRun(result, { total: tree.size, bumps });
   await post({ token, owner, repo, sha, run });
 
   return {
@@ -142,6 +163,7 @@ async function handle(req, env, wired = {}) {
       checked: result.checked,
       drift: result.drift.length,
       unknown: result.unknown.length,
+      upgrades: bumps ? { changed: bumps.changed.length, same: bumps.same.length, unknown: bumps.unknown.length } : null,
       lockfile: which,
     },
   };

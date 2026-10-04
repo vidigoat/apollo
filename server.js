@@ -533,6 +533,8 @@ async function githubWebhook(req, res) {
         privateKey: pem(process.env.GITHUB_PRIVATE_KEY),
         secret: process.env.GITHUB_WEBHOOK_SECRET,
         index: new Index(),
+        // Every release pair the live watcher has run, old against new — what a bump is checked against.
+        ledger: (() => { try { return JSON.parse(fs.readFileSync(path.join(PUBLIC, 'watched-releases.json'), 'utf8')); } catch { return null; } })(),
       }
     );
     return send(res, out.status, JSON.stringify(out.body), 'application/json');

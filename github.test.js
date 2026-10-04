@@ -391,6 +391,89 @@ function wiredTo({ files = ['package-lock.json'], contents = {} } = {}) {
     assert.match(r.body.skipped, /issues/);
   });
 
+  /* ── what a pull request upgrades ─────────────────────────────────────── */
+
+  // A pull request with a base commit, and a GitHub that serves a different lockfile at each ref.
+  const bumpDelivery = () => delivery({ pull_request: { number: 7, draft: false, head: { sha: 'head000' }, base: { sha: 'base000' } } });
+  const refWired = (byRef) => {
+    const posted = [];
+    return { posted, wired: {
+      installationToken: async () => 'tok',
+      filesIn: async () => ['package-lock.json'],
+      fileAt: async ({ path: p, ref }) => byRef[ref]?.[p] ?? null,
+      postCheck: async ({ run }) => { posted.push(run); return { id: 1 }; },
+    } };
+  };
+  const LEDGER = { pairs: {
+    'source-map-js': { '1.2.1→1.2.2': { severity: 'alarming', reasons: ['builds and runs code that did not exist in the source (Function)'], gained: { exec: { added: ['{"how":"Function","sample":"return 0"}'], removed: [] } } } },
+    chalk: { '5.3.0→5.4.0': { severity: 'none' } },
+  } };
+
+  await it('an upgrade the watcher saw behave differently fails the pull request, with the evidence', async () => {
+    /*
+     * The dependency bot's pull request: one line of a lockfile, 1.2.1 → 1.2.2. The lock check has
+     * nothing to say — the version moved, so there is no recorded behaviour to have drifted from —
+     * and this used to come back "never observed, no drift". The watcher ran that exact pair when
+     * 1.2.2 was published. The pull request is where that needs to be said.
+     */
+    const raw = JSON.stringify(bumpDelivery());
+    const { posted, wired } = refWired({
+      base000: { 'package-lock.json': lockfileText([['source-map-js', '1.2.1'], ['chalk', '5.3.0']]) },
+      head000: { 'package-lock.json': lockfileText([['source-map-js', '1.2.2'], ['chalk', '5.4.0']]) },
+    });
+    const out = await handle({ raw, signature: sign(raw), event: 'pull_request' }, { secret: SECRET, index: indexWith([]), ledger: LEDGER }, wired);
+    assert.equal(posted[0].conclusion, 'failure');
+    assert.match(posted[0].title, /1 upgrade behaves differently than the version it replaces/);
+    assert.match(posted[0].summary, /\*\*source-map-js\*\* 1\.2\.1 → 1\.2\.2 — alarming/);
+    assert.match(posted[0].summary, /exec: now `Function\("return 0"\)`/, 'the evidence was not on the pull request, in words');
+    assert.match(posted[0].summary, /1\*\* upgrade was compared and behaves the same as before: chalk 5\.4\.0/);
+    assert.match(posted[0].summary, /never \*this is malicious\*/);
+    assert.deepEqual(out.body.upgrades, { changed: 1, same: 1, unknown: 0 });
+  });
+
+  await it('with no watched pair, two versions the index holds are diffed — and a small change is not a red check', async () => {
+    const raw = JSON.stringify(bumpDelivery());
+    const idx = indexWith([['picocolors', '1.1.0'], ['picocolors', '1.1.1', { env: ['NO_COLOR'] }]]);
+    const { posted, wired } = refWired({
+      base000: { 'package-lock.json': lockfileText([['picocolors', '1.1.0']]) },
+      head000: { 'package-lock.json': lockfileText([['picocolors', '1.1.1']]) },
+    });
+    await handle({ raw, signature: sign(raw), event: 'pull_request' }, { secret: SECRET, index: idx, ledger: null }, wired);
+    assert.notEqual(posted[0].conclusion, 'failure', 'reading NO_COLOR turned a pull request red');
+    assert.match(posted[0].summary, /\*\*picocolors\*\* 1\.1\.0 → 1\.1\.1 — minor/);
+    assert.match(posted[0].summary, /both versions in the index/);
+  });
+
+  await it('an upgrade nobody compared is named as unknown — never counted as the same', async () => {
+    const raw = JSON.stringify(bumpDelivery());
+    const { posted, wired } = refWired({
+      base000: { 'package-lock.json': lockfileText([['source-map-js', '1.2.0']]) },
+      head000: { 'package-lock.json': lockfileText([['source-map-js', '1.2.2']]) },
+    });
+    const out = await handle({ raw, signature: sign(raw), event: 'pull_request' }, { secret: SECRET, index: indexWith([]), ledger: LEDGER }, wired);
+    assert.deepEqual(out.body.upgrades, { changed: 0, same: 0, unknown: 1 });
+    assert.notEqual(posted[0].conclusion, 'failure');
+    // …but the last hop was watched, and it is said rather than withheld.
+    assert.match(posted[0].summary, /source-map-js 1\.2\.0 → 1\.2\.2 — 1\.2\.2 itself was watched against 1\.2\.1: alarming/);
+  });
+
+  await it('a pull request that upgrades nothing, or has no readable base, is answered exactly as before', async () => {
+    const raw = JSON.stringify(bumpDelivery());
+    const text = lockfileText([['lodash', '4.17.21']]);
+    const same = refWired({ base000: { 'package-lock.json': text }, head000: { 'package-lock.json': text } });
+    const a = await handle({ raw, signature: sign(raw), event: 'pull_request' }, { secret: SECRET, index: indexWith([['lodash', '4.17.21']]), ledger: LEDGER }, same.wired);
+    assert.equal(a.body.upgrades, null);
+    assert.doesNotMatch(same.posted[0].summary, /What this pull request upgrades/);
+    const noBase = refWired({ head000: { 'package-lock.json': text } });
+    const b = await handle({ raw, signature: sign(raw), event: 'pull_request' }, { secret: SECRET, index: indexWith([['lodash', '4.17.21']]), ledger: LEDGER }, noBase.wired);
+    assert.equal(b.body.upgrades, null);
+    // A base that is not a lockfile at all must not take the check down with it.
+    const junk = refWired({ base000: { 'package-lock.json': 'not json' }, head000: { 'package-lock.json': text } });
+    const c = await handle({ raw, signature: sign(raw), event: 'pull_request' }, { secret: SECRET, index: indexWith([['lodash', '4.17.21']]), ledger: LEDGER }, junk.wired);
+    assert.equal(c.status, 200);
+    assert.equal(junk.posted.length, 1);
+  });
+
   server.close();
   console.log(`\n${passed} passed`);
 })();

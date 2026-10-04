@@ -111,13 +111,36 @@ function summarise(dir) {
   };
 }
 
+/**
+ * Every release pair the watcher ran, keyed for lookup: what the GitHub App checks a bump against.
+ *
+ * The page needs only the pairs that moved. A pull request needs the others just as much — "this
+ * upgrade was watched, old against new, and behaves the same" is an answer nobody else can give,
+ * and it is most of what a dependency bot's pull requests deserve to hear.
+ */
+function ledger(dir) {
+  const pairs = Object.create(null);
+  for (const r of readLines(dir, 'results.jsonl')) {
+    if (!r || r.outcome !== 'watched' || typeof r.pkg !== 'string' || typeof r.from !== 'string' || typeof r.to !== 'string' || !r.severity) continue;
+    if (r.pkg === '__proto__' || r.pkg === 'constructor' || r.pkg === 'prototype') continue;
+    (pairs[r.pkg] ||= Object.create(null))[`${r.from}→${r.to}`] = {
+      severity: r.severity,
+      ...(r.severity !== 'none' ? { reasons: r.reasons || [], gained: r.gained || {}, explained: explain(r) } : {}),
+      watchedAt: r.doneAt || null,
+    };
+  }
+  return { schema: 1, publishedAt: new Date().toISOString(), count: Object.values(pairs).reduce((n, p) => n + Object.keys(p).length, 0), pairs };
+}
+
 if (require.main === module) {
   const DIR = path.resolve(process.argv[2] || path.join(ROOT, 'local', 'firehose'));
   const out = summarise(DIR);
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, `${JSON.stringify(out)}\n`);
+  const led = ledger(DIR);
+  fs.writeFileSync(path.join(ROOT, 'public', 'watched-releases.json'), `${JSON.stringify(led)}\n`);
   console.log(`  live-watch.json: ${out.releasesWatched} releases watched, ${out.caught} moved, ${out.lookalikes.found} lookalikes` +
     `${out.medianMinutesToVerdict != null ? `, median ${out.medianMinutesToVerdict} min to verdict` : ''}`);
 }
 
-module.exports = { summarise, readLines, explain };
+module.exports = { summarise, readLines, explain, ledger };

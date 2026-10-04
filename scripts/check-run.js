@@ -70,10 +70,10 @@ const delivery = () =>
     action: 'synchronize',
     installation: { id: 42 },
     repository: { name: 'app', owner: { login: 'someone' } },
-    pull_request: { number: 108, draft: false, head: { sha: 'c0ffee1234567890' } },
+    pull_request: { number: 108, draft: false, head: { sha: 'c0ffee1234567890' }, base: { sha: 'ba5e000000000000' } },
   });
 
-async function post({ title, note, deps, drifted = null, indexHas }) {
+async function post({ title, note, deps, drifted = null, indexHas, was = null, ledger = null }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'check-run-'));
   const index = new Index({ dir });
   for (const [name, version] of indexHas) index.put(name, observed(version));
@@ -91,12 +91,13 @@ async function post({ title, note, deps, drifted = null, indexHas }) {
 
   const out = await handle(
     { raw, signature: sign(raw), event: 'pull_request' },
-    { secret: SECRET, index },
+    { secret: SECRET, index, ledger },
     {
       installationToken: async () => 'a-token-scoped-to-one-installation',
       filesIn: async () => ['package-lock.json', 'src/index.js'],
-      fileAt: async ({ path: p }) =>
-        p.endsWith('stakeout.lock') ? JSON.stringify(lock) : text,
+      // The base commit holds the lockfile as it was before the pull request, when one is given.
+      fileAt: async ({ path: p, ref }) =>
+        p.endsWith('stakeout.lock') ? JSON.stringify(lock) : (was && ref === 'ba5e000000000000' ? lockfileText(was) : text),
       postCheck: async ({ run }) => {
         posted = run;
         return { id: 1 };
@@ -130,6 +131,26 @@ async function post({ title, note, deps, drifted = null, indexHas }) {
     indexHas: [['left-pad', '1.3.0'], ['ms', '2.1.3']],
     drifted: ['left-pad', '1.3.0', { env: ['AWS_SECRET_ACCESS_KEY'], net: [{ host: 'cdn-assets-delivery.workers.dev', port: 443 }] }],
   });
+
+  /*
+   * The dependency bot's pull request, against the REAL record: public/watched-releases.json is
+   * every release pair the live watcher has run on Nebius, and source-map-js 1.2.1 → 1.2.2 is one
+   * it flagged the day it was published. Nothing here is planted; if the watcher's record changes,
+   * so does this output.
+   */
+  let ledger = null;
+  try { ledger = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'watched-releases.json'), 'utf8')); } catch { /* shown without it */ }
+  const real = ledger?.pairs?.['source-map-js']?.['1.2.1→1.2.2'];
+  if (real) {
+    await post({
+      title: 'A dependency bot bumps a package',
+      note: `a real release, from the live watch — ${ledger.count} pairs on record`,
+      was: [['source-map-js', '1.2.1'], ['ms', '2.1.3']],
+      deps: [['source-map-js', '1.2.2'], ['ms', '2.1.3']],
+      indexHas: [['ms', '2.1.3']],
+      ledger,
+    });
+  }
 
   await post({
     title: 'A tree the index has never seen',
