@@ -324,4 +324,62 @@ it('index prints what it holds', () => {
   assert.match(r.out, /nodert/);
 });
 
+/* ── stakeout upgrade ───────────────────────────────────────────────────── */
+
+/** A project under git: the lockfile committed at one set of versions, then moved on disk. */
+function bumped(was, now, indexPackages = []) {
+  const p = project(indexPackages);
+  const lockAt = (deps) => JSON.stringify({ name: 'fixture', lockfileVersion: 3, packages: { '': { name: 'fixture' }, ...Object.fromEntries(deps.map(([n, v]) => [`node_modules/${n}`, { version: v }])) } });
+  const git = (...a) => execFileSync('git', a, { cwd: p.root, stdio: 'ignore', env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } });
+  fs.writeFileSync(path.join(p.root, 'package-lock.json'), lockAt(was));
+  git('init', '-q'); git('add', 'package-lock.json'); git('commit', '-q', '-m', 'before');
+  fs.writeFileSync(path.join(p.root, 'package-lock.json'), lockAt(now));
+  const watched = path.join(p.root, 'watched.json');
+  fs.writeFileSync(watched, JSON.stringify({ count: 2, pairs: {
+    'source-map-js': { '1.2.1→1.2.2': { severity: 'alarming', reasons: ['builds and runs code that did not exist in the source (Function)'], gained: { exec: { added: ['{"how":"Function","sample":"return 0"}'], removed: [] } } } },
+    chalk: { '5.3.0→5.4.0': { severity: 'none' } },
+  } }));
+  return { ...p, watched };
+}
+
+it('`upgrade` exits 1 on a bump the watch saw behave differently, and prints the evidence in words', () => {
+  const p = bumped([['source-map-js', '1.2.1'], ['chalk', '5.3.0']], [['source-map-js', '1.2.2'], ['chalk', '5.4.0']]);
+  const r = run(['upgrade', '--watched', p.watched], { env: withIndex(p.indexDir), cwd: p.root });
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /2 versions moved since HEAD/);
+  assert.match(r.out, /alarming\s+.*source-map-js.* 1\.2\.1 → 1\.2\.2/);
+  assert.match(r.out, /\+ exec\s+Function\("return 0"\)/);
+  assert.match(r.out, /1 upgrade compared, behaving the same as before/);
+  assert.match(r.out, /never "malicious"/);
+});
+
+it('`upgrade` exits 0 when every bump was compared and none changed — and when nothing moved at all', () => {
+  const same = bumped([['chalk', '5.3.0']], [['chalk', '5.4.0']]);
+  const r = run(['upgrade', '--watched', same.watched], { env: withIndex(same.indexDir), cwd: same.root });
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /nothing to stop for/);
+  const still = bumped([['chalk', '5.3.0']], [['chalk', '5.3.0']]);
+  const n = run(['upgrade', '--watched', still.watched], { env: withIndex(still.indexDir), cwd: still.root });
+  assert.equal(n.code, 0);
+  assert.match(n.out, /Nothing was upgraded/);
+});
+
+it('`upgrade` names a bump nobody compared as unknown: 0 by default, 2 with --fail-on-unknown', () => {
+  const p = bumped([['left-pad', '1.2.0']], [['left-pad', '1.3.0']]);
+  const r = run(['upgrade', '--watched', p.watched], { env: withIndex(p.indexDir), cwd: p.root });
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /1 upgrade nobody has compared/);
+  assert.match(r.out, /left-pad 1\.2\.0 → 1\.3\.0/);
+  assert.equal(run(['upgrade', '--watched', p.watched, '--fail-on-unknown'], { env: withIndex(p.indexDir), cwd: p.root }).code, 2);
+});
+
+it('`upgrade` with no watched releases to read still answers from the index, and says the watch was missing', () => {
+  const p = bumped([['picocolors', '1.1.0']], [['picocolors', '1.1.1']], [['picocolors', '1.1.0'], ['picocolors', '1.1.1', { env: ['NO_COLOR'] }]]);
+  const r = run(['upgrade', '--watched', path.join(p.root, 'absent.json')], { env: withIndex(p.indexDir), cwd: p.root });
+  assert.equal(r.code, 0, 'reading NO_COLOR failed a build');
+  assert.match(r.out, /no watched releases at/);
+  assert.match(r.out, /minor\s+.*picocolors/);
+  assert.match(r.out, /both versions in the index/);
+});
+
 console.log(`\n${passed} passed`);

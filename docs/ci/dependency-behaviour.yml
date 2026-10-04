@@ -46,6 +46,15 @@ jobs:
           node /tmp/stakeout/scripts/lockfile-run.js \
             --against "origin/${{ github.base_ref }}" --repo "$GITHUB_WORKSPACE" --dry-run
 
+      # What the upgrades DO, from what has already been watched. Runs nothing: each bumped version
+      # is looked up in the live watch (that exact pair, run old-against-new when it was published)
+      # and in the index. Fails on a release the rules call notable or alarming; a bump nobody has
+      # compared is named and passes. This step alone is worth having, and is safe on any trigger.
+      - name: What the upgrades change
+        run: |
+          node /tmp/stakeout/cli.js upgrade --against "origin/${{ github.base_ref }}" \
+            --index https://cassandra-nu.vercel.app/index.json
+
       # Answers already known are free; the strategy is part of the cache key.
       - name: Cache what we already know
         uses: actions/cache@v4

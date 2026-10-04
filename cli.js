@@ -34,7 +34,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Index } = require('./index/schema');
 const { open } = require('./index/published');
-const { lockfileOnDisk, installsOnLinux } = require('./lockfile');
+const { lockfileOnDisk, lockfileAtRevision, whatMoved, installsOnLinux } = require('./lockfile');
+const { bumpReport, readable } = require('./github/bump');
 const { buildLock, checkLock, writeLock, readLock, DEFAULT_FILE } = require('./lock');
 const { CHANNELS } = require('./index/schema');
 
@@ -238,6 +239,93 @@ async function cmdCheck({ flags }) {
   return EXIT.clean;
 }
 
+/* ── stakeout upgrade ───────────────────────────────────────────────────── */
+
+/*
+ * What a version bump DOES — the pull request a dependency bot opens, checked from a terminal.
+ *
+ * `check` asks whether a version that did not move still behaves as the lock records. This asks the
+ * other question: the lockfile on disk moved some versions since a commit (the branch you are about
+ * to merge into) — does each new release behave like the one it replaces? It runs nothing. The
+ * answer comes from the live watch (that exact pair, run old-against-new when the release was
+ * published) and, failing that, from two entries in the index.
+ *
+ * It is the GitHub App's answer without the App: one line in any CI, on any forge.
+ */
+async function openWatched(flags) {
+  const where = typeof flags.watched === 'string' ? flags.watched
+    : typeof flags.index === 'string' && /^https?:/.test(flags.index) ? new URL('watched-releases.json', flags.index).href
+      : path.join(__dirname, 'public', 'watched-releases.json');
+  try {
+    if (/^https?:/.test(where)) {
+      const res = await fetch(where, { signal: AbortSignal.timeout(20000) });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return { ledger: await res.json(), where };
+    }
+    return { ledger: JSON.parse(fs.readFileSync(where, 'utf8')), where };
+  } catch {
+    return { ledger: null, where };
+  }
+}
+
+async function cmdUpgrade({ flags }) {
+  const index = await openIndex(flags);
+  const against = typeof flags.against === 'string' ? flags.against : 'HEAD';
+  const file = flags.lockfile || 'package-lock.json';
+
+  let before;
+  let after;
+  try {
+    before = await lockfileAtRevision(against, file);
+    after = lockfileOnDisk(file);
+  } catch (e) {
+    die(e.message);
+  }
+  const { moved } = whatMoved(before, after);
+  const { ledger, where } = await openWatched(flags);
+
+  console.log(`\n  ${C.bold}stakeout upgrade${C.off} ${C.dim}· ${plural(moved.length, 'version')} moved since ${against}${ledger ? ` · ${ledger.count ?? '?'} watched release pairs` : ` · no watched releases at ${where}`}${C.off}`);
+  if (!moved.length) {
+    console.log(`\n  ${C.dim}Nothing was upgraded, so there is nothing to compare.${C.off}\n`);
+    return EXIT.clean;
+  }
+
+  const r = bumpReport(moved, { index, ledger });
+  const loud = r.changed.filter((c) => c.severity === 'alarming' || c.severity === 'notable');
+
+  for (const c of r.changed) {
+    const tone = c.severity === 'minor' ? C.amber : C.red;
+    console.log(`\n  ${tone}${c.severity}${C.off}  ${C.bold}${c.pkg}${C.off} ${c.from} → ${c.to}  ${C.dim}${(c.reasons || []).join('; ')}${C.off}`);
+    for (const [channel, g] of Object.entries(c.gained || {})) {
+      const where2 = channel.startsWith('install.') ? `at install, ${channel.slice(8)}` : channel;
+      for (const item of (g.added || []).slice(0, 8)) console.log(`      ${tone}+ ${where2.padEnd(5)} ${readable(item)}${C.off}`);
+      for (const item of (g.removed || []).slice(0, 4)) console.log(`      ${C.dim}- ${where2.padEnd(5)} ${readable(item)}${C.off}`);
+    }
+    if (c.explained) console.log(`      ${C.dim}${c.explained}${C.off}`);
+    console.log(`      ${C.dim}${c.source}${C.off}`);
+  }
+  if (r.same.length) {
+    console.log(`\n  ${C.green}${plural(r.same.length, 'upgrade')} compared, behaving the same as before${C.off}`);
+    console.log(`      ${C.dim}${r.same.slice(0, 8).map((x) => `${x.pkg} ${x.to}`).join(', ')}${r.same.length > 8 ? `, and ${r.same.length - 8} more` : ''}${C.off}`);
+  }
+  if (r.unknown.length) {
+    console.log(`\n  ${C.amber}${plural(r.unknown.length, 'upgrade')} nobody has compared${C.off}`);
+    console.log(`  ${C.dim}Not a pass and not a failure — an honest "I do not know".${C.off}`);
+    for (const u of r.unknown.slice(0, 8)) {
+      console.log(`      ${C.dim}${u.pkg} ${u.from} → ${u.to}${u.nearest ? ` — ${u.to} was watched against ${u.nearest.against}: ${u.nearest.severity}` : ''}${C.off}`);
+    }
+    if (r.unknown.length > 8) console.log(`      ${C.dim}… and ${r.unknown.length - 8} more${C.off}`);
+  }
+
+  if (loud.length) {
+    console.log(`\n  ${C.red}${plural(loud.length, 'upgrade')} to read before merging.${C.off} ${C.dim}That is what "alarming" means here — never "malicious".${C.off}\n`);
+    return EXIT.drift;
+  }
+  if (r.unknown.length && flags['fail-on-unknown']) { console.log(''); return EXIT.unknown; }
+  console.log(`\n  ${C.green}nothing to stop for${C.off}\n`);
+  return EXIT.clean;
+}
+
 /* ── stakeout explain ───────────────────────────────────────────────────── */
 
 async function cmdExplain({ flags, rest }) {
@@ -310,6 +398,7 @@ const USAGE = `
 
     stakeout lock                walk package-lock.json, write ${DEFAULT_FILE}
     stakeout check               diff the tree against the committed lock
+    stakeout upgrade             what the versions bumped since a commit now do differently
     stakeout explain <pkg>       what a package does, and who watched it
     stakeout index               what the index holds
 
@@ -320,6 +409,8 @@ const USAGE = `
     --dry-run                    \`lock\` prints what it would do
     --fail-on-unknown            \`check\` exits 2 when the index has gaps
     --index <url|path>           read a published index instead of a local one
+    --against <rev>              \`upgrade\` compares the lockfile with this commit's (default HEAD)
+    --watched <url|path>         \`upgrade\` reads watched release pairs from here
 
   ${C.dim}with no index of your own${C.off}
     stakeout lock --index https://cassandra-nu.vercel.app/index.json
@@ -329,7 +420,7 @@ const USAGE = `
   ${C.dim}exit codes: 0 clean · 1 drift · 2 unknown · 3 usage${C.off}
 `;
 
-const COMMANDS = { lock: cmdLock, check: cmdCheck, explain: cmdExplain, index: cmdIndex };
+const COMMANDS = { lock: cmdLock, check: cmdCheck, upgrade: cmdUpgrade, explain: cmdExplain, index: cmdIndex };
 
 async function main(argv) {
   const { flags, rest } = parseArgs(argv);
