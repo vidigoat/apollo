@@ -1182,7 +1182,7 @@ npm test
 ```
 
 ```
-40 suites · 513 checks
+40 suites · 516 checks
 all green
 ```
 

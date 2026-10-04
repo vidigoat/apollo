@@ -31,6 +31,28 @@ const readLines = (dir, f) => {
   return out;
 };
 
+const RANK = { alarming: 3, notable: 2, minor: 1 };
+const LIVE_WINDOW_MIN = 30;
+
+/**
+ * A plain reading of WHY a release moved — only where the record itself settles it.
+ *
+ * One case is mechanical: the release added a dependency (a publish signal, read from the registry)
+ * and the processes that newly ran at install are that dependency's own files. Then the new
+ * behaviour is the new dependency's install script, and saying so is arithmetic over two recorded
+ * facts. Anything else gets no sentence at all — an explanation the record does not carry would be
+ * a guess wearing the page's authority, and "alarming" already means *look*, not *malicious*.
+ */
+function explain(r) {
+  const added = (Array.isArray(r.signals) ? r.signals : [])
+    .filter((s) => s && s.signal === 'dependencies-added' && typeof s.detail === 'string')
+    .flatMap((s) => s.detail.split(/,\s*/)).map((d) => d.trim()).filter(Boolean);
+  if (!added.length) return null;
+  const procs = (r.gained?.['install.proc']?.added || []).map((x) => (typeof x === 'string' ? x : JSON.stringify(x)));
+  const dep = added.find((d) => procs.some((x) => x.includes(`node_modules/${d}`)));
+  return dep ? `${r.to} added a dependency on ${dep}, and what newly runs at install is ${dep}'s own install script.` : null;
+}
+
 /** Reduce the watcher's local record in `dir` to the small object the catch page reads. */
 function summarise(dir) {
   const results = readLines(dir, 'results.jsonl');
@@ -42,15 +64,30 @@ function summarise(dir) {
   const bySeverity = watched.reduce((t, r) => ((t[r.severity] = (t[r.severity] || 0) + 1), t), {});
   const notWatched = results.filter((r) => r.outcome !== 'watched').reduce((t, r) => ((t[r.outcome] = (t[r.outcome] || 0) + 1), t), {});
 
-  const times = watched.map((r) => r.minutesPublishToVerdict).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  /*
+   * "Minutes after publish" is a claim about the watcher WHILE IT IS RUNNING. When it has been down
+   * and resumes, it works through everything published in the gap — correctly, nothing is skipped —
+   * but those verdicts arrive days after publish, and folding them into one median would either
+   * flatter the tool (if left out silently) or bury what it does when it is up (if left in). So the
+   * two are counted apart and both are said: a release is "live" when the watcher first saw it
+   * within LIVE_WINDOW_MIN of its publish, and "caught up" otherwise.
+   */
+  const sawLive = (r) => {
+    const gap = (Date.parse(r.seenAt) - Date.parse(r.publishedAt)) / 60000;
+    return Number.isFinite(gap) ? gap <= LIVE_WINDOW_MIN : Number.isFinite(r.minutesPublishToVerdict) && r.minutesPublishToVerdict <= LIVE_WINDOW_MIN;
+  };
+  const live = watched.filter(sawLive);
+  const times = live.map((r) => r.minutesPublishToVerdict).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
   const median = times.length ? times[Math.floor(times.length / 2)] : null;
 
   // The releases that moved — behaviour changed from the previous version. The evidence a person reads.
+  // Most severe first: the one that says "look now" should not be third because nobody knows its
+  // download count. Downloads only order releases of the same severity.
   const moved = watched
     .filter((r) => r.severity && r.severity !== 'none')
-    .sort((a, b) => (b.weeklyDownloads || 0) - (a.weeklyDownloads || 0))
+    .sort((a, b) => (RANK[b.severity] || 0) - (RANK[a.severity] || 0) || (b.weeklyDownloads || 0) - (a.weeklyDownloads || 0))
     .slice(0, 50)
-    .map((r) => ({ pkg: r.pkg, from: r.from, to: r.to, severity: r.severity, reasons: r.reasons || [], gained: r.gained || {}, weeklyDownloads: r.weeklyDownloads ?? null, minutesToVerdict: r.minutesPublishToVerdict ?? null, signals: (r.signals || []).map((s) => s.signal) }));
+    .map((r) => ({ pkg: r.pkg, from: r.from, to: r.to, severity: r.severity, reasons: r.reasons || [], gained: r.gained || {}, weeklyDownloads: r.weeklyDownloads ?? null, minutesToVerdict: r.minutesPublishToVerdict ?? null, live: sawLive(r), signals: (r.signals || []).map((s) => s.signal), explained: explain(r) }));
 
   return {
     publishedAt: new Date().toISOString(),
@@ -63,6 +100,8 @@ function summarise(dir) {
     caught: moved.length,
     notWatched,
     medianMinutesToVerdict: median,
+    watchedLive: live.length,
+    caughtUp: watched.length - live.length,
     lookalikes: {
       found: lookalikes.length,
       // A brand-new package imitating a popular name, described from its metadata — never run.
@@ -81,4 +120,4 @@ if (require.main === module) {
     `${out.medianMinutesToVerdict != null ? `, median ${out.medianMinutesToVerdict} min to verdict` : ''}`);
 }
 
-module.exports = { summarise, readLines };
+module.exports = { summarise, readLines, explain };

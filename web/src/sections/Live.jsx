@@ -42,7 +42,10 @@ export default function Live() {
         The watcher follows npm's change feed and runs each new release of a package the index holds in a
         Nebius Sandbox, against the release before it — minutes after it is published.{' '}
         <b>{num(data.releasesWatched)}</b> releases watched{days != null ? ` over ${days === 0 ? 'today' : `${num(days)} day${days === 1 ? '' : 's'}`}` : ''},
-        {data.medianMinutesToVerdict != null ? <> a verdict a median of <b>{data.medianMinutesToVerdict} minutes</b> after each was published.</> : ' each with a verdict soon after it was published.'}
+        {data.medianMinutesToVerdict != null
+          ? <> {data.watchedLive != null ? <><b>{num(data.watchedLive)}</b> of them seen as they were published, with</> : null} a verdict a median of <b>{data.medianMinutesToVerdict} minutes</b> after publish.</>
+          : ' each with a verdict soon after it was published.'}
+        {data.caughtUp ? <> The other {num(data.caughtUp)} were published while the watcher was down, and watched when it came back — nothing in the gap was skipped.</> : null}
       </p>
 
       <div className="yours__panel">
@@ -65,7 +68,9 @@ export default function Live() {
                 <span>
                   <b>{r.pkg}</b> {r.from} → {r.to}
                   {r.weeklyDownloads ? <span className="yours__quiet"> · {num(r.weeklyDownloads)} downloads a week</span> : null}
-                  {r.minutesToVerdict != null ? <span className="yours__quiet"> · caught {r.minutesToVerdict} min after publish</span> : null}
+                  {r.minutesToVerdict != null
+                    ? <span className="yours__quiet"> · {r.live === false ? `watched on catching up, ${Math.round(r.minutesToVerdict / 1440)} days after publish` : `caught ${r.minutesToVerdict} min after publish`}</span>
+                    : null}
                   <br />
                   {Object.entries(r.gained || {}).map(([c, g]) => (
                     <span key={c} className="channel__gained">
@@ -75,6 +80,7 @@ export default function Live() {
                     </span>
                   ))}
                   {r.signals?.length ? <span className="yours__quiet">publish signals: {r.signals.join(', ')}</span> : null}
+                  {r.explained ? <><br /><span className="yours__quiet">what that is: {r.explained}</span></> : null}
                 </span>
               </div>
             ))}

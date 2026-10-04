@@ -13,6 +13,7 @@ import { tree, fleet, published, run, num } from './lib/api.js';
 
 const SECTIONS = [
   ['top', 'stakeout'],
+  ['live', 'npm, as it publishes'],
   ['yours', 'try it on yours'],
   ['releases', 'this week\'s releases'],
   ['run', 'the run'],
@@ -140,8 +141,9 @@ export default function App() {
           </div>
         )}
 
-        <Yours />
+        {/* The real registry first: what was watched as it published, before anything a visitor does. */}
         <Live />
+        <Yours />
         <Releases />
         <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />

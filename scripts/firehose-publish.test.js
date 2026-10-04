@@ -9,7 +9,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { summarise } = require('./firehose-publish');
+const { summarise, explain } = require('./firehose-publish');
 
 let passed = 0;
 const it = (name, fn) => { try { fn(); passed++; console.log('  ok  ', name); } catch (e) { console.error('  FAIL', name, '\n       ', e.message); process.exitCode = 1; } };
@@ -55,6 +55,39 @@ it('"not watched" is never counted as "watched", and shows up as its own outcome
   const out = summarise(dir);
   assert.equal(out.releasesWatched, 1);
   assert.deepEqual(out.notWatched, { 'not-installed': 1 });
+});
+
+it('the median is over releases seen as they published; ones caught up after downtime are counted apart', () => {
+  const dir = tmp();
+  const at = (m) => new Date(Date.parse('2026-10-01T00:00:00Z') + m * 60000).toISOString();
+  fs.writeFileSync(path.join(dir, 'results.jsonl'), [
+    { key: 'a@1→2', pkg: 'a', outcome: 'watched', severity: 'none', publishedAt: at(0), seenAt: at(1), minutesPublishToVerdict: 2 },
+    { key: 'b@1→2', pkg: 'b', outcome: 'watched', severity: 'none', publishedAt: at(0), seenAt: at(2), minutesPublishToVerdict: 4 },
+    { key: 'c@1→2', pkg: 'c', outcome: 'watched', severity: 'minor', publishedAt: at(0), seenAt: at(6000), minutesPublishToVerdict: 6001 },
+  ].map((r) => JSON.stringify(r)).join('\n') + '\n');
+  const out = summarise(dir);
+  assert.equal(out.medianMinutesToVerdict, 4, 'a release caught up days later was folded into the live median');
+  assert.equal(out.watchedLive, 2);
+  assert.equal(out.caughtUp, 1);
+  assert.equal(out.moved[0].live, false);
+});
+
+it('the most severe release leads, whatever its download count', () => {
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, 'results.jsonl'), [
+    { key: 'a@1→2', pkg: 'a', outcome: 'watched', severity: 'minor', weeklyDownloads: 9000000 },
+    { key: 'b@1→2', pkg: 'b', outcome: 'watched', severity: 'alarming', weeklyDownloads: null },
+  ].map((r) => JSON.stringify(r)).join('\n') + '\n');
+  assert.deepEqual(summarise(dir).moved.map((m) => m.pkg), ['b', 'a']);
+});
+
+it('a move is explained only when the record settles it: a new dependency whose own files newly run at install', () => {
+  const base = { to: '0.9.0', gained: { 'install.proc': { added: [JSON.stringify({ argv: ['node', '-e', 'require(process.argv[1])', '/twin/node_modules/koffi'] })] } } };
+  assert.match(explain({ ...base, signals: [{ signal: 'dependencies-added', detail: 'koffi' }] }), /dependency on koffi.*koffi's own install script/);
+  // The same processes with no dependency added, or a dependency that is not what ran: no sentence.
+  assert.equal(explain({ ...base, signals: [] }), null);
+  assert.equal(explain({ ...base, signals: [{ signal: 'dependencies-added', detail: 'left-pad' }] }), null);
+  assert.equal(explain({ to: '1', signals: null, gained: null }), null);
 });
 
 console.log(`\n${passed} passed`);
