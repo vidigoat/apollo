@@ -438,6 +438,49 @@ strategy, not of an observation, so the stored copy is now restated from the tab
 published index is read with the reader's table while any disagreement with the publisher's is
 printed rather than absorbed.
 
+## npm, watched as it publishes
+
+The index answers "what does this version do". The live watch answers the question a team actually
+has on a Tuesday: *a release came out an hour ago — is it the same package?* `scripts/firehose.js`
+follows npm's change feed and, for every new release of a package the index holds, forks two Nebius
+Sandboxes from one checkpoint, installs and imports the new release and the one before it, and
+diffs them — a verdict a median of **2.2 minutes** after publish for the
+releases it saw as they were published. As of 4 October it had watched **1,195** release
+pairs; **7** behaved differently, two of them `alarming` by the rules and both explained on
+reading: `@microsoft/mxc-sdk` 0.9.0 (a new native dependency whose install script builds through a
+shell) and `source-map-js` 1.2.2 — 137 million downloads a week — which began calling
+`Function("return 0")` at import. "Alarming" means *read this before merging*, never *malicious*,
+and the page says so. It also describes new packages whose names imitate popular ones, from their
+metadata alone; it never runs them.
+
+Three things are built on that record, none of which runs anything:
+
+- **the pull request** — the GitHub App, and `stakeout upgrade` for any other CI, compare the
+  lockfile with the base commit's and say, for each version a pull request bumps, whether the new
+  release behaves like the one it replaces;
+- **the page** — "watch two versions" answers a pair the watcher already ran from that record,
+  instantly;
+- **the report** — `npm run live:report` drafts what would be sent to npm about a catch, from the
+  recorded evidence only, and never sends it.
+
+The watcher was down for five days in the week before this was written and the page said so:
+releases are counted as *seen live* or *caught up afterwards*, and nothing published in the gap
+was skipped — it resumes from its saved position in the feed.
+
+## What an install script does when there is nothing to reach
+
+Most real npm malware acts at `npm install`, not at `require()`. `npm run install:proof` runs a
+package's own lifecycle scripts in a container with no network, a read-only root and no
+capabilities, under the same probe, and reads the result against rules narrow enough for a package
+with no "before": it read a credential, it ran a network tool or piped into a shell, or it put a
+planted decoy on the wire. Reaching for the network is reported apart and never called malicious
+on its own. On the synthetic corpus in this repository: 3 of 3 malicious samples strong (one only
+once interrogated), 0 of 3 benign. **It has not been run on a real malware corpus** — that needs a
+machine that can be thrown away, and the command refuses without one. The same rates on the real
+registry's most-used packages are printed beside the result, because a detection number means
+nothing without them: 403 of 7,506 run an install script, 25 read something credential-like, 31
+reach the network.
+
 ## What's next
 
 Kernel-level observation on real Sandboxes — the adapter is written and tested against a stub, and
