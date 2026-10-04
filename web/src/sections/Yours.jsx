@@ -24,7 +24,7 @@ const describe = (x) => (typeof x === 'string' ? x
   : x.host ? `${x.host}${x.port ? `:${x.port}` : ''}`
     : Array.isArray(x.argv) ? x.argv.join(' ')
       : x.path ? `${x.op || ''} ${x.path}`.trim()
-        : x.how ? String(x.how)
+        : x.how ? (x.sample ? `${x.how}(${JSON.stringify(String(x.sample).slice(0, 60))})` : String(x.how))
           : JSON.stringify(x));
 
 async function post(path, body) {
@@ -232,7 +232,7 @@ function Watch() {
       </form>
 
       <div className="yours__try">
-        {[['picocolors', '1.0.0', '1.1.1'], ['debug', '4.3.4', '4.4.0'], ['kleur', '4.1.4', '4.1.5']].map(([pkg, from, to]) => (
+        {[['source-map-js', '1.2.1', '1.2.2'], ['picocolors', '1.0.0', '1.1.1'], ['debug', '4.3.4', '4.4.0'], ['kleur', '4.1.4', '4.1.5']].map(([pkg, from, to]) => (
           <button key={pkg} type="button" className="yours__chip" onClick={() => { const b = { pkg, from, to }; setF(b); run(b); }}>{pkg} {from} → {to}</button>
         ))}
       </div>
@@ -250,6 +250,8 @@ function Watch() {
             <span className="finding__sev">{d.severity}</span>
           </div>
           <p className="yours__quiet">{d.summary} — {d.from}{d.seconds ? `, ${d.seconds}s` : ''}.</p>
+          {d.explained ? <p className="yours__quiet">What that is: {d.explained}</p> : null}
+          {d.onlyChanges ? <p className="yours__quiet">Shown below is what changed between the two. The watch keeps the difference, not each version's whole behaviour.</p> : null}
           <div className="finding__body">
             {[...Object.keys(CHANNEL_LABEL).map((c) => [c, c, d.before, d.after]),
               ...(d.before?.install && d.after?.install ? Object.keys(CHANNEL_LABEL).map((c) => [`install:${c}`, `install ${c}`, d.before.install, d.after.install]) : [])]

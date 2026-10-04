@@ -132,6 +132,28 @@ const LOCK = JSON.stringify({
     } finally { s.close(); }
   });
 
+  await it('a pair the live watcher already ran is answered from that record — nothing runs, and it says only changes are kept', async () => {
+    let ran = false;
+    const watched = { pairs: {
+      'source-map-js': { '1.2.1→1.2.2': { severity: 'alarming', reasons: ['builds and runs code that did not exist in the source (Function)'], gained: { exec: { added: ['{"how":"Function","sample":"return 0"}'], removed: [] }, 'install.proc': { added: ['{"argv":["sh","-c","node x.js"]}'], removed: [] } }, watchedAt: '2026-10-04T06:40:39.084Z' } },
+      chalk: { '5.3.0→5.4.0': { severity: 'none' } },
+    } };
+    const s = await serve((req, res) => watch(req, res, { adapter: { boot: async () => { ran = true; } }, skipLimits: true, watched, registry: async () => { ran = true; return { ok: true }; } }));
+    try {
+      const r = await (await post(`${s.url}/`, { pkg: 'source-map-js', from: '1.2.1', to: '1.2.2' })).json();
+      assert.match(r.from, /live watch/);
+      assert.equal(r.severity, 'alarming');
+      assert.equal(r.onlyChanges, true);
+      assert.deepEqual(r.after.exec, [{ how: 'Function', sample: 'return 0' }], 'the evidence did not come back as the page can draw it');
+      assert.deepEqual(r.after.install.proc, [{ argv: ['sh', '-c', 'node x.js'] }]);
+      assert.deepEqual(r.before.exec, []);
+      const same = await (await post(`${s.url}/`, { pkg: 'chalk', from: '5.3.0', to: '5.4.0' })).json();
+      assert.equal(same.severity, 'none');
+      assert.match(same.summary, /behaved the same/);
+      assert.equal(ran, false, 'a pair already on record was run or looked up again');
+    } finally { s.close(); }
+  });
+
   await it('a watched version that did not install is answered as not watched, never as "none"', async () => {
     const adapter = {
       supports: ['nodert'],

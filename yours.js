@@ -44,6 +44,16 @@ function index() {
   return published;
 }
 
+// Every release pair the live watcher has run, keyed pkg → "from→to". Read once; absent is fine.
+let watchedCache;
+function watchedPairs() {
+  if (watchedCache === undefined) {
+    try { watchedCache = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'watched-releases.json'), 'utf8')).pairs || null; }
+    catch { watchedCache = null; }
+  }
+  return watchedCache;
+}
+
 /** A body, read to a limit — refused in words when it is over, not by hanging up. */
 function body(req, limit) {
   return new Promise((resolve, reject) => {
@@ -286,6 +296,39 @@ async function watch(req, res, deps = {}) {
 
   const key = `${pkg}@${from}→${to}`;
   const { diff, summarise } = require('./differ/diff');
+
+  /*
+   * Already watched AS A PAIR — the strongest answer there is, and it costs nothing.
+   *
+   * The live watcher runs each new release against the one before it, from one checkpoint, as it
+   * is published, and firehose-publish writes every such pair to public/watched-releases.json. If
+   * this is one of them there is nothing to run and nothing to look up twice. The record keeps
+   * what CHANGED between the two, not each side's full behaviour, and the answer says so.
+   */
+  const seen = deps.watched !== undefined ? deps.watched?.pairs?.[pkg]?.[`${from}→${to}`] : watchedPairs()?.[pkg]?.[`${from}→${to}`];
+  if (seen && typeof seen.severity === 'string') {
+    const item = (x) => { if (typeof x === 'string' && x.startsWith('{')) { try { return JSON.parse(x); } catch { return x; } } return x; };
+    const side = (which) => {
+      const out = Object.fromEntries(CHANNELS.map((c) => [c, []]));
+      const inst = Object.fromEntries(CHANNELS.map((c) => [c, []]));
+      let hasInstall = false;
+      for (const [channel, g] of Object.entries(seen.gained || {})) {
+        const items = (Array.isArray(g?.[which]) ? g[which] : []).map(item);
+        if (channel.startsWith('install.')) { if (CHANNELS.includes(channel.slice(8))) { inst[channel.slice(8)] = items; hasInstall = true; } }
+        else if (CHANNELS.includes(channel)) out[channel] = items;
+      }
+      return hasInstall ? { ...out, install: inst } : out;
+    };
+    const reasons = Array.isArray(seen.reasons) ? seen.reasons : [];
+    return json(res, 200, {
+      key, pkg, versions: [from, to],
+      from: `the live watch — this exact pair was run, old against new, when ${to} was published; nothing run now`,
+      before: side('removed'), after: side('added'), onlyChanges: true,
+      severity: seen.severity,
+      summary: reasons.length ? `${pkg} ${from} → ${to}: ${reasons.join('; ')}` : `${pkg} ${from} → ${to}: behaved the same on every channel watched`,
+      reasons, explained: seen.explained || null, watchedAt: seen.watchedAt || null,
+    });
+  }
 
   // Already watched — by the index build, or by an earlier visitor on this instance. Free.
   const idx = index();
