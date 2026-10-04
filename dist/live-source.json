@@ -1,0 +1,6 @@
+{
+  "what": "Where the live watch's record is published between deploys. The watcher's machine pushes a summary here every few minutes (scripts/firehose-sync.js); the site and the server read it, and fall back to the copies bundled with the deploy if it cannot be reached or is older.",
+  "gist": "3bc632abac1b4ce85bde872ad497836c",
+  "liveWatch": "https://gist.githubusercontent.com/vidigoat/3bc632abac1b4ce85bde872ad497836c/raw/live-watch.json",
+  "watchedReleases": "https://gist.githubusercontent.com/vidigoat/3bc632abac1b4ce85bde872ad497836c/raw/watched-releases.json"
+}

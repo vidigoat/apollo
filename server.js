@@ -534,7 +534,8 @@ async function githubWebhook(req, res) {
         secret: process.env.GITHUB_WEBHOOK_SECRET,
         index: new Index(),
         // Every release pair the live watcher has run, old against new — what a bump is checked against.
-        ledger: (() => { try { return JSON.parse(fs.readFileSync(path.join(PUBLIC, 'watched-releases.json'), 'utf8')); } catch { return null; } })(),
+        // …as fresh as it can be had: the bundled copy, or a newer one the watcher has published since.
+        ledger: await require('./firehose/published').fresh(),
       }
     );
     return send(res, out.status, JSON.stringify(out.body), 'application/json');

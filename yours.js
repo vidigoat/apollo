@@ -44,15 +44,9 @@ function index() {
   return published;
 }
 
-// Every release pair the live watcher has run, keyed pkg → "from→to". Read once; absent is fine.
-let watchedCache;
-function watchedPairs() {
-  if (watchedCache === undefined) {
-    try { watchedCache = JSON.parse(fs.readFileSync(path.join(__dirname, 'public', 'watched-releases.json'), 'utf8')).pairs || null; }
-    catch { watchedCache = null; }
-  }
-  return watchedCache;
-}
+// Every release pair the live watcher has run — the bundled copy, or a newer one it has published
+// since the deploy (firehose/published.js).
+const watchedLedger = require('./firehose/published');
 
 /** A body, read to a limit — refused in words when it is over, not by hanging up. */
 function body(req, limit) {
@@ -305,7 +299,9 @@ async function watch(req, res, deps = {}) {
    * this is one of them there is nothing to run and nothing to look up twice. The record keeps
    * what CHANGED between the two, not each side's full behaviour, and the answer says so.
    */
-  const seen = deps.watched !== undefined ? deps.watched?.pairs?.[pkg]?.[`${from}→${to}`] : watchedPairs()?.[pkg]?.[`${from}→${to}`];
+  const ledger = deps.watched !== undefined ? deps.watched : await watchedLedger.fresh();
+  const ofPkg = ledger?.pairs && Object.prototype.hasOwnProperty.call(ledger.pairs, pkg) ? ledger.pairs[pkg] : null;
+  const seen = ofPkg && Object.prototype.hasOwnProperty.call(ofPkg, `${from}→${to}`) ? ofPkg[`${from}→${to}`] : null;
   if (seen && typeof seen.severity === 'string') {
     const item = (x) => { if (typeof x === 'string' && x.startsWith('{')) { try { return JSON.parse(x); } catch { return x; } } return x; };
     const side = (which) => {

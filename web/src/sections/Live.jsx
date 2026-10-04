@@ -26,7 +26,20 @@ const daysSince = (iso) => (iso ? Math.max(0, Math.round((Date.now() - new Date(
 export default function Live() {
   const [data, setData] = useState(null);
   useEffect(() => {
-    fetch('/live-watch.json').then((r) => (r.ok ? r.json() : null)).then(setData).catch(() => setData(null));
+    /*
+     * Two copies, and the newer one wins. The one bundled with the site is as old as the last
+     * deploy; the watcher's machine also publishes the same summary where it can update it on its
+     * own (live-source.json says where). Whichever was written later is shown, with the time it
+     * was written — so a watcher that has stopped shows as an old timestamp, never as a fresh page.
+     */
+    const get = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    let alive = true;
+    get('/live-watch.json').then((bundled) => { if (alive && bundled) setData((d) => d || bundled); });
+    get('/live-source.json').then((src) => (src?.liveWatch ? get(src.liveWatch) : null)).then((remote) => {
+      if (!alive || !remote || typeof remote.releasesWatched !== 'number') return;
+      setData((d) => (!d || Date.parse(remote.publishedAt) > Date.parse(d.publishedAt) ? remote : d));
+    });
+    return () => { alive = false; };
   }, []);
   if (!data) return null;
 
@@ -45,6 +58,7 @@ export default function Live() {
         {data.medianMinutesToVerdict != null
           ? <> {data.watchedLive != null ? <><b>{num(data.watchedLive)}</b> of them seen as they were published, with</> : null} a verdict a median of <b>{data.medianMinutesToVerdict} minutes</b> after publish.</>
           : ' each with a verdict soon after it was published.'}
+        {data.publishedAt ? <> <span className="yours__quiet">As of {new Date(data.publishedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}.</span></> : null}
         {data.caughtUp ? <> The other {num(data.caughtUp)} were published while the watcher was down, and watched when it came back — nothing in the gap was skipped.</> : null}
       </p>
 
