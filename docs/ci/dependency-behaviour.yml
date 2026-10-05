@@ -60,7 +60,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/apollo
-          key: stakeout-behaviour-${{ runner.os }}
+          key: apollo-behaviour-${{ runner.os }}
 
       - name: What those changes do
         env:

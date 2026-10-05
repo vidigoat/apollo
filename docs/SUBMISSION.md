@@ -394,7 +394,7 @@ or alarming fails the check with the evidence on the pull request; one that star
 "the same". `npm run check-run` shows it on a real release: source-map-js 1.2.1 → 1.2.2, 137 million
 downloads a week, which the watcher saw start calling `Function("return 0")` at import.
 
-**Registered** as [`stakeout-behaviour`](https://github.com/apps/stakeout-behaviour) — pull-request
+**Registered** as [`apollo-behaviour`](https://github.com/apps/apollo-behaviour) — pull-request
 events, `checks: write`, `contents: read`. GitHub has no REST endpoint for creating an App, so
 `node scripts/register-app.js` drove the manifest flow: one human press on GitHub's own page, and
 the app id, private key and webhook secret went to `.env` and to the live deployment. It is **not

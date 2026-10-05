@@ -57,7 +57,7 @@ const ROOT = path.join(__dirname, '..');
 
 /** One place the app is described, so the install screen and the README cannot disagree. */
 const manifest = {
-  name: arg('name', 'stakeout-behaviour'),
+  name: arg('name', 'apollo-behaviour'),
   url: 'https://github.com/vidigoat/apollo',
   hook_attributes: { url: WEBHOOK, active: true },
   redirect_url: `${HOME}/created`,
