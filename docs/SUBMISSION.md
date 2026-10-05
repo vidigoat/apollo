@@ -445,11 +445,12 @@ has on a Tuesday: *a release came out an hour ago — is it the same package?* `
 follows npm's change feed and, for every new release of a package the index holds, forks two Nebius
 Sandboxes from one checkpoint, installs and imports the new release and the one before it, and
 diffs them — a verdict a median of **2.2 minutes** after publish for the
-releases it saw as they were published. As of 4 October it had watched **1,195** release
-pairs; **7** behaved differently, two of them `alarming` by the rules and both explained on
+releases it saw as they were published. As of 5 October it had watched **1,285** release
+pairs; **10** behaved differently, four of them `alarming` by the rules and every one explained on
 reading: `@microsoft/mxc-sdk` 0.9.0 (a new native dependency whose install script builds through a
-shell) and `source-map-js` 1.2.2 — 137 million downloads a week — which began calling
-`Function("return 0")` at import. "Alarming" means *read this before merging*, never *malicious*,
+shell), `source-map-js` 1.2.2 — 137 million downloads a week — which began calling
+`Function("return 0")` at import, and `@wdio/runner` and `@wdio/local-runner` 10.0.0, whose new
+install-time shell is esbuild's own install script, which 9.32.0 never ran. "Alarming" means *read this before merging*, never *malicious*,
 and the page says so. It also describes new packages whose names imitate popular ones, from their
 metadata alone; it never runs them.
 
