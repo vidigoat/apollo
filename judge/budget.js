@@ -25,8 +25,8 @@ const path = require('node:path');
 const DEFAULT_CEILING_USD = 0.25;
 
 const LEDGER =
-  process.env.STAKEOUT_LEDGER ||
-  path.join(process.env.XDG_STATE_HOME || path.join(os.homedir(), '.local', 'state'), 'stakeout', 'spend.json');
+  process.env.APOLLO_LEDGER ||
+  path.join(process.env.XDG_STATE_HOME || path.join(os.homedir(), '.local', 'state'), 'apollo', 'spend.json');
 
 /**
  * The most a single call could cost, before it is made.
@@ -42,7 +42,7 @@ function worstCase({ rate, maxTokens = 400, promptChars = 4000 }) {
 }
 
 class Budget {
-  constructor({ ceiling = Number(process.env.STAKEOUT_BUDGET_USD) || DEFAULT_CEILING_USD, file = LEDGER } = {}) {
+  constructor({ ceiling = Number(process.env.APOLLO_BUDGET_USD) || DEFAULT_CEILING_USD, file = LEDGER } = {}) {
     this.ceiling = ceiling;
     this.file = file;
   }
@@ -83,7 +83,7 @@ class Budget {
       throw new Error(
         `Budget stop: ${label} could cost up to $${could.toFixed(6)}, and $${spent.toFixed(4)} of ` +
           `the $${this.ceiling.toFixed(2)} ceiling is already spent.\n` +
-          `  Nothing was called. Raise it deliberately with STAKEOUT_BUDGET_USD=<amount>, or reset ` +
+          `  Nothing was called. Raise it deliberately with APOLLO_BUDGET_USD=<amount>, or reset ` +
           `the ledger at ${this.file}.`
       );
     }

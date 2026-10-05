@@ -12,7 +12,7 @@ Capture at **1440×900**, in a window with no browser chrome if possible (Chrome
 
 | File | What to capture |
 |---|---|
-| `hero-wall.png` | Press **Run the stakeout**, let it finish, then scroll to *What changed* so the frame is mostly grey identical rows with one red-bordered row entering at the bottom. This is the whole argument in one frame: the emptiness is the subject, the finding is the intrusion. |
+| `hero-wall.png` | Press **Run the watch**, let it finish, then scroll to *What changed* so the frame is mostly grey identical rows with one red-bordered row entering at the bottom. This is the whole argument in one frame: the emptiness is the subject, the finding is the intrusion. |
 | `wall-silence.png` | Same section, scrolled so **nothing but quiet rows** is visible — no colour at all. It should look almost like a mistake. That is the point. |
 | `catch-panel.png` | The *The one that matters* section, full panel: severity pill, the two reasons, the red transcript block, what the open web says, and the model chain ending in "two models, independently, read this as credential exfiltration". |
 | `fork-strip.png` | Press **Run** and capture **mid-run**, while hairlines are still amber and filling left to right. Shoot the strip plus the status line underneath. |

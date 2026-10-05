@@ -24,7 +24,7 @@ exactly what the models said rather than taking a screenshot's word for it.
 
 ## What the hosted version deliberately cannot do
 
-`/api/real` — running actual npm packages — stays behind `STAKEOUT_ALLOW_LOCAL`, which is never set
+`/api/real` — running actual npm packages — stays behind `APOLLO_ALLOW_LOCAL`, which is never set
 here, and returns a 403 explaining why. Executing strangers' packages on shared infrastructure would
 be the precise thing this project warns about, performed by this project.
 
@@ -55,7 +55,7 @@ curl -s https://<your-url>/api/run | head -c 200     # should return the run, no
 
 Then put the URL in the Devpost submission, and in `docs/SUBMISSION.md` next to the demo-URL row.
 
-## Stakeout Live, always on — Nebius Serverless Jobs
+## Apollo Live, always on — Nebius Serverless Jobs
 
 The npm watcher (`scripts/firehose.js`) runs until the deadline as a chain of week-long Serverless
 Jobs. A job's disk dies with it, so the watch's state is mirrored to Nebius Object Storage

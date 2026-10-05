@@ -1,4 +1,4 @@
-/* STAKEOUT — zero-dependency dev server. node server.js -> http://localhost:8791 */
+/* APOLLO — zero-dependency dev server. node server.js -> http://localhost:8791 */
 const http = require('http');
 require('./env').loadEnv();
 const { sandboxCost } = require('./pricing');
@@ -27,7 +27,7 @@ const PORT = Number(process.env.PORT) || 8791;
  * Resolved from this file, so it is correct whether started with `npm start` from the repository
  * root or imported by a host that runs from somewhere else entirely.
  *
- * The site has its own dependencies and its own package.json, in `web/`. `stakeout` itself still
+ * The site has its own dependencies and its own package.json, in `web/`. `apollo` itself still
  * has none and still needs no build step — that is a claim this project makes in its README, and a
  * website is not a reason to stop keeping it.
  */
@@ -64,7 +64,7 @@ const publicRecordFor = (pkg, version) => lookUp(pkg, version, { recorded: PUBLI
  */
 const REAL_JOBS = require('./scripts/survey-pairs').PAIRS;
 
-const realAllowed = () => process.env.STAKEOUT_ALLOW_LOCAL === '1';
+const realAllowed = () => process.env.APOLLO_ALLOW_LOCAL === '1';
 
 /**
  * The same pipeline, against the real registry, on this machine.
@@ -148,7 +148,7 @@ async function realRun() {
  * serverless deployment, rather than there being a second, subtly different copy for hosting —
  * which is how a demo URL ends up showing something the repository does not do.
  *
- * The live-registry route stays off in both unless STAKEOUT_ALLOW_LOCAL is set, and says so. A
+ * The live-registry route stays off in both unless APOLLO_ALLOW_LOCAL is set, and says so. A
  * hosted deployment must not run strangers' packages on someone else's machine.
  */
 function handler(req, res) {
@@ -271,7 +271,7 @@ function handler(req, res) {
     if (url.pathname === '/api/real') {
       if (!realAllowed()) {
         return send(res, 403, JSON.stringify({
-          error: 'Live runs are off. Start the server with STAKEOUT_ALLOW_LOCAL=1 — and read ' +
+          error: 'Live runs are off. Start the server with APOLLO_ALLOW_LOCAL=1 — and read ' +
                  'adapters/local.js first: these packages run as you, with your network and your files.',
         }), 'application/json');
       }
@@ -554,5 +554,5 @@ module.exports.handler = handler;
 
 // Only listen when run directly. Imported — by a host, or by server.test.js — it is just a function.
 if (require.main === module) {
-  http.createServer(handler).listen(PORT, () => console.log(`stakeout  http://localhost:${PORT}`));
+  http.createServer(handler).listen(PORT, () => console.log(`apollo  http://localhost:${PORT}`));
 }

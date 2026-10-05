@@ -172,7 +172,7 @@ async function sandboxes() {
 }
 
 (async () => {
-  console.log(`${C.bold}STAKEOUT preflight${C.off}  ${C.dim}— the assumptions that only a real key can check${C.off}`);
+  console.log(`${C.bold}APOLLO preflight${C.off}  ${C.dim}— the assumptions that only a real key can check${C.off}`);
   await nebius();
   await tavily();
   await sandboxes();

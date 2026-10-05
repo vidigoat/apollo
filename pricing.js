@@ -18,7 +18,7 @@
  * solid. A reader has no way to tell a measured number from an invented one unless the code says
  * which it is, and a made-up cost sitting beside a real one quietly borrows its credibility.
  *
- * If you have real pricing, set STAKEOUT_SANDBOX_USD and the label stops saying "est.".
+ * If you have real pricing, set APOLLO_SANDBOX_USD and the label stops saying "est.".
  */
 
 /**
@@ -31,10 +31,10 @@
 const ESTIMATED_SANDBOX_USD = 0.0146;
 
 /** True once somebody supplies a real price, which is the only thing that removes the caveat. */
-const sandboxPriceIsKnown = () => Number.isFinite(Number(process.env.STAKEOUT_SANDBOX_USD));
+const sandboxPriceIsKnown = () => Number.isFinite(Number(process.env.APOLLO_SANDBOX_USD));
 
 const sandboxUnitPrice = () =>
-  sandboxPriceIsKnown() ? Number(process.env.STAKEOUT_SANDBOX_USD) : ESTIMATED_SANDBOX_USD;
+  sandboxPriceIsKnown() ? Number(process.env.APOLLO_SANDBOX_USD) : ESTIMATED_SANDBOX_USD;
 
 /**
  * @returns {{usd:number, estimated:boolean, label:string}}

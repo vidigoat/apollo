@@ -94,17 +94,17 @@ it('watches what an install script does — and leaves out npm itself', () => {
   const inst = path.join(ROOT, 'fixture-install');
   fs.mkdirSync(pkg, { recursive: true });
   fs.mkdirSync(twin, { recursive: true });
-  fs.writeFileSync(path.join(pkg, 'package.json'), JSON.stringify({ name: 'stakeout-fixture', version: '1.0.0', main: 'index.js', scripts: { postinstall: 'node post.js' } }));
+  fs.writeFileSync(path.join(pkg, 'package.json'), JSON.stringify({ name: 'apollo-fixture', version: '1.0.0', main: 'index.js', scripts: { postinstall: 'node post.js' } }));
   fs.writeFileSync(path.join(pkg, 'index.js'), 'module.exports = 1;');
   fs.writeFileSync(path.join(pkg, 'post.js'), "process.env.NPM_TOKEN; require('node:net').connect(59996, '127.0.0.1').on('error', () => {}); require('node:child_process').spawnSync('sh', ['-c', 'true']);");
   fs.writeFileSync(path.join(twin, 'package.json'), '{"name":"twin","version":"1.0.0"}');
   execFileSync('npm', ['install', pkg, '--no-audit', '--no-fund', '--loglevel=error', '--offline'], {
     cwd: twin, stdio: 'pipe', timeout: 60_000,
-    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, STAKEOUT_INSTALL_DIR: inst, STAKEOUT_NPM_ROOT: npmRoot() },
+    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, APOLLO_INSTALL_DIR: inst, APOLLO_NPM_ROOT: npmRoot() },
   });
   const out = path.join(ROOT, 'fixture.json');
   const runner = path.join(twin, 'run.js');
-  fs.writeFileSync(runner, runnerSource('stakeout-fixture', out, require.resolve('./probe'), inst));
+  fs.writeFileSync(runner, runnerSource('apollo-fixture', out, require.resolve('./probe'), inst));
   execFileSync(process.execPath, [runner], { cwd: twin, stdio: 'pipe', timeout: 20_000 });
   const r = readReport(out);
   assert.ok(r.install, 'the install phase was not reported');
@@ -132,7 +132,7 @@ it('an install script cannot pass for npm by calling itself npm-cli.js', () => {
   fs.writeFileSync(path.join(twin, 'package.json'), '{"name":"twin","version":"1.0.0"}');
   execFileSync('npm', ['install', pkg, '--no-audit', '--no-fund', '--loglevel=error', '--offline'], {
     cwd: twin, stdio: 'pipe', timeout: 60_000,
-    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, STAKEOUT_INSTALL_DIR: inst, STAKEOUT_NPM_ROOT: npmRoot() },
+    env: { ...process.env, NODE_OPTIONS: `--require ${require.resolve('./probe')}`, APOLLO_INSTALL_DIR: inst, APOLLO_NPM_ROOT: npmRoot() },
   });
   const out = path.join(ROOT, 'disguise.json');
   const runner = path.join(twin, 'run.js');
@@ -277,12 +277,12 @@ it('a read Node makes while loading the package is Node\'s, not the package\'s',
   // A file with a source map makes Node read NODE_V8_COVERAGE (maybeCacheSourceMap); util.debuglog
   // makes it read NODE_DEBUG. Neither is the package asking — only the direct read below is.
   const r = watch('runtime-reads', [
-    "require('node:util').debuglog('stakeout-test')('x');",
-    'process.env.STAKEOUT_DIRECT_READ;',
+    "require('node:util').debuglog('apollo-test')('x');",
+    'process.env.APOLLO_DIRECT_READ;',
     'module.exports = 1;',
     '//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbXSwibWFwcGluZ3MiOiIifQ==',
   ].join('\n'));
-  assert.ok(r.env.includes('STAKEOUT_DIRECT_READ'), `a direct read was missed: ${JSON.stringify(r.env)}`);
+  assert.ok(r.env.includes('APOLLO_DIRECT_READ'), `a direct read was missed: ${JSON.stringify(r.env)}`);
   assert.ok(!r.env.includes('NODE_V8_COVERAGE'), `Node's source-map read was credited to the package: ${JSON.stringify(r.env)}`);
   assert.ok(!r.env.includes('NODE_DEBUG'), `Node's debuglog read was credited to the package: ${JSON.stringify(r.env)}`);
 });
@@ -296,7 +296,7 @@ it('contained mode records a connection and a decoy on the wire, and never forwa
     `req.on('error', () => {});`,
     `req.end('stolen=' + process.env.LOOT);`,
     `module.exports = 1;`,
-  ].join('\n'), { STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: 'DECOY-MARK', LOOT: 'DECOY-MARK-secret' });
+  ].join('\n'), { APOLLO_CONTAINED: '1', APOLLO_CANARY: 'DECOY-MARK', LOOT: 'DECOY-MARK-secret' });
   assert.ok(r, 'no report');
   assert.equal(r.contained, true);
   assert.ok(r.net.some((n) => n && n.host === '127.0.0.1'), 'the connection attempt was not recorded');
@@ -329,7 +329,7 @@ it('contained mode really blocks egress: a live listener gets nothing', () => {
       req.end('loot=EGRESS-CANARY');
       setTimeout(() => { server.close(); console.log(JSON.stringify({ hits, net: probe.seen.net, contained: probe.seen.contained })); process.exit(0); }, 250);
     });`;
-  const out = execFileSync(process.execPath, ['-e', child], { encoding: 'utf8', env: { ...process.env, STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: 'EGRESS-CANARY' }, timeout: 10000 });
+  const out = execFileSync(process.execPath, ['-e', child], { encoding: 'utf8', env: { ...process.env, APOLLO_CONTAINED: '1', APOLLO_CANARY: 'EGRESS-CANARY' }, timeout: 10000 });
   const r = JSON.parse(out.trim().split('\n').pop());
   assert.equal(r.hits, 0, 'a contained run reached the listener — a byte left the box');
   assert.equal(r.contained, true);

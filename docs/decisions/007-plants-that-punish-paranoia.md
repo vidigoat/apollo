@@ -4,7 +4,7 @@
 
 ## The decision
 
-Four packages are planted in the corpus, and only two of them are things Stakeout should catch.
+Four packages are planted in the corpus, and only two of them are things Apollo should catch.
 
 - **PLANTED-1** `express-fileupload@2.1.1` — credential read plus exfiltration at import time.
   *Should be caught.*

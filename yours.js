@@ -11,7 +11,7 @@
  *
  * ── /api/lockfile ────────────────────────────────────────────────────────────
  *
- * Runs nothing. It is `stakeout lock` in a browser: every package-version in the tree resolved
+ * Runs nothing. It is `apollo lock` in a browser: every package-version in the tree resolved
  * against `public/index.json`, and the answer split into what is known — with what those packages
  * actually do when imported — and what nobody has watched, which is reported by name and never
  * as clean. Every package whose lockfile entry says it runs an install script is named, with what

@@ -113,13 +113,13 @@ async function handle(req, env, wired = {}) {
   }
 
   /*
-   * The repository's own stakeout.lock if it keeps one, and an empty lock if it does not.
+   * The repository's own apollo.lock if it keeps one, and an empty lock if it does not.
    *
    * With no lock there is nothing to have drifted FROM, so every observed package comes back as
    * "added" and the check reports what the index knows rather than a comparison. That is the right
    * first experience: install the app, open a PR, and see how much of your tree is already known.
    */
-  const lockPath = which.replace(/package-lock\.json$/, 'stakeout.lock');
+  const lockPath = which.replace(/package-lock\.json$/, 'apollo.lock');
   const lockText = await getFile({ token, owner, repo, path: lockPath, ref: sha });
 
   let lock = { packages: {} };

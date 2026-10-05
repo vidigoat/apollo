@@ -71,7 +71,7 @@ starting state. The two behaviours were diffed. ${r.to} did the following that $
 ${ev.length ? ev.join('\n') : '  (no channel-level change recorded)'}
 ${sigs.length ? `\nSignals from the publish metadata itself:\n${sigs.join('\n')}\n` : ''}
 How to reproduce
-  git clone https://github.com/vidigoat/cassandra && cd cassandra
+  git clone https://github.com/vidigoat/apollo && cd cassandra
   node scripts/release-watch.js --rewatch "${r.pkg}@${r.from}→${r.to}"
 
 This is a behavioural difference, observed by running the package, not a judgement of intent. It is
@@ -97,7 +97,7 @@ host — caught on the wire, and blocked (contained), so nothing left the sandbo
   - env: NPM_TOKEN
 
 How to reproduce
-  git clone https://github.com/vidigoat/cassandra && cd cassandra
+  git clone https://github.com/vidigoat/apollo && cd cassandra
   npm run interrogate -- --demo
 
 A real report would name the real package and versions, and carry the same kind of evidence, quoted

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * A screen recording of the stakeout running on the site — real footage for the video.
+ * A screen recording of Apollo running on the site — real footage for the video.
  *
- *   node scripts/record-run.js [https://cassandra-nu.vercel.app]
+ *   node scripts/record-run.js [https://apollo-watch.vercel.app]
  *
- * Presses the same buttons a person would: runs the stakeout watched with ebpf, opens the finding,
+ * Presses the same buttons a person would: runs the watch with ebpf, opens the finding,
  * then switches what was watching to nodert — the shot where the same tree is re-judged by a
  * strategy that sees a string become a function, which a kernel tracer never does. Nothing is
  * retaken. The run on the site is the bundled corpus, labelled as planted on the page itself.
@@ -20,7 +20,7 @@ try {
 const fs = require('node:fs');
 const path = require('node:path');
 
-const BASE = process.argv[2] || 'https://cassandra-nu.vercel.app';
+const BASE = process.argv[2] || 'https://apollo-watch.vercel.app';
 const OUT = path.join(__dirname, '..', 'docs', 'media');
 
 (async () => {
@@ -29,7 +29,7 @@ const OUT = path.join(__dirname, '..', 'docs', 'media');
   const p = await ctx.newPage();
   await p.goto(BASE, { waitUntil: 'networkidle' });
   await p.waitForTimeout(3500); // the hero, long enough to read
-  const run = p.getByRole('button', { name: /Run the stakeout/i });
+  const run = p.getByRole('button', { name: /Run the watch/i });
   await run.scrollIntoViewIfNeeded();
   await p.evaluate(() => window.scrollBy(0, -120));
   await p.waitForTimeout(1500);

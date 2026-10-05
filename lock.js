@@ -1,8 +1,8 @@
 /**
- * `stakeout.lock` — a behavioural lockfile.
+ * `apollo.lock` — a behavioural lockfile.
  *
  *   package-lock.json   pins   express@4.18.3                          a VERSION
- *   stakeout.lock       pins   express@4.18.3 reads no environment
+ *   apollo.lock       pins   express@4.18.3 reads no environment
  *                              variable, opens no socket, spawns
  *                              nothing, writes only inside node_modules  a BEHAVIOUR
  *
@@ -38,7 +38,7 @@ const path = require('node:path');
 const { CHANNELS } = require('./index/schema');
 
 const LOCK_VERSION = 1;
-const DEFAULT_FILE = 'stakeout.lock';
+const DEFAULT_FILE = 'apollo.lock';
 
 /** Deep-sorted so two runs over the same facts produce byte-identical files. */
 function stable(value) {
@@ -184,13 +184,13 @@ function readLock(file = DEFAULT_FILE) {
   try {
     text = fs.readFileSync(abs, 'utf8');
   } catch {
-    return null; // no lock is a state, not an error: it means `stakeout lock` has not been run
+    return null; // no lock is a state, not an error: it means `apollo lock` has not been run
   }
   const parsed = JSON.parse(text);
   if (parsed.lockfileVersion !== LOCK_VERSION) {
     throw new Error(
       `${file} was written by lockfile version ${parsed.lockfileVersion}; this is version ` +
-        `${LOCK_VERSION}. Re-run \`stakeout lock\` rather than trusting a format this does not know.`
+        `${LOCK_VERSION}. Re-run \`apollo lock\` rather than trusting a format this does not know.`
     );
   }
   return parsed;

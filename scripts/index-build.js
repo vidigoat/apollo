@@ -2,11 +2,11 @@
 /**
  * Build the behavioural index.
  *
- *   STAKEOUT_ALLOW_LOCAL=1 node scripts/index-build.js --limit 20
+ *   APOLLO_ALLOW_LOCAL=1 node scripts/index-build.js --limit 20
  *   node scripts/index-build.js --from-survey        # seed from pairs already surveyed
  *
  * This is the thing that makes every other surface possible. Run a package ONCE, here, and
- * `stakeout lock` in somebody else's repository becomes a lookup rather than a sandbox run. The
+ * `apollo lock` in somebody else's repository becomes a lookup rather than a sandbox run. The
  * expensive work happens in one place and the answer is reusable by everyone — which is the only
  * definition of "scale" that means anything for this project.
  *
@@ -27,7 +27,7 @@
  * ── Safety ──────────────────────────────────────────────────────────────────
  *
  * Running strangers' packages executes their install scripts as you. `adapters/local.js` refuses
- * without `STAKEOUT_ALLOW_LOCAL=1` for exactly that reason, and that refusal is deliberate: this
+ * without `APOLLO_ALLOW_LOCAL=1` for exactly that reason, and that refusal is deliberate: this
  * project's whole subject is packages doing things you did not expect.
  */
 
@@ -221,7 +221,7 @@ module.exports = { work };
 
 /*
  * Guarded, because requiring this file used to start a build. A test that imports it would have
- * hit the STAKEOUT_ALLOW_LOCAL refusal and exited the whole test process — which is why nothing
+ * hit the APOLLO_ALLOW_LOCAL refusal and exited the whole test process — which is why nothing
  * here was tested until now.
  */
 if (require.main !== module) return;
@@ -244,13 +244,13 @@ if (require.main !== module) return;
     const { ConTreeSandboxes } = require('../adapters/contree');
     adapter = new ConTreeSandboxes({ image: 'docker.io/library/node:22-slim' });
   } else adapter = new LocalMachines();
-  const observedOn = simulated ? null : onNebius ? 'nebius-token-factory-sandboxes' : (process.env.STAKEOUT_OBSERVED_ON || 'local');
+  const observedOn = simulated ? null : onNebius ? 'nebius-token-factory-sandboxes' : (process.env.APOLLO_OBSERVED_ON || 'local');
   const concurrency = Math.max(1, Math.min(48, Number(flags.concurrency) || (onNebius ? 16 : 1)));
 
-  if (!simulated && !onNebius && process.env.STAKEOUT_ALLOW_LOCAL !== '1') {
+  if (!simulated && !onNebius && process.env.APOLLO_ALLOW_LOCAL !== '1') {
     console.error(`\n  ${C.red}Refusing to run.${C.off}`);
     console.error(`  ${C.dim}Building the index installs and imports real packages from the real registry,`);
-    console.error(`  as you, with your network and your files. Set STAKEOUT_ALLOW_LOCAL=1 if that is`);
+    console.error(`  as you, with your network and your files. Set APOLLO_ALLOW_LOCAL=1 if that is`);
     console.error(`  what you meant — and read adapters/local.js first.`);
     console.error(`  Or pass --simulated to exercise the pipeline without running anything.${C.off}\n`);
     process.exit(3);
@@ -311,7 +311,7 @@ if (require.main !== module) return;
     } catch (e) {
       failed++;
       // One package that will not install must never end the run. It is recorded as absent, which
-      // is honest, and `stakeout check` reports absent as "unknown" rather than as clean.
+      // is honest, and `apollo check` reports absent as "unknown" rather than as clean.
       console.log(`  ${C.red}fail ${C.off} ${label} ${C.dim}${String(e.message).split('\n')[0].slice(0, 140)}${C.off}`);
     }
 
@@ -336,7 +336,7 @@ if (require.main !== module) return;
   console.log(`  ${C.dim}strategies: ${manifest.strategies.join(', ')} · revision ${manifest.revision}${C.off}\n`);
 
   if (failed) {
-    console.log(`  ${C.dim}Failures are absent from the index, not recorded as quiet. \`stakeout check\``);
+    console.log(`  ${C.dim}Failures are absent from the index, not recorded as quiet. \`apollo check\``);
     console.log(`  reports them as "unknown", which is the honest answer.${C.off}\n`);
   }
 })();

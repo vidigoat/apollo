@@ -1,5 +1,5 @@
 {
-  "name": "stakeout",
+  "name": "apollo",
   "version": "0.1.0",
   "private": true,
   "description": "Your lockfile pins versions. This pins behaviour.",
@@ -45,6 +45,6 @@
     "behavioural-diff"
   ],
   "bin": {
-    "stakeout": "./cli.js"
+    "apollo": "./cli.js"
   }
 }

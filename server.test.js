@@ -118,13 +118,13 @@ const json = async (p) => (await get(p)).json();
   });
 
   await it('the live run is off unless it was deliberately turned on', async () => {
-    // The server under test is started without STAKEOUT_ALLOW_LOCAL. Running real packages must
+    // The server under test is started without APOLLO_ALLOW_LOCAL. Running real packages must
     // never be something you get by default — they execute as whoever started this.
     assert.equal(tree.realAllowed, false);
     const r = await get('/api/real');
     assert.equal(r.status, 403);
     const body = await r.json();
-    assert.match(body.error, /STAKEOUT_ALLOW_LOCAL/);
+    assert.match(body.error, /APOLLO_ALLOW_LOCAL/);
     assert.match(body.error, /adapters\/local\.js/, 'the refusal should say where to read first');
   });
 

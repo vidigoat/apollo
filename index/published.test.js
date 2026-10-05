@@ -283,7 +283,7 @@ const doc = (over = {}) => ({
     const out = execFileSync(
       process.execPath,
       [path.join(__dirname, '..', 'scripts', 'publish-index.js'), '--out', at],
-      { encoding: 'utf8', env: { ...process.env, STAKEOUT_INDEX: dir }, cwd: path.join(__dirname, '..') }
+      { encoding: 'utf8', env: { ...process.env, APOLLO_INDEX: dir }, cwd: path.join(__dirname, '..') }
     );
     assert.match(out, /THE INDEX, AS ONE FILE/);
 

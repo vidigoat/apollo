@@ -89,7 +89,7 @@ Three implementations, and the differences between them are the honest part:
 - **`simulated.js`** — a fixed corpus, no network. Deterministic, which is what makes the demo
   checkable by a stranger.
 - **`local.js`** — real `npm install` into throwaway directories on this machine, watched by
-  `observe/probe.js`. The only adapter that has actually run. Requires `STAKEOUT_ALLOW_LOCAL=1`,
+  `observe/probe.js`. The only adapter that has actually run. Requires `APOLLO_ALLOW_LOCAL=1`,
   because it executes packages as *you*.
 - **`contree.js`** — Nebius Sandboxes. Written and tested against a stub; has never talked to a live
   sandbox. Confirmed rather than assumed on 2026-09-20: a live key reaches Token Factory fine, and

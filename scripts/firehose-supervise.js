@@ -33,9 +33,9 @@ function start() {
   const left = Math.max(0.05, (stopAt - Date.now()) / 3600000);
   const rest = args.filter((a, k) => k !== i && k !== i + 1);
   const startedAt = Date.now();
-  // STAKEOUT_SUPERVISE_CHILD exists for the test, which supervises a script that crashes on purpose.
-  const script = process.env.STAKEOUT_SUPERVISE_CHILD || path.join(__dirname, 'firehose.js');
-  const first = process.env.STAKEOUT_SUPERVISE_FIRST_DELAY_MS;
+  // APOLLO_SUPERVISE_CHILD exists for the test, which supervises a script that crashes on purpose.
+  const script = process.env.APOLLO_SUPERVISE_CHILD || path.join(__dirname, 'firehose.js');
+  const first = process.env.APOLLO_SUPERVISE_FIRST_DELAY_MS;
   if (first && delay === 5000) delay = Number(first);
   child = spawn(process.execPath, [script, '--hours', left.toFixed(3), ...rest], { stdio: 'inherit' });
   console.log(`  supervise ${stamp()}  started watcher pid ${child.pid} for ${left.toFixed(1)} h`);

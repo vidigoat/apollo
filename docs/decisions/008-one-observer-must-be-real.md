@@ -21,7 +21,7 @@ package reaches for. `adapters/local.js` installs real packages into throwaway d
 them under it.
 
 ```
-STAKEOUT_ALLOW_LOCAL=1 npm run real
+APOLLO_ALLOW_LOCAL=1 npm run real
 ```
 
 ## What it is not
@@ -29,7 +29,7 @@ STAKEOUT_ALLOW_LOCAL=1 npm run real
 It is instrumentation, not containment. The package runs as you, with your network and your files,
 and it shares a heap with the probe — so a native addon, a WebAssembly module, or code that
 captured a reference to `net.Socket` before we loaded is invisible, and a determined package can
-reach the report file. `STAKEOUT_ALLOW_LOCAL=1` is required so nobody reaches for this by accident,
+reach the report file. `APOLLO_ALLOW_LOCAL=1` is required so nobody reaches for this by accident,
 and `canSee` plus the strategy name travel with every transcript so a weaker run can never be read
 as a quiet one. The containment answer is still a microVM — decision 005, and `adapters/contree.js`.
 

@@ -1,5 +1,5 @@
 /**
- * `stakeout.lock` — the behavioural lockfile.
+ * `apollo.lock` — the behavioural lockfile.
  *
  *   node lock.test.js
  *
@@ -39,7 +39,7 @@ const it = (name, fn) => {
 
 /** An index of its own, per test. Nothing here reads the developer's real one. */
 function indexWith(entries) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'stakeout-index-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'apollo-index-'));
   const index = new Index({ dir });
   for (const [name, transcript] of entries) index.put(name, transcript);
   index.writeManifest({ revision: 'test-rev' });
@@ -55,7 +55,7 @@ const transcript = (version, over = {}) => ({
   ...over,
 });
 
-console.log('stakeout.lock');
+console.log('apollo.lock');
 
 /* ── stability ───────────────────────────────────────────────────────────── */
 
@@ -202,7 +202,7 @@ it('a removed dependency is not a finding', () => {
 it('a lock round-trips through the filesystem', () => {
   const index = indexWith([['p', transcript('1.0.0', { env: ['CI'] })]]);
   const { lock } = buildLock(new Map([['p', '1.0.0']]), index);
-  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lock-')), 'stakeout.lock');
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lock-')), 'apollo.lock');
 
   writeLock(lock, file);
   const text = fs.readFileSync(file, 'utf8');
@@ -218,7 +218,7 @@ it('a missing lock is a state, not an error', () => {
 it('a lock from a future format version is refused, loudly', () => {
   // Silently misreading a format we do not know would produce confident wrong answers about
   // software somebody is about to ship.
-  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lock-')), 'stakeout.lock');
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lock-')), 'apollo.lock');
   fs.writeFileSync(file, JSON.stringify({ lockfileVersion: LOCK_VERSION + 1, packages: {} }));
   assert.throws(() => readLock(file), /lockfile version/);
 });

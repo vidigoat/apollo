@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stakeout Live on Nebius: the npm watcher as a Serverless Job, its state in Object Storage.
+# Apollo Live on Nebius: the npm watcher as a Serverless Job, its state in Object Storage.
 #
 #   bash deploy/nebius/launch.sh             # first time: registry, bucket, keys, secret, image, job
 #   bash deploy/nebius/launch.sh --relaunch  # every week: a new 167 h job that resumes the watch
@@ -19,8 +19,8 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 
 REGION=eu-north1
-NAME=stakeout-live
-BUCKET="${STAKEOUT_BUCKET:-stakeout-live-watch}"
+NAME=apollo-live
+BUCKET="${APOLLO_BUCKET:-stakeout-live-watch}"
 PREFIX=live
 ENDPOINT="https://storage.$REGION.nebius.cloud"
 STATE_FILE=deploy/nebius/.launch-state   # ids of what this script made; gitignored, no secrets in it
@@ -38,7 +38,7 @@ touch "$STATE_FILE"; source "$STATE_FILE"
 
 if [[ "${1:-}" == "--health" ]]; then
   : "${S3_KEY_ID:?no launch state — run the first-time launch first}"
-  STAKEOUT_STATE_S3="s3://$BUCKET/$PREFIX" STAKEOUT_S3_KEY_ID="$S3_KEY_ID" STAKEOUT_S3_SECRET="$(nebius iam v2 access-key get --id "$ACCESS_KEY_ID" --format json | jq -r '.status.secret')" \
+  APOLLO_STATE_S3="s3://$BUCKET/$PREFIX" APOLLO_S3_KEY_ID="$S3_KEY_ID" APOLLO_S3_SECRET="$(nebius iam v2 access-key get --id "$ACCESS_KEY_ID" --format json | jq -r '.status.secret')" \
     node scripts/firehose-health.js --mirror
   exit $?
 fi
@@ -104,9 +104,9 @@ if [[ "${1:-}" != "--relaunch" ]]; then
   # 3. The keys, in MysteryBox — never in the image and never on the command line of the job.
   set -a; source <(grep -E '^(NEBIUS_API_KEY|NEBIUS_PROJECT_ID)=' .env); set +a
   PAYLOAD=$(jq -cn --arg a "$NEBIUS_API_KEY" --arg p "$NEBIUS_PROJECT_ID" --arg k "$S3_KEY_ID" --arg s "$S3_SECRET" \
-    '[{key:"NEBIUS_API_KEY",string_value:$a},{key:"NEBIUS_PROJECT_ID",string_value:$p},{key:"STAKEOUT_S3_KEY_ID",string_value:$k},{key:"STAKEOUT_S3_SECRET",string_value:$s}]')
+    '[{key:"NEBIUS_API_KEY",string_value:$a},{key:"NEBIUS_PROJECT_ID",string_value:$p},{key:"APOLLO_S3_KEY_ID",string_value:$k},{key:"APOLLO_S3_SECRET",string_value:$s}]')
   if [[ -z "${SECRET_ID:-}" ]]; then
-    SECRET_ID=$(nebius mysterybox secret create --name "$NAME-keys" --description "Stakeout Live watcher keys" --secret-version-payload "$PAYLOAD" --format json | jq -r '.metadata.id')
+    SECRET_ID=$(nebius mysterybox secret create --name "$NAME-keys" --description "Apollo Live watcher keys" --secret-version-payload "$PAYLOAD" --format json | jq -r '.metadata.id')
     echo "SECRET_ID=$SECRET_ID" >> "$STATE_FILE"
   fi
   unset PAYLOAD S3_SECRET NEBIUS_API_KEY
@@ -122,8 +122,8 @@ if [[ "${1:-}" != "--relaunch" && -f local/firehose/state.json ]]; then
     while kill -0 "$(cat "$PIDFILE")" 2>/dev/null; do sleep 2; done
     say "stopped the local watcher"
   fi
-  STAKEOUT_STATE_S3="s3://$BUCKET/$PREFIX" STAKEOUT_S3_KEY_ID="$S3_KEY_ID" \
-    STAKEOUT_S3_SECRET="$(nebius iam v2 access-key get --id "$ACCESS_KEY_ID" --format json | jq -r '.status.secret')" \
+  APOLLO_STATE_S3="s3://$BUCKET/$PREFIX" APOLLO_S3_KEY_ID="$S3_KEY_ID" \
+    APOLLO_S3_SECRET="$(nebius iam v2 access-key get --id "$ACCESS_KEY_ID" --format json | jq -r '.status.secret')" \
     node -e 'require("./firehose/mirror").Mirror.fromEnv().push("local/firehose",{force:true}).then((r)=>{if(r.failed.length){console.error(r.failed.join("; "));process.exit(1)}console.log("  handed over: "+r.pushed.join(", "))})'
 fi
 
@@ -135,13 +135,13 @@ nebius ai job create \
   --disk-size 30Gi \
   --timeout 168h \
   --restart-policy on-failure \
-  --env "STAKEOUT_STATE_S3=s3://$BUCKET/$PREFIX" \
-  --env "STAKEOUT_S3_ENDPOINT=$ENDPOINT" \
-  --env "STAKEOUT_S3_REGION=$REGION" \
+  --env "APOLLO_STATE_S3=s3://$BUCKET/$PREFIX" \
+  --env "APOLLO_S3_ENDPOINT=$ENDPOINT" \
+  --env "APOLLO_S3_REGION=$REGION" \
   --env-secret "NEBIUS_API_KEY=$SECRET_ID:NEBIUS_API_KEY" \
   --env-secret "NEBIUS_PROJECT_ID=$SECRET_ID:NEBIUS_PROJECT_ID" \
-  --env-secret "STAKEOUT_S3_KEY_ID=$SECRET_ID:STAKEOUT_S3_KEY_ID" \
-  --env-secret "STAKEOUT_S3_SECRET=$SECRET_ID:STAKEOUT_S3_SECRET" \
+  --env-secret "APOLLO_S3_KEY_ID=$SECRET_ID:APOLLO_S3_KEY_ID" \
+  --env-secret "APOLLO_S3_SECRET=$SECRET_ID:APOLLO_S3_SECRET" \
   --async
 
 say "job started. In about five minutes: bash deploy/nebius/launch.sh --health"

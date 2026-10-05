@@ -65,8 +65,8 @@ const SCHEMA = 1;
 const SHIPPED_DIR = path.join(__dirname, 'verdicts');
 
 const DEFAULT_DIR =
-  process.env.STAKEOUT_JUDGE_CACHE ||
-  path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'), 'stakeout', 'judgements');
+  process.env.APOLLO_JUDGE_CACHE ||
+  path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'), 'apollo', 'judgements');
 
 /** Every field of the evidence that could move a verdict, in a stable order. */
 function evidenceOf(d) {

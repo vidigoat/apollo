@@ -1,4 +1,4 @@
-# Stakeout — the 10× plan
+# Apollo — the 10× plan
 
 Nebius × NVIDIA Global AI Hackathon. Submissions close **30 Oct 2026, 10:00 PT** (22:30 IST).
 
@@ -45,10 +45,10 @@ video thinking *that's clever*, not *I want that*.
 
 | phase | stated | where it got to |
 |---|---|---|
-| 1 · the primitive | `stakeout.lock` + CLI | **Done.** Proven on a real 691-package tree; exit codes 0/1/2/3 verified in a child process. |
+| 1 · the primitive | `apollo.lock` + CLI | **Done.** Proven on a real 691-package tree; exit codes 0/1/2/3 verified in a child process. |
 | 2 · index at scale | 5,000 target, 500 floor | **2,120 observations**, answering **12,986** of a 76-project fleet's 20,897 dependency-versions — 62% coverage, 6.1× reuse. Above the floor, below the target, and the target is now a question of hours rather than of whether it works. |
 | 3 · GitHub App | 13–17 Oct | Not started. Blocked on Vidit creating the app. |
-| 4 · web surface | stakeout.dev | **The fleet view is built** — every project on a machine, the unwatched surface drawn as absence rather than as the dark half of a bar, and a per-project view whose channel strip distinguishes *watched and silent* from *nothing was watching*. |
+| 4 · web surface | apollo.dev | **The fleet view is built** — every project on a machine, the unwatched surface drawn as absence rather than as the dark half of a bar, and a per-project view whose channel strip distinguishes *watched and silent* from *nothing was watching*. |
 
 **Ordering the index by sharing is the result worth keeping.** `--from-fleet` ranks
 package-versions by how many projects in a scan depend on them, instead of walking one lockfile
@@ -80,12 +80,12 @@ The line has always been right. We have been treating it as a tagline when it sh
 
 ```
 package-lock.json    pins    express@4.18.3                        a version
-stakeout.lock        pins    express@4.18.3 reads no environment
+apollo.lock        pins    express@4.18.3 reads no environment
                              variable, opens no socket, spawns
                              nothing, writes only inside node_modules   a behaviour
 ```
 
-You commit `stakeout.lock`. CI diffs against it. **A dependency that changes what it DOES fails your
+You commit `apollo.lock`. CI diffs against it. **A dependency that changes what it DOES fails your
 build even when the version did not move** — which is precisely the 2024–26 supply-chain attack: a
 compromised maintainer publishing a patch release that no diff and no changelog reveals.
 
@@ -106,9 +106,9 @@ then checking your hundredth repository is a *lookup* rather than a hundred sand
                                     │  lookup — not a run
         ┌───────────────────────────┼───────────────────────────┐
         ▼                           ▼                           ▼
-  stakeout CLI               GitHub App                    stakeout.dev
-  `stakeout lock`            comments on your               sign in with GitHub,
-  `stakeout check`           Dependabot PR, sets            connect repos, browse
+  apollo CLI               GitHub App                    apollo.dev
+  `apollo lock`            comments on your               sign in with GitHub,
+  `apollo check`           Dependabot PR, sets            connect repos, browse
   commit the lock, CI        a check run                    the index
   fails on drift
 ```
@@ -163,25 +163,25 @@ is not urgent, because the index is free and judgement is pennies, but it should
 Dates assume Amazon has priority until its freeze on 13–15 Oct. This project gets fragments until
 then and the full run after, which is why the heavy lifting sits in Phase 3 onward.
 
-### Phase 1 · `stakeout.lock` and the CLI — the primitive (22–28 Sep)
+### Phase 1 · `apollo.lock` and the CLI — the primitive (22–28 Sep)
 
 The smallest thing that makes this a tool instead of a page.
 
 ```
-stakeout lock              walk package-lock.json, look every package up in the index,
-                           write stakeout.lock
-stakeout check             re-read, diff against the index, exit non-zero on drift
-stakeout explain <pkg>     what this package does, and where that was observed
+apollo lock              walk package-lock.json, look every package up in the index,
+                           write apollo.lock
+apollo check             re-read, diff against the index, exit non-zero on drift
+apollo explain <pkg>     what this package does, and where that was observed
 ```
 
-- `stakeout.lock` format: JSON, one entry per package@version, the six channels, the strategy that
+- `apollo.lock` format: JSON, one entry per package@version, the six channels, the strategy that
   observed it, and the index revision it came from. **Human-diffable** — that is the whole point,
   so a reviewer can read the change in a PR.
-- `stakeout check` must distinguish three outcomes, not two: **drift** (behaviour changed),
+- `apollo check` must distinguish three outcomes, not two: **drift** (behaviour changed),
   **unknown** (not in the index — say so, do not pass silently), **clean**.
 - Exit codes: `0` clean, `1` drift, `2` unknown-and-configured-to-fail.
 
-**Done when:** `npx stakeout lock && npx stakeout check` runs green in a real repository of Vidit's,
+**Done when:** `npx apollo lock && npx apollo check` runs green in a real repository of Vidit's,
 and deliberately introducing a package the index has never seen produces `unknown`, not a pass.
 
 **Why this is first:** every other surface is a client of it, and it is the one piece that works
@@ -199,7 +199,7 @@ with no Sandboxes, no hosting, and no auth.
   ceiling, pre-flight, fails closed. It stops before the credits do.
 - Output: `index/` — static JSON, servable from anywhere, plus a single manifest with the revision.
 
-**Done when:** the index holds ≥2,000 packages, `stakeout check` resolves against it without a
+**Done when:** the index holds ≥2,000 packages, `apollo check` resolves against it without a
 network call to us, and re-running the builder costs nothing for packages already done.
 
 **Sandboxes dependency:** see §6. There is a fallback and it is not fatal.
@@ -219,7 +219,7 @@ Where the decision actually gets made. A developer does not visit a dashboard; t
 **Done when:** it is installed on a real repository, a real Dependabot PR gets a real comment, and
 a screen recording of that exists.
 
-### Phase 4 · stakeout.dev — the web surface (18–20 Oct)
+### Phase 4 · apollo.dev — the web surface (18–20 Oct)
 
 - **Sign in with GitHub** (OAuth). Justified because we genuinely need to read lockfiles, not
   because products have login pages.
@@ -264,10 +264,10 @@ A plan without this is a wish list. When time runs out, in this order:
 
 ```
 1st to go    the index browser UI      the index still exists and the CLI still uses it
-2nd          stakeout.dev entirely     the GitHub App is the better demo anyway
+2nd          apollo.dev entirely     the GitHub App is the better demo anyway
 3rd          index size 5,000 → 500    still 6× the current survey, still honest
 4th          the GitHub App            falls back to the CLI plus a recorded run
-NEVER cut    stakeout.lock + check     without the primitive this is a demo again
+NEVER cut    apollo.lock + check     without the primitive this is a demo again
 NEVER cut    the honesty machinery     labelled estimates, canSee caveats, the absence tests
 ```
 
@@ -291,7 +291,7 @@ limit — wall clock and the 50-concurrent cap are. → The builder is resumable
 so it can be stopped and restarted across days, and 500 packages is already a perfectly good index.
 
 **A package does something destructive when run.** → Sandboxes are isolated; locally, `nodert`
-already requires `STAKEOUT_ALLOW_LOCAL=1` and warns that it executes packages as you. The hosted
+already requires `APOLLO_ALLOW_LOCAL=1` and warns that it executes packages as you. The hosted
 demo deliberately refuses `/api/real` entirely.
 
 **GitHub App review/approval delays.** → A GitHub App in development mode works on your own repos

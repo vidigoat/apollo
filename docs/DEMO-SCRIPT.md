@@ -11,7 +11,7 @@ of the labelled stand-in, which is better but not required.
 | # | shot | line | why it is in |
 |---|---|---|---|
 | 0 | black, text only: *"Your lockfile pins versions. It pins nothing about what they do."* | silence | the whole thesis, before anything moves |
-| 1 | press **Run the stakeout** | "1,214 packages. Fifteen of them moved." | — |
+| 1 | press **Run the watch** | "1,214 packages. Fifteen of them moved." | — |
 | 2 | 30 hairlines fill left to right | "Two twins per package, forked from one checkpoint at the same instant." | ConTree, shown rather than described |
 | 3 | **hold on the field of 1,214 marks — say nothing for six seconds** | *(silence)* | **do not cut this.** the silence IS the argument. Twelve hundred marks, fifteen lit, one red — the ratio as a picture rather than a number |
 | 4 | the single red mark, then scroll to the finding it belongs to | "Ten of the fifteen behaved identically. Here is one that did not." | weight comes from the contrast |

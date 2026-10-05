@@ -59,7 +59,7 @@ async function call(path, { token, method = 'GET', body, accept = 'application/v
       accept,
       authorization: `Bearer ${token}`,
       'x-github-api-version': '2022-11-28',
-      'user-agent': 'stakeout',
+      'user-agent': 'apollo',
       ...(body ? { 'content-type': 'application/json' } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -103,7 +103,7 @@ async function fileAt({ token, owner, repo, path, ref }) {
           accept: 'application/vnd.github.raw+json',
           authorization: `Bearer ${token}`,
           'x-github-api-version': '2022-11-28',
-          'user-agent': 'stakeout',
+          'user-agent': 'apollo',
         },
       }
     ).then((r) => (r.ok ? r.text() : null));
@@ -125,7 +125,7 @@ async function postCheck({ token, owner, repo, sha, run }) {
     token,
     method: 'POST',
     body: {
-      name: 'stakeout',
+      name: 'apollo',
       head_sha: sha,
       status: 'completed',
       conclusion: run.conclusion,

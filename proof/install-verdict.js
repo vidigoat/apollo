@@ -1,7 +1,7 @@
 /**
  * What a package's own install scripts did, read against rules — for a package with no "before".
  *
- * Stakeout's ordinary claim is a DIFF: this release does something the last one did not. Most real
+ * Apollo's ordinary claim is a DIFF: this release does something the last one did not. Most real
  * malware on npm offers no such comparison — a typosquat is version 1.0.0 of a name that never
  * existed — so there is only what the install did, taken by itself. Rules for that have to be
  * narrower than the differ's, because "it ran a shell" is true of every lifecycle script there is.

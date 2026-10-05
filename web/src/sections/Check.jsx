@@ -4,7 +4,7 @@ import { m, AnimatePresence, useReducedMotion } from 'motion/react';
 /**
  * The answer, where the decision is actually made.
  *
- * `stakeout check` already answers this in CI, which is the right place for it and also the place
+ * `apollo check` already answers this in CI, which is the right place for it and also the place
  * nobody looks until it is too late. The GitHub App puts the same answer on the pull request that
  * bumps the dependency, next to the diff, while somebody still has their hand on it.
  *
@@ -41,7 +41,7 @@ const OUTCOMES = [
       'No dependency in this pull request behaves differently than the lock records.',
       '23 of them have never been observed by anything, so nothing is claimed about those.',
     ],
-    foot: 'That is the normal state of a dependency tree, not a finding. Run `npx stakeout index --from-lockfile package-lock.json` to shrink it.',
+    foot: 'That is the normal state of a dependency tree, not a finding. Run `npx apollo index --from-lockfile package-lock.json` to shrink it.',
   },
   {
     key: 'clean',
@@ -100,7 +100,7 @@ export default function Check() {
               <span className="check__mark" aria-hidden="true">
                 {shown.mark}
               </span>
-              <span className="check__name">stakeout</span>
+              <span className="check__name">apollo</span>
               <span className="check__title">{shown.title}</span>
               <span className="check__conclusion">{shown.conclusion}</span>
             </div>

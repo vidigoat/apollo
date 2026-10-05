@@ -7,10 +7,10 @@
  * mirrored to S3-compatible object storage (Nebius Object Storage in practice): restored before the
  * first poll when the directory is empty, pushed after that at most once a minute.
  *
- *   STAKEOUT_STATE_S3=s3://bucket/prefix        where the mirror lives; unset means no mirror
- *   STAKEOUT_S3_ENDPOINT                        default https://storage.eu-north1.nebius.cloud
- *   STAKEOUT_S3_REGION                          default eu-north1
- *   STAKEOUT_S3_KEY_ID / STAKEOUT_S3_SECRET     an access key for that bucket only
+ *   APOLLO_STATE_S3=s3://bucket/prefix        where the mirror lives; unset means no mirror
+ *   APOLLO_S3_ENDPOINT                        default https://storage.eu-north1.nebius.cloud
+ *   APOLLO_S3_REGION                          default eu-north1
+ *   APOLLO_S3_KEY_ID / APOLLO_S3_SECRET     an access key for that bucket only
  *
  * Pushing is best-effort and says so: a failed push is logged and tried again next minute, and it
  * never stops the watch — losing a minute of mirror is recoverable, a watcher that stops on a
@@ -71,16 +71,16 @@ const FILES = ['state.json', 'results.jsonl', 'lookalikes.jsonl', 'hours.jsonl',
 class Mirror {
   /** From the environment; null when no mirror is configured. */
   static fromEnv(env = process.env, deps = {}) {
-    if (!env.STAKEOUT_STATE_S3) return null;
-    const m = /^s3:\/\/([^/]+)\/?(.*)$/.exec(env.STAKEOUT_STATE_S3);
-    if (!m) throw new Error(`STAKEOUT_STATE_S3 must look like s3://bucket/prefix, not ${env.STAKEOUT_STATE_S3}`);
-    if (!env.STAKEOUT_S3_KEY_ID || !env.STAKEOUT_S3_SECRET) throw new Error('STAKEOUT_STATE_S3 is set but STAKEOUT_S3_KEY_ID / STAKEOUT_S3_SECRET are not');
+    if (!env.APOLLO_STATE_S3) return null;
+    const m = /^s3:\/\/([^/]+)\/?(.*)$/.exec(env.APOLLO_STATE_S3);
+    if (!m) throw new Error(`APOLLO_STATE_S3 must look like s3://bucket/prefix, not ${env.APOLLO_STATE_S3}`);
+    if (!env.APOLLO_S3_KEY_ID || !env.APOLLO_S3_SECRET) throw new Error('APOLLO_STATE_S3 is set but APOLLO_S3_KEY_ID / APOLLO_S3_SECRET are not');
     return new Mirror({
       bucket: m[1],
       prefix: m[2].replace(/\/+$/, ''),
-      endpoint: (env.STAKEOUT_S3_ENDPOINT || 'https://storage.eu-north1.nebius.cloud').replace(/\/+$/, ''),
-      region: env.STAKEOUT_S3_REGION || 'eu-north1',
-      creds: { accessKeyId: env.STAKEOUT_S3_KEY_ID, secretAccessKey: env.STAKEOUT_S3_SECRET },
+      endpoint: (env.APOLLO_S3_ENDPOINT || 'https://storage.eu-north1.nebius.cloud').replace(/\/+$/, ''),
+      region: env.APOLLO_S3_REGION || 'eu-north1',
+      creds: { accessKeyId: env.APOLLO_S3_KEY_ID, secretAccessKey: env.APOLLO_S3_SECRET },
       ...deps,
     });
   }

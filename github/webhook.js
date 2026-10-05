@@ -8,7 +8,7 @@
  *
  * ── What this app is for ────────────────────────────────────────────────────
  *
- * `stakeout check` already answers the question in CI. That is the right place for it and it is
+ * `apollo check` already answers the question in CI. That is the right place for it and it is
  * also the place nobody looks until it is too late. The App puts the same answer where the
  * decision is actually made — on the pull request that bumps a dependency, next to the diff, while
  * somebody still has their hand on it.
@@ -180,7 +180,7 @@ function lockRun(result, { total } = {}) {
         `about those:\n\n${shown.map((u) => `- ${u}`).join('\n')}` +
         (unknown.length > shown.length ? `\n- …and ${unknown.length - shown.length} more` : '') +
         `\n\nThat is the normal state of a dependency tree, not a finding. Run ` +
-        '`npx stakeout index --from-lockfile package-lock.json` to shrink it.',
+        '`npx apollo index --from-lockfile package-lock.json` to shrink it.',
     };
   }
 

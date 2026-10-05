@@ -1,5 +1,5 @@
 {
-  "name": "stakeout-web",
+  "name": "apollo-web",
   "private": true,
   "type": "module",
   "scripts": {

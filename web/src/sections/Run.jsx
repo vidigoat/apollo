@@ -122,7 +122,7 @@ export default function Run({ strategies = [], tree = null }) {
 
       <div className="controls">
         <button className="btn" onClick={() => go(strategy)} disabled={state.status === 'running'}>
-          {state.status === 'done' ? 'Run it again' : 'Run the stakeout'}
+          {state.status === 'done' ? 'Run it again' : 'Run the watch'}
         </button>
         <output className="status">
           {state.status === 'idle' && 'idle'}

@@ -10,7 +10,7 @@
  * be pointed at something believed to be malicious. What it is good for is the thing the simulated
  * adapter cannot do: prove the pipeline end to end on real packages from the real registry.
  *
- * Use it deliberately. `STAKEOUT_ALLOW_LOCAL=1` is required, so nobody reaches for it by accident.
+ * Use it deliberately. `APOLLO_ALLOW_LOCAL=1` is required, so nobody reaches for it by accident.
  */
 
 const fs = require('node:fs');
@@ -30,14 +30,14 @@ const run = promisify(execFile);
 
 class LocalMachines {
   constructor({ root, timeoutMs = 90_000 } = {}) {
-    if (process.env.STAKEOUT_ALLOW_LOCAL !== '1') {
+    if (process.env.APOLLO_ALLOW_LOCAL !== '1') {
       throw new Error(
         'LocalMachines runs packages on this machine with your network and your files. ' +
-          'Nothing isolates them. Set STAKEOUT_ALLOW_LOCAL=1 if that is what you meant, and never ' +
+          'Nothing isolates them. Set APOLLO_ALLOW_LOCAL=1 if that is what you meant, and never ' +
           'point it at a package you actually suspect.'
       );
     }
-    this.root = root || fs.mkdtempSync(path.join(os.tmpdir(), 'stakeout-'));
+    this.root = root || fs.mkdtempSync(path.join(os.tmpdir(), 'apollo-'));
     this.timeoutMs = timeoutMs;
     this.live = new Map();
     this.peakOpen = 0;
@@ -59,7 +59,7 @@ class LocalMachines {
     fs.mkdirSync(base, { recursive: true });
     fs.writeFileSync(
       path.join(base, 'package.json'),
-      JSON.stringify({ name: 'stakeout-twin', version: '1.0.0', private: true }, null, 2)
+      JSON.stringify({ name: 'apollo-twin', version: '1.0.0', private: true }, null, 2)
     );
     this.base = base;
     return base;
@@ -84,13 +84,13 @@ class LocalMachines {
 
     if (ctx.step === 'install') {
       // The install phase is watched the same way as in a sandbox — see observe/probe.js.
-      const env = { ...process.env, NODE_OPTIONS: `--require ${PROBE}`, STAKEOUT_INSTALL_DIR: this.installDir(branch), STAKEOUT_NPM_ROOT: npmRoot() };
+      const env = { ...process.env, NODE_OPTIONS: `--require ${PROBE}`, APOLLO_INSTALL_DIR: this.installDir(branch), APOLLO_NPM_ROOT: npmRoot() };
       const r = await this.sh('npm', ['install', `${ctx.pkg}@${ctx.version}`, '--no-audit', '--no-fund', '--loglevel=error'], branch.dir, env);
       return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed: null };
     }
 
     if (ctx.step === 'import') {
-      const runner = path.join(branch.dir, '__stakeout_runner.js');
+      const runner = path.join(branch.dir, '__apollo_runner.js');
       // Outside the branch directory, so a package rummaging through its own cwd does not find it.
       const out = path.join(this.root, `report-${path.basename(branch.dir)}.json`);
       fs.writeFileSync(runner, runnerSource(ctx.pkg, out, PROBE, this.installDir(branch)));
@@ -108,7 +108,7 @@ class LocalMachines {
           fs.mkdirSync(path.dirname(full), { recursive: true });
           fs.writeFileSync(full, content);
         }
-        env = { ...process.env, ...(ctx.provocation.env || {}), HOME: home, STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: require('../interrogate/provocations').CANARY };
+        env = { ...process.env, ...(ctx.provocation.env || {}), HOME: home, APOLLO_CONTAINED: '1', APOLLO_CANARY: require('../interrogate/provocations').CANARY };
       }
       const r = await this.sh(process.execPath, [runner], branch.dir, env);
       // readReport returns null when the probe never reported — a crash, a timeout, a process that

@@ -4,7 +4,7 @@ Read this before changing anything. Written for whoever picks the work up next, 
 
 ## What this is
 
-**Stakeout** watches what a dependency *does* — at import and while its install scripts run — in
+**Apollo** watches what a dependency *does* — at import and while its install scripts run — in
 Nebius Token Factory Sandboxes, and records it in a behavioural index anybody can check a lockfile
 against. An upgrade is watched as two twins forked from one checkpoint and diffed; Nemotron explains
 what moved and never decides severity. Submission for the Nebius × NVIDIA Global AI Hackathon.
@@ -30,7 +30,7 @@ If a change makes the report longer but the evidence thinner, it is the wrong ch
 | `observe/probe.js` | the runtime probe — import and install phase; `public/probe.source.txt` is its verbatim copy for the hosted bundle (a test keeps them equal) |
 | `adapters/` | sandbox backends: `contree.js` (Nebius), `local.js`, `simulated.js` — one interface |
 | `transcript/`, `differ/`, `judge/`, `evidence/` | what was seen, what changed, what a model makes of it, what the open web says |
-| `index/`, `lock.js`, `lockfile.js`, `cli.js` | the behavioural index, `stakeout.lock`, and the CLI that checks a tree against it |
+| `index/`, `lock.js`, `lockfile.js`, `cli.js` | the behavioural index, `apollo.lock`, and the CLI that checks a tree against it |
 | `scripts/` | index builds (`index-build.js`), the release watch, cross-validation, summaries |
 | `server.js`, `yours.js`, `github/` | the hosted site's API, the "try it on yours" routes, the GitHub App |
 | `web/` → `dist/` | the site; `dist/` is committed on purpose (a server test reads it) |

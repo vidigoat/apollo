@@ -1,7 +1,7 @@
 /**
  * A published index, read from a URL or a file, with the same shape as a local one.
  *
- *   const index = await open('https://cassandra-nu.vercel.app/index.json');
+ *   const index = await open('https://apollo-watch.vercel.app/index.json');
  *   index.lookup('left-pad', '1.3.0');
  *
  * ── Why this is separate from index/schema.js ───────────────────────────────

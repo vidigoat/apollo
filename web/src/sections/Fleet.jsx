@@ -235,9 +235,9 @@ export default function Fleet({ data, published }) {
           */}
           <pre className="offer__cmd" tabIndex={0} aria-label="the command to run">
             <code>
-              {'git clone https://github.com/vidigoat/cassandra ~/stakeout\n'}
+              {'git clone https://github.com/vidigoat/apollo ~/apollo\n'}
               {'cd ~/your-project\n'}
-              {'node ~/stakeout/cli.js lock --index '}
+              {'node ~/apollo/cli.js lock --index '}
               <span className="offer__url">{origin()}/index.json</span>
             </code>
           </pre>

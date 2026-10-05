@@ -245,7 +245,7 @@ function wiredTo({ files = ['package-lock.json'], contents = {} } = {}) {
     const { lock } = buildLock(parseLockfile(text).versions, idx);
 
     const { posted, wired } = wiredTo({
-      contents: { 'package-lock.json': text, 'stakeout.lock': JSON.stringify(lock) },
+      contents: { 'package-lock.json': text, 'apollo.lock': JSON.stringify(lock) },
     });
     const out = await handle({ raw, signature: sign(raw), event: 'pull_request' },
       { secret: SECRET, index: idx }, wired);
@@ -271,7 +271,7 @@ function wiredTo({ files = ['package-lock.json'], contents = {} } = {}) {
     idx.writeManifest({ revision: 'test' });
 
     const { posted, wired } = wiredTo({
-      contents: { 'package-lock.json': text, 'stakeout.lock': JSON.stringify(lock) },
+      contents: { 'package-lock.json': text, 'apollo.lock': JSON.stringify(lock) },
     });
     const out = await handle({ raw, signature: sign(raw), event: 'pull_request' },
       { secret: SECRET, index: idx }, wired);
@@ -280,7 +280,7 @@ function wiredTo({ files = ['package-lock.json'], contents = {} } = {}) {
     assert.match(posted[0].summary, /AWS_SECRET_ACCESS_KEY/);
   });
 
-  await it('a repository with no stakeout.lock still gets a real answer', async () => {
+  await it('a repository with no apollo.lock still gets a real answer', async () => {
     // The first experience: install the app, open a PR, see how much of your tree is already known.
     const raw = JSON.stringify(delivery());
     const idx = indexWith([['lodash', '4.17.21']]);

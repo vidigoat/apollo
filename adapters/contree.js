@@ -55,11 +55,11 @@ const FINAL = new Set(['SUCCESS', 'FAILED', 'CANCELLED']);
 /** Where things live inside every twin. Outside the package's own directory, by design. */
 const IN_VM = {
   twin: '/twin',
-  probe: '/stakeout/probe.js',
-  runner: '/twin/__stakeout_runner.js',
-  report: '/stakeout/report.json',
+  probe: '/apollo/probe.js',
+  runner: '/twin/__apollo_runner.js',
+  report: '/apollo/report.json',
   // Where the install step's processes leave their reports (observe/probe.js, "the install phase").
-  install: '/stakeout/install',
+  install: '/apollo/install',
 };
 
 /** Observation needs particular things from a guest. If we cannot get them, say so instead of reporting silence. */
@@ -163,7 +163,7 @@ class ConTreeSandboxes {
     return {
       authorization: `Bearer ${this.apiKey}`,
       project: this.projectId,
-      'user-agent': 'stakeout',
+      'user-agent': 'apollo',
       ...extra,
     };
   }
@@ -321,8 +321,8 @@ class ConTreeSandboxes {
       command: 'sh',
       args: [
         '-c',
-        `mkdir -p ${IN_VM.twin} /stakeout && cd ${IN_VM.twin} && ` +
-          `printf '{"name":"stakeout-twin","version":"1.0.0","private":true}' > package.json && ` +
+        `mkdir -p ${IN_VM.twin} /apollo && cd ${IN_VM.twin} && ` +
+          `printf '{"name":"apollo-twin","version":"1.0.0","private":true}' > package.json && ` +
           'npm config set fund false && npm config set audit false',
       ],
       files: { [IN_VM.probe]: fileSpec(this.probeFile, '0444') },
@@ -367,7 +367,7 @@ class ConTreeSandboxes {
         cwd: IN_VM.twin,
         // Every Node process the install starts loads the probe: npm records the scripts it runs,
         // the scripts are watched whole. The import runner gathers the reports.
-        env: { NODE_OPTIONS: `--require ${IN_VM.probe}`, STAKEOUT_INSTALL_DIR: IN_VM.install, STAKEOUT_NPM_ROOT: '/usr/local/lib/node_modules/npm' },
+        env: { NODE_OPTIONS: `--require ${IN_VM.probe}`, APOLLO_INSTALL_DIR: IN_VM.install, APOLLO_NPM_ROOT: '/usr/local/lib/node_modules/npm' },
       });
       if (r.image) twin.image = r.image;
       return { code: r.code, stdout: r.stdout, stderr: r.stderr, observed: null };

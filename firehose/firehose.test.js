@@ -1,5 +1,5 @@
 /**
- * Stakeout Live: the feed, the selection, the queue, and the loop that ties them.
+ * Apollo Live: the feed, the selection, the queue, and the loop that ties them.
  *
  *   node firehose/firehose.test.js
  *

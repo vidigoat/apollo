@@ -65,7 +65,7 @@ it('the refusal says how to proceed deliberately', () => {
     b.check(call);
     assert.fail('should have refused');
   } catch (e) {
-    assert.match(e.message, /STAKEOUT_BUDGET_USD/, 'a limit with no documented override is a wall');
+    assert.match(e.message, /APOLLO_BUDGET_USD/, 'a limit with no documented override is a wall');
     assert.match(e.message, /ceiling is already spent/);
   }
 });

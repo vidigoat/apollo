@@ -175,7 +175,7 @@ if (require.main === module) {
      * and two restarts in a morning were enough to be throttled for the rest of it.
      */
     const scopedTop = Number(flag('scoped', 0));
-    const cacheFile = path.join(require('node:os').tmpdir(), `stakeout-release-ranking-${top}-${scopedTop}.json`);
+    const cacheFile = path.join(require('node:os').tmpdir(), `apollo-release-ranking-${top}-${scopedTop}.json`);
     /*
      * `--refresh`: the weekly feed. The packages already watched, asked again for their newest
      * release; a pair not yet in the record is a release published since, and only those are watched.

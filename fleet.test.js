@@ -149,7 +149,7 @@ it('a project with a lock that checks out is clean', () => {
 
   const lockfile = path.join(root, 'a', 'package-lock.json');
   const { versions } = parseLockfile(fs.readFileSync(lockfile, 'utf8'));
-  writeLock(buildLock(versions, index).lock, path.join(root, 'a', 'stakeout.lock'));
+  writeLock(buildLock(versions, index).lock, path.join(root, 'a', 'apollo.lock'));
 
   assert.equal(scanRepo(lockfile, index).state, 'clean');
 });
@@ -162,7 +162,7 @@ it('behaviour changing under an unmoved version is drift', () => {
 
   const lockfile = path.join(root, 'a', 'package-lock.json');
   const { versions } = parseLockfile(fs.readFileSync(lockfile, 'utf8'));
-  writeLock(buildLock(versions, index).lock, path.join(root, 'a', 'stakeout.lock'));
+  writeLock(buildLock(versions, index).lock, path.join(root, 'a', 'apollo.lock'));
 
   index.put('lodash', transcript('4.17.21', { env: ['AWS_SECRET_ACCESS_KEY'] }));
   index.writeManifest({ revision: 'test' });
@@ -177,7 +177,7 @@ it('behaviour changing under an unmoved version is drift', () => {
 
 it('an unreadable lock is its own state, not a clean bill of health', () => {
   const { root, index } = fixture({ a: [['lodash', '4.17.21']] });
-  fs.writeFileSync(path.join(root, 'a', 'stakeout.lock'), '{ not json');
+  fs.writeFileSync(path.join(root, 'a', 'apollo.lock'), '{ not json');
   assert.equal(scanRepo(path.join(root, 'a', 'package-lock.json'), index).state, 'unreadable-lock');
 });
 

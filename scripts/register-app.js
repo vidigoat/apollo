@@ -51,14 +51,14 @@ const arg = (name, fallback) => {
 };
 
 const PORT = Number(arg('port', 8799));
-const WEBHOOK = arg('webhook', 'https://cassandra-nu.vercel.app/api/github/webhook');
+const WEBHOOK = arg('webhook', 'https://apollo-watch.vercel.app/api/github/webhook');
 const HOME = `http://localhost:${PORT}`;
 const ROOT = path.join(__dirname, '..');
 
 /** One place the app is described, so the install screen and the README cannot disagree. */
 const manifest = {
   name: arg('name', 'stakeout-behaviour'),
-  url: 'https://github.com/vidigoat/cassandra',
+  url: 'https://github.com/vidigoat/apollo',
   hook_attributes: { url: WEBHOOK, active: true },
   redirect_url: `${HOME}/created`,
   description:
@@ -142,7 +142,7 @@ const server = http.createServer(async (req, res) => {
       method: 'POST',
       headers: {
         accept: 'application/vnd.github+json',
-        'user-agent': 'stakeout',
+        'user-agent': 'apollo',
         'x-github-api-version': '2022-11-28',
       },
     }).then(async (r) => {

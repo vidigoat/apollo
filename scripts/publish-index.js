@@ -18,9 +18,9 @@
  * This writes the artefact. `public/index.json`, about half a megabyte, sixty kilobytes over the
  * wire, and after that:
  *
- *     git clone https://github.com/vidigoat/cassandra ~/stakeout
+ *     git clone https://github.com/vidigoat/apollo ~/apollo
  *     cd ~/your-project
- *     node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
+ *     node ~/apollo/cli.js lock --index https://apollo-watch.vercel.app/index.json
  *
  * runs in somebody else's repository against real observations, and either their tree is answered
  * or it is not. The claim becomes a thing that can be wrong.
@@ -44,7 +44,7 @@ const ROOT = path.join(__dirname, '..');
  * Where to write. `--out <path>` exists because a test needed it.
  *
  * `index/published.test.js` proves the publisher refuses a simulated entry by pointing
- * STAKEOUT_INDEX at a temporary index and running this — and with a hard-coded destination that
+ * APOLLO_INDEX at a temporary index and running this — and with a hard-coded destination that
  * run replaced the repository's real, committed `public/index.json` with a one-package test file.
  * Nothing failed. It was caught by `check-readme`, which noticed the README now claimed 1,589
  * packages for an artefact holding one, and it would otherwise have been deployed.
@@ -133,7 +133,7 @@ function main() {
     note:
       'Every entry is one real installation of one real package-version, watched by the strategy ' +
       'named on it. A package-version that is not in here was never observed — which is not the ' +
-      'same as observed and quiet, and `stakeout check` reports it as its own outcome.',
+      'same as observed and quiet, and `apollo check` reports it as its own outcome.',
     packages,
   };
 
@@ -171,15 +171,15 @@ function main() {
   /*
    * The whole command, including the clone.
    *
-   * It printed `npx github:vidigoat/cassandra`, which is a command that does not work: the
+   * It printed `npx github:vidigoat/apollo`, which is a command that does not work: the
    * repository is private until submission, and npx on a private repo fails with a git error that
    * says nothing about why. A printed command is a promise, and one that only works after something
    * else has happened is a promise broken the first time somebody tries it.
    */
   console.log(`  ${C.dim}Anybody, in their own repository:${C.off}`);
-  console.log('    git clone https://github.com/vidigoat/cassandra ~/stakeout');
+  console.log('    git clone https://github.com/vidigoat/apollo ~/apollo');
   console.log('    cd ~/your-project');
-  console.log('    node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json\n');
+  console.log('    node ~/apollo/cli.js lock --index https://apollo-watch.vercel.app/index.json\n');
 }
 
 if (require.main === module) main();

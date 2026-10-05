@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * stakeout — the command line.
+ * apollo — the command line.
  *
- *   stakeout lock            walk package-lock.json, resolve every package against the index,
- *                            write stakeout.lock. Commit it.
- *   stakeout check           re-resolve and diff against the committed lock. Non-zero on drift.
- *   stakeout explain <pkg>   what this package does, and which run observed it.
- *   stakeout index           what the index currently holds.
+ *   apollo lock            walk package-lock.json, resolve every package against the index,
+ *                            write apollo.lock. Commit it.
+ *   apollo check           re-resolve and diff against the committed lock. Non-zero on drift.
+ *   apollo explain <pkg>   what this package does, and which run observed it.
+ *   apollo index           what the index currently holds.
  *
  * ── Why a CLI at all ────────────────────────────────────────────────────────
  *
@@ -77,7 +77,7 @@ function renderItem(channel, item) {
   return JSON.stringify(item);
 }
 
-/* ── stakeout lock ──────────────────────────────────────────────────────── */
+/* ── apollo lock ──────────────────────────────────────────────────────── */
 
 async function cmdLock({ flags }) {
   const index = await openIndex(flags);
@@ -133,7 +133,7 @@ async function cmdLock({ flags }) {
  * by anyone who had not already spent an afternoon on it: run a package once, answer for every
  * repository that depends on it. Once is the point. Once, by somebody.
  *
- *     stakeout check --index https://cassandra-nu.vercel.app/index.json
+ *     apollo check --index https://apollo-watch.vercel.app/index.json
  *
  * reads a published index — 1,589 packages, sixty kilobytes over the wire — and answers about YOUR
  * tree. Most of it will come back unknown, because most of npm has not been watched by anybody.
@@ -147,9 +147,9 @@ async function openIndex(flags) {
     if (!index.manifest()) {
       die(
         'No index found.',
-        'Build one with `npm run index:build`, point STAKEOUT_INDEX at one,\n' +
+        'Build one with `npm run index:build`, point APOLLO_INDEX at one,\n' +
           '  or use a published one:\n\n' +
-          '    stakeout check --index https://cassandra-nu.vercel.app/index.json'
+          '    apollo check --index https://apollo-watch.vercel.app/index.json'
       );
     }
     return index;
@@ -175,7 +175,7 @@ async function openIndex(flags) {
   return null;
 }
 
-/* ── stakeout check ─────────────────────────────────────────────────────── */
+/* ── apollo check ─────────────────────────────────────────────────────── */
 
 async function cmdCheck({ flags }) {
   const index = await openIndex(flags);
@@ -187,7 +187,7 @@ async function cmdCheck({ flags }) {
     die(e.message);
   }
   if (!lock) {
-    die(`No ${flags.lock || DEFAULT_FILE} to check against.`, 'Run `stakeout lock` first and commit the result.');
+    die(`No ${flags.lock || DEFAULT_FILE} to check against.`, 'Run `apollo lock` first and commit the result.');
   }
 
   let tree;
@@ -199,7 +199,7 @@ async function cmdCheck({ flags }) {
 
   const result = checkLock(lock, tree.versions, index);
 
-  console.log(`\n  ${C.bold}stakeout check${C.off} ${C.dim}· ${plural(result.checked, 'package')} checked against ${lock.index?.revision ?? 'an unknown index'}${C.off}`);
+  console.log(`\n  ${C.bold}apollo check${C.off} ${C.dim}· ${plural(result.checked, 'package')} checked against ${lock.index?.revision ?? 'an unknown index'}${C.off}`);
 
   if (result.drift.length) {
     console.log(`\n  ${C.red}${plural(result.drift.length, 'package')} behaves differently than the lock records${C.off}\n`);
@@ -219,7 +219,7 @@ async function cmdCheck({ flags }) {
     console.log(`  ${C.dim}${plural(result.added.length, 'package')} added since the lock was written — not drift, there is nothing to have drifted from:${C.off}`);
     for (const a of result.added.slice(0, 5)) console.log(`      ${C.dim}${a}${C.off}`);
     if (result.added.length > 5) console.log(`      ${C.dim}… and ${result.added.length - 5} more${C.off}`);
-    console.log(`  ${C.dim}Re-run \`stakeout lock\` to pin them.${C.off}\n`);
+    console.log(`  ${C.dim}Re-run \`apollo lock\` to pin them.${C.off}\n`);
   }
 
   if (result.unknown.length) {
@@ -239,7 +239,7 @@ async function cmdCheck({ flags }) {
   return EXIT.clean;
 }
 
-/* ── stakeout upgrade ───────────────────────────────────────────────────── */
+/* ── apollo upgrade ───────────────────────────────────────────────────── */
 
 /*
  * What a version bump DOES — the pull request a dependency bot opens, checked from a terminal.
@@ -284,7 +284,7 @@ async function cmdUpgrade({ flags }) {
   const { moved } = whatMoved(before, after);
   const { ledger, where } = await openWatched(flags);
 
-  console.log(`\n  ${C.bold}stakeout upgrade${C.off} ${C.dim}· ${plural(moved.length, 'version')} moved since ${against}${ledger ? ` · ${ledger.count ?? '?'} watched release pairs` : ` · no watched releases at ${where}`}${C.off}`);
+  console.log(`\n  ${C.bold}apollo upgrade${C.off} ${C.dim}· ${plural(moved.length, 'version')} moved since ${against}${ledger ? ` · ${ledger.count ?? '?'} watched release pairs` : ` · no watched releases at ${where}`}${C.off}`);
   if (!moved.length) {
     console.log(`\n  ${C.dim}Nothing was upgraded, so there is nothing to compare.${C.off}\n`);
     return EXIT.clean;
@@ -326,11 +326,11 @@ async function cmdUpgrade({ flags }) {
   return EXIT.clean;
 }
 
-/* ── stakeout explain ───────────────────────────────────────────────────── */
+/* ── apollo explain ───────────────────────────────────────────────────── */
 
 async function cmdExplain({ flags, rest }) {
   const spec = rest[0];
-  if (!spec) die('Which package?', 'stakeout explain lodash            — every version the index holds\nstakeout explain lodash@4.17.21   — one version');
+  if (!spec) die('Which package?', 'apollo explain lodash            — every version the index holds\napollo explain lodash@4.17.21   — one version');
 
   const at = spec.lastIndexOf('@');
   const name = at > 0 ? spec.slice(0, at) : spec;
@@ -370,7 +370,7 @@ async function cmdExplain({ flags, rest }) {
   return EXIT.clean;
 }
 
-/* ── stakeout index ─────────────────────────────────────────────────────── */
+/* ── apollo index ─────────────────────────────────────────────────────── */
 
 async function cmdIndex({ flags } = {}) {
   const index = await openIndex(flags || {});
@@ -394,13 +394,13 @@ async function cmdIndex({ flags } = {}) {
 /* ── dispatch ───────────────────────────────────────────────────────────── */
 
 const USAGE = `
-  ${C.bold}stakeout${C.off} ${C.dim}— your lockfile pins versions. This pins behaviour.${C.off}
+  ${C.bold}apollo${C.off} ${C.dim}— your lockfile pins versions. This pins behaviour.${C.off}
 
-    stakeout lock                walk package-lock.json, write ${DEFAULT_FILE}
-    stakeout check               diff the tree against the committed lock
-    stakeout upgrade             what the versions bumped since a commit now do differently
-    stakeout explain <pkg>       what a package does, and who watched it
-    stakeout index               what the index holds
+    apollo lock                walk package-lock.json, write ${DEFAULT_FILE}
+    apollo check               diff the tree against the committed lock
+    apollo upgrade             what the versions bumped since a commit now do differently
+    apollo explain <pkg>       what a package does, and who watched it
+    apollo index               what the index holds
 
   ${C.dim}flags${C.off}
     --lockfile <path>            default package-lock.json
@@ -413,7 +413,7 @@ const USAGE = `
     --watched <url|path>         \`upgrade\` reads watched release pairs from here
 
   ${C.dim}with no index of your own${C.off}
-    stakeout lock --index https://cassandra-nu.vercel.app/index.json
+    apollo lock --index https://apollo-watch.vercel.app/index.json
     ${C.dim}1,589 packages somebody already ran. Most of your tree will come back${C.off}
     ${C.dim}unknown, because most of npm has never been watched. That is the answer.${C.off}
 

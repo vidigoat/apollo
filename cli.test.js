@@ -3,7 +3,7 @@
  *
  *   node cli.test.js
  *
- * `stakeout check` runs in CI, where nobody reads the output until something fails. **The exit code
+ * `apollo check` runs in CI, where nobody reads the output until something fails. **The exit code
  * IS the product.** Everything else on screen is a courtesy to whoever eventually opens the log.
  *
  *   0   clean
@@ -16,7 +16,7 @@
  * then the one time it means something, nobody looks.
  *
  * Everything runs through a child process, because `main()` returning the right number is not the
- * claim. The claim is that `stakeout check` in a shell exits with it.
+ * claim. The claim is that `apollo check` in a shell exits with it.
  */
 
 const assert = require('node:assert');
@@ -64,7 +64,7 @@ const transcript = (version, over = {}) => ({
 
 /** A throwaway project: its own index, its own lockfile, its own working directory. */
 function project(packages) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'stakeout-cli-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'apollo-cli-'));
   const indexDir = path.join(root, 'index');
   const index = new Index({ dir: indexDir });
 
@@ -82,7 +82,7 @@ function project(packages) {
   return { root, indexDir, index };
 }
 
-const withIndex = (dir) => ({ STAKEOUT_INDEX: dir });
+const withIndex = (dir) => ({ APOLLO_INDEX: dir });
 
 console.log('cli — exit codes are the interface');
 
@@ -100,7 +100,7 @@ it('an unknown command exits 3', () => {
 it('`help` is a successful command, not an error', () => {
   const r = run(['help']);
   assert.equal(r.code, 0);
-  assert.match(r.out, /stakeout lock/);
+  assert.match(r.out, /apollo lock/);
 });
 
 it('with no index, every command exits 3 and says what to do', () => {
@@ -114,7 +114,7 @@ it('with no index, every command exits 3 and says what to do', () => {
 
 it('lock writes a lock and exits 0', () => {
   const p = project([['alpha', '1.0.0'], ['beta', '2.0.0', { env: ['CI'] }]]);
-  const out = path.join(p.root, 'stakeout.lock');
+  const out = path.join(p.root, 'apollo.lock');
   const r = run(['lock', '--out', out], { env: withIndex(p.indexDir), cwd: p.root });
 
   assert.equal(r.code, 0);
@@ -125,7 +125,7 @@ it('lock writes a lock and exits 0', () => {
 
 it('--dry-run writes nothing', () => {
   const p = project([['alpha', '1.0.0']]);
-  const out = path.join(p.root, 'stakeout.lock');
+  const out = path.join(p.root, 'apollo.lock');
   const r = run(['lock', '--out', out, '--dry-run'], { env: withIndex(p.indexDir), cwd: p.root });
   assert.equal(r.code, 0);
   assert.equal(fs.existsSync(out), false, 'a dry run wrote a file');
@@ -133,7 +133,7 @@ it('--dry-run writes nothing', () => {
 
 it('check exits 0 when nothing has drifted', () => {
   const p = project([['alpha', '1.0.0']]);
-  const out = path.join(p.root, 'stakeout.lock');
+  const out = path.join(p.root, 'apollo.lock');
   run(['lock', '--out', out], { env: withIndex(p.indexDir), cwd: p.root });
 
   const r = run(['check', '--lock', out], { env: withIndex(p.indexDir), cwd: p.root });
@@ -144,7 +144,7 @@ it('check exits 0 when nothing has drifted', () => {
 it('check exits 1 when a pinned version starts doing something new', () => {
   // The whole point of the file. The version did not move; the behaviour did.
   const p = project([['alpha', '1.0.0']]);
-  const out = path.join(p.root, 'stakeout.lock');
+  const out = path.join(p.root, 'apollo.lock');
   run(['lock', '--out', out], { env: withIndex(p.indexDir), cwd: p.root });
 
   p.index.put('alpha', transcript('1.0.0', { env: ['AWS_SECRET_ACCESS_KEY'] }));
@@ -163,7 +163,7 @@ it('check exits 2 for unknowns only when asked to', () => {
    * drift, so the pipeline can tell "I found something" from "I could not look".
    */
   const p = project([['alpha', '1.0.0']]);
-  const out = path.join(p.root, 'stakeout.lock');
+  const out = path.join(p.root, 'apollo.lock');
   run(['lock', '--out', out], { env: withIndex(p.indexDir), cwd: p.root });
 
   // A dependency the index has never observed appears in the tree.
@@ -199,11 +199,11 @@ it('a project with no index of its own can use a published one', () => {
   execFileSync(
     process.execPath,
     [path.join(__dirname, 'scripts', 'publish-index.js'), '--out', published],
-    { env: { ...process.env, STAKEOUT_INDEX: p.indexDir }, stdio: 'ignore', cwd: __dirname }
+    { env: { ...process.env, APOLLO_INDEX: p.indexDir }, stdio: 'ignore', cwd: __dirname }
   );
 
   const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'no-index-at-all-'));
-  const out = path.join(p.root, 'stakeout.lock');
+  const out = path.join(p.root, 'apollo.lock');
 
   const locked = run(['lock', '--index', published, '--out', out], {
     env: withIndex(nowhere),
@@ -236,7 +236,7 @@ it('a package the published index has never seen is unknown, not clean', () => {
   execFileSync(
     process.execPath,
     [path.join(__dirname, 'scripts', 'publish-index.js'), '--out', published],
-    { env: { ...process.env, STAKEOUT_INDEX: p.indexDir }, stdio: 'ignore', cwd: __dirname }
+    { env: { ...process.env, APOLLO_INDEX: p.indexDir }, stdio: 'ignore', cwd: __dirname }
   );
 
   // A second package appears in the tree that the published index has never observed.
@@ -245,7 +245,7 @@ it('a package the published index has never seen is unknown, not clean', () => {
   tree.packages['node_modules/never-watched'] = { name: 'never-watched', version: '9.9.9' };
   fs.writeFileSync(lockfile, JSON.stringify(tree));
 
-  const out = path.join(p.root, 'stakeout.lock');
+  const out = path.join(p.root, 'apollo.lock');
   const nowhere = fs.mkdtempSync(path.join(os.tmpdir(), 'no-index-at-all-'));
 
   run(['lock', '--index', published, '--out', out], { env: withIndex(nowhere), cwd: p.root });
@@ -282,7 +282,7 @@ it('check with no lock exits 3, not 1', () => {
   const p = project([['alpha', '1.0.0']]);
   const r = run(['check', '--lock', path.join(p.root, 'nope.lock')], { env: withIndex(p.indexDir), cwd: p.root });
   assert.equal(r.code, 3);
-  assert.match(r.out, /stakeout lock/);
+  assert.match(r.out, /apollo lock/);
 });
 
 it('explain shows what a package did, and who was watching', () => {
@@ -324,7 +324,7 @@ it('index prints what it holds', () => {
   assert.match(r.out, /nodert/);
 });
 
-/* ── stakeout upgrade ───────────────────────────────────────────────────── */
+/* ── apollo upgrade ───────────────────────────────────────────────────── */
 
 /** A project under git: the lockfile committed at one set of versions, then moved on disk. */
 function bumped(was, now, indexPackages = []) {

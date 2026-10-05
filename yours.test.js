@@ -30,7 +30,7 @@ const LOCK = JSON.stringify({
   packages: {
     '': { name: 'x' },
     'node_modules/ms': { version: '2.1.3' },
-    'node_modules/definitely-not-a-real-package-stakeout': { version: '9.9.9' },
+    'node_modules/definitely-not-a-real-package-apollo': { version: '9.9.9' },
   },
 });
 
@@ -42,7 +42,7 @@ const LOCK = JSON.stringify({
     try {
       const r = await (await post(`${s.url}/`, { lockfile: LOCK })).json();
       assert.equal(r.total, 2);
-      assert.ok(r.unknownSample.includes('definitely-not-a-real-package-stakeout@9.9.9'), 'an unwatched package was not reported as unknown');
+      assert.ok(r.unknownSample.includes('definitely-not-a-real-package-apollo@9.9.9'), 'an unwatched package was not reported as unknown');
       assert.equal(r.known + r.unknown, r.total);
       assert.ok(r.index.versions > 0);
       assert.match(r.note, /never that it is clean/);
@@ -52,19 +52,19 @@ const LOCK = JSON.stringify({
   await it('an unknown binary built for another platform is counted as such — still unknown', async () => {
     const lock = JSON.stringify({ name: 'x', lockfileVersion: 3, packages: {
       '': { name: 'x' },
-      'node_modules/@stakeout-test/darwin-arm64': { version: '1.0.0', os: ['darwin'], cpu: ['arm64'], optional: true },
-      'node_modules/@stakeout-test/linux-x64-musl': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['musl'], optional: true },
-      'node_modules/@stakeout-test/linux-x64-gnu': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['glibc'], optional: true },
-      'node_modules/@stakeout-test/native': { version: '2.0.0', hasInstallScript: true },
+      'node_modules/@apollo-test/darwin-arm64': { version: '1.0.0', os: ['darwin'], cpu: ['arm64'], optional: true },
+      'node_modules/@apollo-test/linux-x64-musl': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['musl'], optional: true },
+      'node_modules/@apollo-test/linux-x64-gnu': { version: '1.0.0', os: ['linux'], cpu: ['x64'], libc: ['glibc'], optional: true },
+      'node_modules/@apollo-test/native': { version: '2.0.0', hasInstallScript: true },
     } });
     const s = await serve((req, res) => lockfile(req, res));
     try {
       const r = await (await post(`${s.url}/`, { lockfile: lock })).json();
       assert.equal(r.unknown, 4, 'a binary for another platform was counted as known');
-      assert.deepEqual(r.installScripts, ['@stakeout-test/native@2.0.0'], 'an install script was not named as unwatched');
+      assert.deepEqual(r.installScripts, ['@apollo-test/native@2.0.0'], 'an install script was not named as unwatched');
       assert.equal(r.installScriptCount, 1);
       assert.equal(r.otherPlatform, 2);
-      assert.deepEqual(r.otherPlatformSample.sort(), ['@stakeout-test/darwin-arm64@1.0.0', '@stakeout-test/linux-x64-musl@1.0.0']);
+      assert.deepEqual(r.otherPlatformSample.sort(), ['@apollo-test/darwin-arm64@1.0.0', '@apollo-test/linux-x64-musl@1.0.0']);
     } finally { s.close(); }
   });
 
@@ -164,7 +164,7 @@ const LOCK = JSON.stringify({
     };
     const s = await serve((req, res) => watch(req, res, { adapter, skipLimits: true, registry: async () => ({ ok: true }) }));
     try {
-      const r = await post(`${s.url}/`, { pkg: 'stakeout-never-indexed-pkg', from: '5.0.9', to: '5.0.10' });
+      const r = await post(`${s.url}/`, { pkg: 'apollo-never-indexed-pkg', from: '5.0.9', to: '5.0.10' });
       assert.equal(r.status, 422);
       const body = await r.json();
       assert.match(body.error, /did not install/);
@@ -188,7 +188,7 @@ const LOCK = JSON.stringify({
     const s = await serve((req, res) => watch(req, res, { adapter, skipLimits: true, registry: async () => ({ ok: true }) }));
     const err = console.error; console.error = () => {};
     try {
-      const r = await post(`${s.url}/`, { pkg: 'stakeout-never-indexed-pkg', from: '1.0.0', to: '1.0.1' });
+      const r = await post(`${s.url}/`, { pkg: 'apollo-never-indexed-pkg', from: '1.0.0', to: '1.0.1' });
       assert.equal(r.status, 503);
       const body = await r.json();
       assert.match(body.error, /at capacity right now/);

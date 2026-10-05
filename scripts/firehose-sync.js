@@ -31,7 +31,7 @@ function push() {
   if (!/^[0-9a-f]{20,40}$/.test(String(source.gist || ''))) throw new Error('public/live-source.json names no gist');
   const sum = summarise(DIR);
   const body = { files: { 'live-watch.json': { content: JSON.stringify(sum) }, 'watched-releases.json': { content: JSON.stringify(ledger(DIR)) } } };
-  const tmp = path.join(os.tmpdir(), `stakeout-sync-${process.pid}.json`);
+  const tmp = path.join(os.tmpdir(), `apollo-sync-${process.pid}.json`);
   fs.writeFileSync(tmp, JSON.stringify(body));
   try { execFileSync('gh', ['api', '-X', 'PATCH', `gists/${source.gist}`, '--input', tmp, '--silent'], { stdio: ['ignore', 'ignore', 'pipe'], timeout: 60000 }); }
   finally { try { fs.unlinkSync(tmp); } catch { /* already gone */ } }

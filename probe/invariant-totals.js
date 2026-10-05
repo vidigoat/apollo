@@ -6,7 +6,7 @@
  *
  * PLANTED-2 in the corpus is `money-fmt@2.4.2`, which changed its default rounding from HALF_EVEN
  * ("banker's rounding") to HALF_UP in a patch release. That change opens no socket, reads no
- * variable and writes no file, so the behavioural diff is empty and Stakeout correctly reports
+ * variable and writes no file, so the behavioural diff is empty and Apollo correctly reports
  * nothing. The README and the interface both say so.
  *
  * This is what a team would have instead: not a scanner, but a claim about their own domain that

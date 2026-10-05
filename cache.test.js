@@ -29,7 +29,7 @@ const it = (name, fn) => {
   }
 };
 
-const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'stakeout-cache-'));
+const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'apollo-cache-'));
 const JOB = { pkg: 'left-pad', from: '1.2.0', to: '1.3.0', strategy: 'nodert' };
 const DIFF = { pkg: 'left-pad', severity: 'none', changed: false, reasons: [] };
 

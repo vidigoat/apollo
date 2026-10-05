@@ -1,4 +1,4 @@
-# Stakeout on every dependency change.
+# Apollo on every dependency change.
 #
 # Copy to .github/workflows/ in the repository you want watched. It runs when a pull request touches
 # package-lock.json — which is what Dependabot and Renovate do all day — and reports what those
@@ -26,7 +26,7 @@ permissions:
   contents: read        # nothing else. See the note above.
 
 jobs:
-  stakeout:
+  apollo:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -37,13 +37,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
 
-      - name: Fetch Stakeout
-        run: git clone --depth 1 https://github.com/vidigoat/cassandra.git /tmp/stakeout
+      - name: Fetch Apollo
+        run: git clone --depth 1 https://github.com/vidigoat/apollo.git /tmp/apollo
 
       # What moved. Costs nothing, needs nothing, and is worth having even if the step below is off.
       - name: What moved
         run: |
-          node /tmp/stakeout/scripts/lockfile-run.js \
+          node /tmp/apollo/scripts/lockfile-run.js \
             --against "origin/${{ github.base_ref }}" --repo "$GITHUB_WORKSPACE" --dry-run
 
       # What the upgrades DO, from what has already been watched. Runs nothing: each bumped version
@@ -52,25 +52,25 @@ jobs:
       # compared is named and passes. This step alone is worth having, and is safe on any trigger.
       - name: What the upgrades change
         run: |
-          node /tmp/stakeout/cli.js upgrade --against "origin/${{ github.base_ref }}" \
-            --index https://cassandra-nu.vercel.app/index.json
+          node /tmp/apollo/cli.js upgrade --against "origin/${{ github.base_ref }}" \
+            --index https://apollo-watch.vercel.app/index.json
 
       # Answers already known are free; the strategy is part of the cache key.
       - name: Cache what we already know
         uses: actions/cache@v4
         with:
-          path: ~/.cache/stakeout
+          path: ~/.cache/apollo
           key: stakeout-behaviour-${{ runner.os }}
 
       - name: What those changes do
         env:
-          STAKEOUT_ALLOW_LOCAL: '1'
+          APOLLO_ALLOW_LOCAL: '1'
           # Optional. Without them the judgement and the public record fall back to labelled
           # stand-ins, and the behavioural diff — which is the part that matters — is unaffected.
           NEBIUS_API_KEY: ${{ secrets.NEBIUS_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
         run: |
-          node /tmp/stakeout/scripts/lockfile-run.js \
+          node /tmp/apollo/scripts/lockfile-run.js \
             --against "origin/${{ github.base_ref }}" \
             --repo "$GITHUB_WORKSPACE" \
             --json --fail-on alarming > behaviour.json

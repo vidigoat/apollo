@@ -26,7 +26,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const IMAGE = process.env.STAKEOUT_PROOF_IMAGE || 'stakeout-proof:node22';
+const IMAGE = process.env.APOLLO_PROOF_IMAGE || 'apollo-proof:node22';
 // The real probe, mounted into the container so there is never a second copy to keep in sync.
 const PROBE = path.join(__dirname, '..', 'observe', 'probe.js');
 
@@ -48,7 +48,7 @@ function dockerAvailable() {
  */
 // Docker Desktop on macOS shares /Users but not /var/folders (os.tmpdir()), so the work directory
 // the container bind-mounts lives under the repo, where the mount actually appears.
-const WORK_BASE = process.env.STAKEOUT_PROOF_WORK || path.join(__dirname, '.work');
+const WORK_BASE = process.env.APOLLO_PROOF_WORK || path.join(__dirname, '.work');
 
 /*
  * ── The install phase, contained ────────────────────────────────────────────
@@ -97,7 +97,7 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
         if (typeof cmd !== 'string' || !cmd.trim()) continue;
         started.push({ argv: ['sh', '-c', cmd] });
         const r = cp.spawnSync('sh', ['-c', cmd], { cwd: PKG, timeout: ${Math.max(5000, Math.floor(timeoutMs / 2))}, stdio: 'ignore', env: { ...process.env,
-          NODE_OPTIONS: '--require /run/probe.js', STAKEOUT_INSTALL_DIR: IDIR, INIT_CWD: PKG,
+          NODE_OPTIONS: '--require /run/probe.js', APOLLO_INSTALL_DIR: IDIR, INIT_CWD: PKG,
           npm_lifecycle_event: name, npm_lifecycle_script: cmd, npm_package_name: String(manifest.name || ''), npm_package_version: String(manifest.version || ''),
           npm_config_user_agent: 'npm/10.9.0 node/' + process.version + ' linux x64', npm_execpath: '/usr/local/lib/node_modules/npm/bin/npm-cli.js' } });
         ran.push({ name, timedOut: Boolean(r.error && r.error.code === 'ETIMEDOUT'), status: r.status });
@@ -122,7 +122,7 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
     `;
     fs.writeFileSync(path.join(work, 'runner.js'), runner);
 
-    const env = { STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: canary, HOME: '/run/work/home', ...(provocation.env || {}) };
+    const env = { APOLLO_CONTAINED: '1', APOLLO_CANARY: canary, HOME: '/run/work/home', ...(provocation.env || {}) };
     const envArgs = Object.entries(env).flatMap(([k, v]) => ['-e', `${k}=${v}`]);
     const args = [
       'run', '--rm',

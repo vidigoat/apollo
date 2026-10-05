@@ -1,4 +1,4 @@
-# The image is Stakeout Live's watcher and nothing else. Everything is excluded, then the files it
+# The image is Apollo Live's watcher and nothing else. Everything is excluded, then the files it
 # needs are let back in — the list is short on purpose, and it never contains .env: keys go in as
 # job environment variables from MysteryBox (deploy/nebius/launch.sh), never baked into an image.
 *

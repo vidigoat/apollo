@@ -32,8 +32,8 @@ const it = async (name, fn) => {
 };
 
 const allow = (on) => {
-  if (on) process.env.STAKEOUT_ALLOW_LOCAL = '1';
-  else delete process.env.STAKEOUT_ALLOW_LOCAL;
+  if (on) process.env.APOLLO_ALLOW_LOCAL = '1';
+  else delete process.env.APOLLO_ALLOW_LOCAL;
 };
 
 (async () => {
@@ -41,7 +41,7 @@ const allow = (on) => {
 
   await it('refuses to exist unless somebody meant it', () => {
     allow(false);
-    assert.throws(() => new LocalMachines(), /STAKEOUT_ALLOW_LOCAL/);
+    assert.throws(() => new LocalMachines(), /APOLLO_ALLOW_LOCAL/);
     assert.throws(() => new LocalMachines(), /Nothing isolates them/,
       'the refusal has to say why, not just how to bypass it');
     allow(true);
@@ -137,7 +137,7 @@ const allow = (on) => {
     // ...but a runner that cannot write at all must produce null.
     const m2 = new LocalMachines();
     const [b] = await m2.fork(await m2.boot(), 1);
-    m2.root = path.join(os.tmpdir(), 'stakeout-nowhere', 'nope'); // report path becomes unwritable
+    m2.root = path.join(os.tmpdir(), 'apollo-nowhere', 'nope'); // report path becomes unwritable
     const bad = await m2.run(b, '', { step: 'import', pkg: 'definitely-not-installed' });
     assert.equal(bad.observed, null, 'a lost report must never look like a silent package');
 

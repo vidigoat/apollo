@@ -18,7 +18,7 @@
  * anything the package itself printed.
  */
 
-const MARKER = '__STAKEOUT__';
+const MARKER = '__APOLLO__';
 
 function install() {
   const seen = { net: [], dns: [], fs: [], env: [], proc: [], exec: [] };
@@ -27,7 +27,7 @@ function install() {
   /*
    * Contained mode: record what the package reaches for, and let NONE of it out.
    *
-   * Set by STAKEOUT_CONTAINED. Normal observation forwards the real call — a popular, benign
+   * Set by APOLLO_CONTAINED. Normal observation forwards the real call — a popular, benign
    * package doing legitimate network things is fine, and blocking it would hide behaviour. But
    * SUSPECTED code (a lookalike) and the interrogation agent's probes must never actually egress:
    * Nebius's AUP forbids running malicious code and any network egress/attack, and the whole point
@@ -36,18 +36,18 @@ function install() {
    * `contained` also travels in the report, so a transcript can never be mistaken for one where the
    * package was actually allowed to reach the network.
    */
-  const CONTAINED = Boolean(process.env.STAKEOUT_CONTAINED);
+  const CONTAINED = Boolean(process.env.APOLLO_CONTAINED);
   seen.contained = CONTAINED;
-  const HARNESS_ENV = new Set(['STAKEOUT_CONTAINED', 'STAKEOUT_CANARY', 'STAKEOUT_CLOCK_OFFSET_DAYS', 'STAKEOUT_INSTALL_DIR', 'STAKEOUT_NPM_ROOT']);
+  const HARNESS_ENV = new Set(['APOLLO_CONTAINED', 'APOLLO_CANARY', 'APOLLO_CLOCK_OFFSET_DAYS', 'APOLLO_INSTALL_DIR', 'APOLLO_NPM_ROOT']);
 
   /* ── clock ───────────────────────────────────────────────────────────
    * A payload that waits for a date before it acts sees nothing wrong in a sandbox opened today. So
-   * STAKEOUT_CLOCK_OFFSET_DAYS moves the clock the PACKAGE sees forward, without touching the real
+   * APOLLO_CLOCK_OFFSET_DAYS moves the clock the PACKAGE sees forward, without touching the real
    * one: Date.now() and `new Date()` with no argument return the future, and a read of the shifted
    * clock is recorded, so a dormancy check is itself a signal. Timers are left alone — they run on
    * the real clock, so the probe still writes its report on time.
    */
-  const offsetDays = Number(process.env.STAKEOUT_CLOCK_OFFSET_DAYS) || 0;
+  const offsetDays = Number(process.env.APOLLO_CLOCK_OFFSET_DAYS) || 0;
   if (offsetDays) {
     const shiftMs = offsetDays * 86400000;
     const RealDate = Date;
@@ -85,7 +85,7 @@ function install() {
   process.env = new Proxy(realEnv, {
     get(target, prop) {
       // Never our own instrumentation: these exact vars are the harness talking to itself. Only
-      // these, not every STAKEOUT_* name, so a package's own read of such a var is still its read.
+      // these, not every APOLLO_* name, so a package's own read of such a var is still its read.
       if (typeof prop === 'string' && !HARNESS_ENV.has(prop) && !fromRuntime()) push('env', prop);
       return target[prop];
     },
@@ -104,7 +104,7 @@ function install() {
       // Fail like a refused connection, without the real socket ever leaving the box. The last
       // callback argument, if any, is the caller's 'connect' listener — never called, so nothing
       // downstream believes it connected.
-      process.nextTick(() => { try { this.destroy(Object.assign(new Error('stakeout: egress blocked (contained)'), { code: 'ECONNREFUSED' })); } catch { /* already gone */ } });
+      process.nextTick(() => { try { this.destroy(Object.assign(new Error('apollo: egress blocked (contained)'), { code: 'ECONNREFUSED' })); } catch { /* already gone */ } });
       return this;
     }
     return realConnect.apply(this, args);
@@ -117,7 +117,7 @@ function install() {
    * Off outside containment: reading every package's socket writes in the normal watch is neither
    * needed nor wanted.
    */
-  const CANARY = process.env.STAKEOUT_CANARY || null;
+  const CANARY = process.env.APOLLO_CANARY || null;
   if (CONTAINED && CANARY) {
     // The request body is handed to ClientRequest.write / .end, which is BEFORE the socket — so it
     // is seen even though containment fails the socket a tick later and the bytes never leave. This
@@ -152,7 +152,7 @@ function install() {
       // A socket that never connects: record, then error. A stub rather than a real TLSSocket,
       // because a real one would open the underlying TCP connection this is here to prevent.
       const s = new net.Socket();
-      process.nextTick(() => { try { s.destroy(Object.assign(new Error('stakeout: egress blocked (contained)'), { code: 'ECONNREFUSED' })); } catch { /* already gone */ } });
+      process.nextTick(() => { try { s.destroy(Object.assign(new Error('apollo: egress blocked (contained)'), { code: 'ECONNREFUSED' })); } catch { /* already gone */ } });
       const cb = args.find((a) => typeof a === 'function');
       return s;
     }
@@ -170,7 +170,7 @@ function install() {
         if (CONTAINED) {
           // No resolution leaves the box. A callback caller gets ENOTFOUND; a promise caller a
           // rejection — the same shape a real failed lookup has, so the package handles it normally.
-          const err = Object.assign(new Error(`stakeout: DNS blocked (contained): ${String(name)}`), { code: 'ENOTFOUND' });
+          const err = Object.assign(new Error(`apollo: DNS blocked (contained): ${String(name)}`), { code: 'ENOTFOUND' });
           const cb = rest[rest.length - 1];
           if (typeof cb === 'function') { process.nextTick(() => cb(err)); return undefined; }
           return Promise.reject(err);
@@ -372,7 +372,7 @@ function parseReport(raw) {
  *
  * The runner above watches the import. An install script — `preinstall`, `install`,
  * `postinstall` — runs before that, and npm 10 and 11 run it by default. So the install step runs
- * with NODE_OPTIONS=--require <this file> and STAKEOUT_INSTALL_DIR set, and every Node process it
+ * with NODE_OPTIONS=--require <this file> and APOLLO_INSTALL_DIR set, and every Node process it
  * starts loads this block:
  *
  *   - npm itself records only which processes it starts. That is the list of lifecycle scripts that
@@ -383,17 +383,17 @@ function parseReport(raw) {
  * Each writes its own report when it exits; the runner gathers them before the import. A script
  * written in shell rather than Node is seen as the command npm started, not from inside.
  */
-const INSTALL_DIR = process.env.STAKEOUT_INSTALL_DIR;
-if (INSTALL_DIR && !global.__stakeoutInstallPhase) {
-  global.__stakeoutInstallPhase = true;
+const INSTALL_DIR = process.env.APOLLO_INSTALL_DIR;
+if (INSTALL_DIR && !global.__apolloInstallPhase) {
+  global.__apolloInstallPhase = true;
   /*
    * npm is recognised by where it really is, not by what it is called. By name alone, a postinstall
    * running `node npm-cli.js` — or anything under a folder called node_modules/npm — was taken for
    * npm and watched only for what it started, which hid its network and environment reads (a test
-   * does exactly that). STAKEOUT_NPM_ROOT is the npm the install was started with, set by the
+   * does exactly that). APOLLO_NPM_ROOT is the npm the install was started with, set by the
    * adapter; a process counts as npm only if its script's real path is inside it.
    */
-  const npmRoot = process.env.STAKEOUT_NPM_ROOT;
+  const npmRoot = process.env.APOLLO_NPM_ROOT;
   let isNpm = false;
   if (npmRoot) {
     try {

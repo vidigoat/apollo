@@ -34,8 +34,8 @@ const path = require('node:path');
 const SCHEMA = 2;
 
 const DEFAULT_DIR =
-  process.env.STAKEOUT_CACHE ||
-  path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'), 'stakeout');
+  process.env.APOLLO_CACHE ||
+  path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'), 'apollo');
 
 /** Content-addressed, so the filename carries everything that makes the answer what it is. */
 function keyFor({ pkg, from, to, strategy }) {

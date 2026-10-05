@@ -2,7 +2,7 @@
 /**
  * Every route the deployed site serves, asked once, after a deploy.
  *
- *   npm run smoke:live                       # https://cassandra-nu.vercel.app
+ *   npm run smoke:live                       # https://apollo-watch.vercel.app
  *   npm run smoke:live -- https://preview-url
  *
  * The hosted functions are a compiled bundle, and a bundle can break what every local test passes:
@@ -13,7 +13,7 @@
  * it spends one.
  */
 
-const BASE = (process.argv[2] || 'https://cassandra-nu.vercel.app').replace(/\/$/, '');
+const BASE = (process.argv[2] || 'https://apollo-watch.vercel.app').replace(/\/$/, '');
 
 const CHECKS = [
   ['GET', '/', 200, (t) => /<div id="root"|<html/i.test(t)],
@@ -22,7 +22,7 @@ const CHECKS = [
   ['GET', '/api/run', 200, (t) => t.length > 100],
   ['GET', '/index.json', 200, (t) => Object.keys(JSON.parse(t).packages).length > 1000],
   ['GET', '/release-watch.json', 200, (t) => Object.keys(JSON.parse(t).results).length > 0],
-  ['GET', '/probe.source.txt', 200, (t) => t.includes('STAKEOUT_INSTALL_DIR')],
+  ['GET', '/probe.source.txt', 200, (t) => t.includes('APOLLO_INSTALL_DIR')],
   ['POST', '/api/lockfile', 200, (t) => JSON.parse(t).total === 1, { lockfile: JSON.stringify({ lockfileVersion: 3, packages: { '': {}, 'node_modules/ms': { version: '2.1.3' } } }) }],
   ['POST', '/api/lockfile', 400, (t) => /lockfile/i.test(JSON.parse(t).error), { lockfile: 'not json' }],
   ['POST', '/api/watch', 400, (t) => Boolean(JSON.parse(t).error), { pkg: '../etc', from: '1.0.0', to: '1.0.1' }],

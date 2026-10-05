@@ -2,13 +2,15 @@
 
 <br>
 
-# Stakeout
+# Apollo
 
 ### Your lockfile pins versions. This pins behaviour.
 
+*Apollo is the god who cannot lie, and the one who gave Cassandra her sight — which is why the repository is still called `cassandra`. Cassandra saw what was coming and nobody believed her. Apollo's answer is evidence: the old release and the new one, run side by side, and what changed between them.*
+
 <br>
 
-[**Live demo**](https://cassandra-nu.vercel.app) · [The deep dive](docs/DEEP-DIVE.md) · [For reviewers](docs/JUDGING.md) · MIT
+[**Live demo**](https://apollo-watch.vercel.app) · [The deep dive](docs/DEEP-DIVE.md) · [For reviewers](docs/JUDGING.md) · MIT
 
 <br>
 
@@ -23,7 +25,7 @@
 A lockfile guarantees you get `express-fileupload@2.1.1`. It guarantees **nothing** about what that
 version does.
 
-Stakeout gives every dependency its own disposable copy of a machine, installs it, imports it — and
+Apollo gives every dependency its own disposable copy of a machine, installs it, imports it — and
 writes down what it actually did. Then it does the same for the version you had before, from the
 **identical** starting state, and diffs the two.
 
@@ -48,7 +50,7 @@ rules, and ajv's and core-js's real ones came back that way. [The newest release
 ## Try it
 
 ```bash
-git clone https://github.com/vidigoat/cassandra.git stakeout && cd stakeout
+git clone https://github.com/vidigoat/apollo.git apollo && cd apollo
 
 npm run demo        # the whole argument in a terminal, ~2 seconds
 npm run check-run   # what the GitHub App posts on a pull request
@@ -69,7 +71,7 @@ dependency tree is telling on itself. Node 20+.
 
 ### On the site, with your own packages
 
-**<https://cassandra-nu.vercel.app/#yours>** — two things that are not the demo: name a public GitHub
+**<https://apollo-watch.vercel.app/#yours>** — two things that are not the demo: name a public GitHub
 repository (or drop a `package-lock.json`) and it is resolved against the published index, running
 nothing — with what nobody has watched listed by name, binaries built for another platform counted
 apart, and every package that runs an install script named with what that script was watched
@@ -126,11 +128,11 @@ quiet package. It no longer can: a version that never installed is left out, and
 
 ```bash
 cd ~/your-project
-node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
+node ~/apollo/cli.js lock --index https://apollo-watch.vercel.app/index.json
 ```
 
 That reads a **published index** — 7,933 packages and 18,257 versions somebody has already run,
-about 390 kB over the wire — and writes a `stakeout.lock` for *your* tree. Some of it will come
+about 390 kB over the wire — and writes a `apollo.lock` for *your* tree. Some of it will come
 back **unknown**, because most of npm has never been watched by anybody, and the lock says so by
 name rather than pretending to cover it.
 

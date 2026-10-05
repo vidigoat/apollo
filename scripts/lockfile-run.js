@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Stakeout, pointed at a real repository.
+ * Apollo, pointed at a real repository.
  *
- *   STAKEOUT_ALLOW_LOCAL=1 npm run lockfile -- --against HEAD~20
- *   STAKEOUT_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/some/project
+ *   APOLLO_ALLOW_LOCAL=1 npm run lockfile -- --against HEAD~20
+ *   APOLLO_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/some/project
  *   npm run lockfile -- --against HEAD~20 --dry-run        # just say what moved
  *
  * Everything else in this project runs against a fixture. This reads an actual `package-lock.json`,
@@ -65,14 +65,14 @@ const RANK = { none: 0, minor: 1, notable: 2, alarming: 3 };
   ${C.bold}Which commit should I compare against?${C.off}
 
     npm run lockfile -- --against HEAD~20 --dry-run
-    STAKEOUT_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/my-project
+    APOLLO_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/my-project
 
   ${C.dim}--dry-run needs nothing and answers "how much of this upgrade is worth looking at".${C.off}
 `);
     process.exit(1);
   }
 
-  out(`\n  ${C.bold}STAKEOUT${C.off}  ${C.dim}${args.repo}${C.off}`);
+  out(`\n  ${C.bold}APOLLO${C.off}  ${C.dim}${args.repo}${C.off}`);
 
   let before;
   let after;
@@ -114,7 +114,7 @@ const RANK = { none: 0, minor: 1, notable: 2, alarming: 3 };
     }
     out(`\n  ${C.dim}--dry-run: what moved, without running anything.${C.off}\n`);
     jobs.forEach((m) => out(`    ${m.pkg.padEnd(38)} ${C.dim}${m.from} → ${m.to}${C.off}`));
-    out(`\n  ${C.dim}Drop --dry-run (with STAKEOUT_ALLOW_LOCAL=1) to find out what they do.${C.off}\n`);
+    out(`\n  ${C.dim}Drop --dry-run (with APOLLO_ALLOW_LOCAL=1) to find out what they do.${C.off}\n`);
     return;
   }
 

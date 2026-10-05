@@ -2,7 +2,7 @@
 /**
  * A survey of the real registry.
  *
- *   STAKEOUT_ALLOW_LOCAL=1 npm run survey
+ *   APOLLO_ALLOW_LOCAL=1 npm run survey
  *
  * Everything else here answers "does the machinery work". This asks the question the machinery was
  * built for, about software nobody involved controls:
@@ -49,7 +49,7 @@ async function main() {
   const cache = new BehaviourCache();
   const strategy = bestStrategy(machines);
 
-  console.log(`\n  ${C.bold}STAKEOUT — a survey of the real registry${C.off}`);
+  console.log(`\n  ${C.bold}APOLLO — a survey of the real registry${C.off}`);
   console.log(`  ${C.dim}${PAIRS.length} upgrades of genuinely popular packages, watched with "${strategy}".`);
   console.log(`  Nothing here is chosen for being interesting — that is the point of a baseline.${C.off}\n`);
 

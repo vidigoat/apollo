@@ -1,5 +1,5 @@
 /**
- * Stakeout Live — npm, watched as it publishes.
+ * Apollo Live — npm, watched as it publishes.
  *
  *   feed ──► select ──► queue ──► runPair in Nebius Sandboxes ──► results.jsonl
  *
@@ -19,7 +19,7 @@ const { newReleases, publishSignals, lookalike, describeLookalike } = require('.
 // The same short account of a diff the release watch keeps, so the two records read alike.
 const { gained } = require('../scripts/release-watch');
 
-const REGISTRY = (process.env.STAKEOUT_NPM_REGISTRY || 'https://registry.npmjs.org').replace(/\/+$/, '');
+const REGISTRY = (process.env.APOLLO_NPM_REGISTRY || 'https://registry.npmjs.org').replace(/\/+$/, '');
 
 /**
  * npm's CDN serves a new version a little after the registry records it; an install in that

@@ -130,7 +130,7 @@ do and what it says instead.
 
 Both are live:
 
-- **<https://cassandra-nu.vercel.app>** — and it now serves the **published index** at
+- **<https://apollo-watch.vercel.app>** — and it now serves the **published index** at
   `/index.json`: 7,933 packages, about 620 kB over the wire. A stranger can point `cli.js lock --index` at
   it and get their own tree answered without building anything, which is the part of the argument
   that used to be unverifiable.
@@ -178,7 +178,7 @@ Not urgent for the build. It is a real exposure and it should not go into Decemb
   memory across sessions on the hosted server (a second item in that table — nothing more to
   provision); today it is not kept, and says so. Know before you run it: the public demo has no
   accounts, so that household is ONE, shared by every visitor (the privacy page says so). `--undo` takes it all away.
-- **Grow Stakeout's index on your Mac?** Done — in Colima containers that see only
+- **Grow Apollo's index on your Mac?** Done — in Colima containers that see only
   `~/stakeout-index-work`, then on Nebius once Sandboxes opened: 18,257 versions, every one of
   them observed on Nebius by now.
 - **A Tavily key on Vercel?** Optional. The hosted run's corpus is planted packages, so a live search

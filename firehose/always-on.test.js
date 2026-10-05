@@ -33,7 +33,7 @@ function store() {
   };
   return { objects, seen, fetchImpl };
 }
-const env = { STAKEOUT_STATE_S3: 's3://stakeout-watch/live', STAKEOUT_S3_KEY_ID: 'AKIDEXAMPLE', STAKEOUT_S3_SECRET: 'wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY' };
+const env = { APOLLO_STATE_S3: 's3://stakeout-watch/live', APOLLO_S3_KEY_ID: 'AKIDEXAMPLE', APOLLO_S3_SECRET: 'wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY' };
 
 (async () => {
   console.log('always on');
@@ -91,8 +91,8 @@ const env = { STAKEOUT_STATE_S3: 's3://stakeout-watch/live', STAKEOUT_S3_KEY_ID:
 
   await it('a half-configured mirror is refused at start, not discovered at the first push', () => {
     assert.equal(Mirror.fromEnv({}), null);
-    assert.throws(() => Mirror.fromEnv({ STAKEOUT_STATE_S3: 's3://b/p' }), /KEY_ID/);
-    assert.throws(() => Mirror.fromEnv({ ...env, STAKEOUT_STATE_S3: 'b/p' }), /s3:\/\/bucket/);
+    assert.throws(() => Mirror.fromEnv({ APOLLO_STATE_S3: 's3://b/p' }), /KEY_ID/);
+    assert.throws(() => Mirror.fromEnv({ ...env, APOLLO_STATE_S3: 'b/p' }), /s3:\/\/bucket/);
   });
 
   await it('the health check names each quiet failure: stopped, falling behind, reading but not watching', () => {
@@ -111,7 +111,7 @@ const env = { STAKEOUT_STATE_S3: 's3://stakeout-watch/live', STAKEOUT_S3_KEY_ID:
     // Dies twice, then stays up until told to stop — which the deadline does.
     fs.writeFileSync(crashy, `const fs=require('fs');const f=${JSON.stringify(counter)};const n=(fs.existsSync(f)?Number(fs.readFileSync(f,'utf8')):0)+1;fs.writeFileSync(f,String(n));if(n<3)process.exit(1);setTimeout(()=>process.exit(0),1500);`);
     const r = spawnSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'firehose-supervise.js'), '--hours', '0.0015'], {
-      env: { ...process.env, STAKEOUT_SUPERVISE_CHILD: crashy, STAKEOUT_SUPERVISE_FIRST_DELAY_MS: '100' },
+      env: { ...process.env, APOLLO_SUPERVISE_CHILD: crashy, APOLLO_SUPERVISE_FIRST_DELAY_MS: '100' },
       encoding: 'utf8',
       timeout: 20000,
     });

@@ -416,14 +416,14 @@ const it = async (name, fn) => {
     }
   });
 
-  await it('the site is its own package, so stakeout still has no dependencies', () => {
+  await it('the site is its own package, so apollo still has no dependencies', () => {
     /*
      * The README claims zero dependencies and no build step, and a judge will check it. React lives
      * in web/package.json; the root one has to stay empty, and this is the assertion that says so
      * when somebody reaches for a convenient `npm i` at the top level.
      */
     const root = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
-    assert.deepEqual(root.dependencies ?? {}, {}, 'stakeout itself now has dependencies');
+    assert.deepEqual(root.dependencies ?? {}, {}, 'apollo itself now has dependencies');
     assert.ok(fs.existsSync(path.join(__dirname, 'web', 'package.json')), 'the site has no package of its own');
 
     const web = JSON.parse(fs.readFileSync(path.join(__dirname, 'web', 'package.json'), 'utf8'));

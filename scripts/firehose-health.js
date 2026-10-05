@@ -3,7 +3,7 @@
  * Is the watch alive, and keeping up? From its heartbeat — the local one, or the mirrored one.
  *
  *   node scripts/firehose-health.js                 # local/firehose/heartbeat.json
- *   node scripts/firehose-health.js --mirror        # the copy in STAKEOUT_STATE_S3 (a job elsewhere)
+ *   node scripts/firehose-health.js --mirror        # the copy in APOLLO_STATE_S3 (a job elsewhere)
  *
  * Exits 1, with the reason, when any of these is true — each is how a watcher fails quietly:
  *   - the heartbeat is older than 10 minutes          it has stopped (a poll is every 15 s)
@@ -35,7 +35,7 @@ if (require.main === module) {
     let hb;
     if (process.argv.includes('--mirror')) {
       const m = Mirror.fromEnv();
-      if (!m) throw new Error('--mirror needs STAKEOUT_STATE_S3 and its keys');
+      if (!m) throw new Error('--mirror needs APOLLO_STATE_S3 and its keys');
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'firehose-health-'));
       await m.restore(dir);
       hb = JSON.parse(fs.readFileSync(path.join(dir, 'heartbeat.json'), 'utf8'));

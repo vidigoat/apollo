@@ -2,8 +2,8 @@
 /**
  * The same pipeline, against real packages from the real registry, on this machine.
  *
- *   STAKEOUT_ALLOW_LOCAL=1 npm run real -- chalk 5.3.0 5.4.1
- *   STAKEOUT_ALLOW_LOCAL=1 npm run real            # a short default list
+ *   APOLLO_ALLOW_LOCAL=1 npm run real -- chalk 5.3.0 5.4.1
+ *   APOLLO_ALLOW_LOCAL=1 npm run real            # a short default list
  *
  * Everything downstream of the adapter is the code the demo uses. Nothing is simulated except the
  * judgement and the web lookup, and only while their keys are absent — each says so when it is.
@@ -57,7 +57,7 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
     process.exit(1);
   }
 
-  console.log(`${C.bold}STAKEOUT — real packages, real registry, ${onNebius ? 'Nebius Token Factory Sandboxes' : 'this machine'}${C.off}`);
+  console.log(`${C.bold}APOLLO — real packages, real registry, ${onNebius ? 'Nebius Token Factory Sandboxes' : 'this machine'}${C.off}`);
   const strategy = bestStrategy(machines);
   console.log(`${C.dim}Watching with "${strategy}". Node's API surface only — a native addon goes underneath it.${C.off}\n`);
 

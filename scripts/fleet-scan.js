@@ -73,9 +73,9 @@ function scanRepo(lockfilePath, index, root = null) {
   const tree = parsed.versions;
   const built = buildLock(tree, index);
 
-  // A repo that already keeps a stakeout.lock gets checked against it; one that does not is
+  // A repo that already keeps an apollo.lock gets checked against it; one that does not is
   // reported on what the index knows today. Both are useful; only the first can show drift.
-  const existing = path.join(dir, 'stakeout.lock');
+  const existing = path.join(dir, 'apollo.lock');
   let state = 'unpinned';
   let drift = [];
   if (fs.existsSync(existing)) {

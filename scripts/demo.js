@@ -25,7 +25,7 @@ const TONE = { alarming: C.red, notable: C.amber, minor: C.dim, none: C.dim };
 
 (async () => {
   rule();
-  console.log(`${C.bold}STAKEOUT${C.off}  Your lockfile pins versions. This pins behaviour.`);
+  console.log(`${C.bold}APOLLO${C.off}  Your lockfile pins versions. This pins behaviour.`);
   rule();
 
   console.log(`\n  Dependency tree      ${TOTAL.toLocaleString()} packages`);

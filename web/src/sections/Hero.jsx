@@ -50,7 +50,7 @@ export default function Hero() {
         sentence explaining it has no business being suspense.
       */}
       <div className="hero__said">
-        <p className="hero__mark">Stakeout</p>
+        <p className="hero__mark">Apollo</p>
 
         <h1>
           Your lockfile pins versions.

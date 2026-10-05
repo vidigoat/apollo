@@ -14,7 +14,7 @@ Checklist against the stated requirements:
 | uses at least one NVIDIA open source model | **LIVE, three of them.** `NVIDIA-Nemotron-3-Nano-30B-A3B` triages, `Nemotron-3-Ultra-550b-a55b` judges, `nemotron-3-super-120b-a12b` vetoes. Preflight shows a parsed verdict and a real cost for each. |
 | public repo, OSS licence visible at top | **MIT — must be made public at submission** |
 | README with setup + how Nemotron and Token Factory were used | yes |
-| **a working demo URL** — hosted app or test build | **LIVE: <https://cassandra-nu.vercel.app>** — no login, no key. The verdicts ship committed — for all four watching strategies, so switching the tab never falls back to a simulated model — and a visitor costs nothing and sees the same verdicts every time. |
+| **a working demo URL** — hosted app or test build | **LIVE: <https://apollo-watch.vercel.app>** — no login, no key. The verdicts ship committed — for all four watching strategies, so switching the tab never falls back to a simulated model — and a visitor costs nothing and sees the same verdicts every time. |
 | 3-min public YouTube video, audio covering Nebius + Nemotron use | `docs/DEMO-SCRIPT.md` |
 | feedback on Token Factory / AI Cloud / NVIDIA tools | `docs/FEEDBACK-NOTES.md` |
 | what changed during the submission window | this project was built in it |
@@ -56,7 +56,7 @@ changed. That is the whole reason this could be built now and not a year ago.
 
 ## What it does
 
-Stakeout gives every dependency its own disposable copy of your machine. It installs it, imports it,
+Apollo gives every dependency its own disposable copy of your machine. It installs it, imports it,
 writes down what it actually did — then does the same with the version you had before, forked from
 the identical starting state, and shows you the difference.
 
@@ -321,7 +321,7 @@ Same bytes, three honest answers — and the transcript always says which questi
 
 **It admits what it cannot do.** One planted package changes a rounding mode from `HALF_EVEN` to
 `HALF_UP`: 5 of 500 order totals drift by a cent, the test suite passes, and no syscall differs.
-Stakeout cannot see it, and the interface has a section saying so. A tool that only advertises its
+Apollo cannot see it, and the interface has a section saying so. A tool that only advertises its
 hits is not a security tool.
 
 **It is affordable.** Nine model calls for 1,214 packages, and a behavioural cache means a version
@@ -414,9 +414,9 @@ sentence about an artefact that existed on exactly one laptop.
 from the demo URL at `/index.json`. Then, in a repository that has never heard of this project:
 
 ```bash
-git clone https://github.com/vidigoat/cassandra ~/stakeout
+git clone https://github.com/vidigoat/apollo ~/apollo
 cd ~/your-project
-node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
+node ~/apollo/cli.js lock --index https://apollo-watch.vercel.app/index.json
 ```
 
 On six public projects that were not used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,969 of their 3,548 dependency-versions are answered (84%)**, up from 56% before the index was grown today; the other 579 come back unknown by name. Most of anyone's tree comes back unknown, because most of npm has never been watched by
@@ -456,7 +456,7 @@ metadata alone; it never runs them.
 
 Three things are built on that record, none of which runs anything:
 
-- **the pull request** — the GitHub App, and `stakeout upgrade` for any other CI, compare the
+- **the pull request** — the GitHub App, and `apollo upgrade` for any other CI, compare the
   lockfile with the base commit's and say, for each version a pull request bumps, whether the new
   release behaves like the one it replaces;
 - **the page** — "watch two versions" answers a pair the watcher already ran from that record,
@@ -492,7 +492,7 @@ Kernel-level observation on real Sandboxes — the adapter is written and tested
 ## Built with
 
 `Nebius Token Factory Sandboxes` · `NVIDIA Nemotron 3 (Nano 30B / Ultra 550B / Super 120B)` ·
-`Tavily` · `Node 22` · `React` + `Motion` for the website only — `stakeout` itself has zero runtime
+`Tavily` · `Node 22` · `React` + `Motion` for the website only — `apollo` itself has zero runtime
 dependencies and no build step, and there is a test that fails if the root package.json ever grows
 one
 
@@ -504,5 +504,5 @@ one
 npm run demo        # the whole argument in a terminal, ~2s, no keys
 npm start           # the same run in a browser
 npm test            # every suite
-STAKEOUT_ALLOW_LOCAL=1 npm run survey    # 20 real packages from the real registry
+APOLLO_ALLOW_LOCAL=1 npm run survey    # 20 real packages from the real registry
 ```

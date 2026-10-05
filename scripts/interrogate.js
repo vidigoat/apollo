@@ -51,7 +51,7 @@ const p = install();
 try { require(${JSON.stringify(pkgDir)}); } catch (e) {}
 setTimeout(() => { require('fs').writeFileSync(${JSON.stringify(out)}, JSON.stringify(p.seen)); process.exit(0); }, 400);
 `);
-  const env = { ...process.env, ...(provocation.env || {}), HOME: home, STAKEOUT_CONTAINED: '1', STAKEOUT_CANARY: CANARY };
+  const env = { ...process.env, ...(provocation.env || {}), HOME: home, APOLLO_CONTAINED: '1', APOLLO_CANARY: CANARY };
   const { execFileSync } = require('node:child_process');
   try { execFileSync(process.execPath, [runner], { env, timeout: 15000, stdio: 'ignore' }); } catch { /* a crash still leaves a report, or none */ }
   let observed = null;

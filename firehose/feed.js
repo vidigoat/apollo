@@ -15,7 +15,7 @@
  * the difference between "we watched npm for a day" and "we watched most of a day".
  */
 
-const FEED = (process.env.STAKEOUT_NPM_FEED || 'https://replicate.npmjs.com/registry').replace(/\/+$/, '');
+const FEED = (process.env.APOLLO_NPM_FEED || 'https://replicate.npmjs.com/registry').replace(/\/+$/, '');
 
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

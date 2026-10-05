@@ -1,9 +1,9 @@
-# Stakeout
+# Apollo
 
 **Your lockfile pins versions. This pins behaviour.**
 
 `package-lock.json` guarantees you get `express-fileupload@2.1.1`. It guarantees nothing about what
-`2.1.1` *does*. Stakeout gives every dependency its own disposable copy of your machine, installs
+`2.1.1` *does*. Apollo gives every dependency its own disposable copy of your machine, installs
 it, imports it, writes down what it actually did — then does the same with the version you had
 before, forked from the identical starting state, and shows you the difference.
 
@@ -72,8 +72,8 @@ and could not have existed a year ago.
 No keys. No network. No build step. No dependencies.
 
 ```bash
-git clone https://github.com/vidigoat/cassandra.git stakeout
-cd stakeout
+git clone https://github.com/vidigoat/apollo.git apollo
+cd apollo
 npm run demo      # the whole argument, in a terminal, in about two seconds
 npm run check-run # what the GitHub App posts on a pull request — no GitHub account needed
 npm start         # the same run in a browser at http://localhost:8791
@@ -87,13 +87,13 @@ These three need a little more: Chrome, or a network, or keys.
 
 ```bash
 npm run capture                    # regenerate this README's screenshots from a real run
-STAKEOUT_ALLOW_LOCAL=1 npm start   # adds a button that runs against the real npm registry
+APOLLO_ALLOW_LOCAL=1 npm start   # adds a button that runs against the real npm registry
 npm run preflight                  # check the live APIs, once keys exist
 ```
 
 ### What does the real registry actually look like?
 
-`STAKEOUT_ALLOW_LOCAL=1 npm run survey` runs **eighty-two** upgrades of genuinely popular packages —
+`APOLLO_ALLOW_LOCAL=1 npm run survey` runs **eighty-two** upgrades of genuinely popular packages —
 `semver`, `chalk`, `debug`, `lru-cache`, `tslib`, `minimatch`, `uuid`, `dotenv`, `fastq`,
 `brace-expansion` and the rest. None of them is chosen for being interesting, because that is the
 only way a baseline is worth anything. Every version pair is checked against the registry by
@@ -175,11 +175,11 @@ at an earlier commit, and runs the packages that really moved:
 
 ```bash
 npm run lockfile -- --against HEAD~20 --dry-run          # what moved. needs nothing at all.
-STAKEOUT_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/my-project
+APOLLO_ALLOW_LOCAL=1 npm run lockfile -- --against v2.3.0 --repo ~/my-project
 ```
 
 ```
-  STAKEOUT  /tmp/demo
+  APOLLO  /tmp/demo
 
   HEAD → working tree   (lockfile v3 → v3)
   3 packages · 3 moved · 0 added · 0 removed · 0 untouched
@@ -226,7 +226,7 @@ same function serves `npm start` and a serverless deployment. `api/index.js` and
 the whole deployment; there are no dependencies to install and no build step.
 
 A hosted copy deliberately **cannot** run real packages: `/api/real` stays behind
-`STAKEOUT_ALLOW_LOCAL` and returns 403 with the reason. Executing strangers' npm packages on shared
+`APOLLO_ALLOW_LOCAL` and returns 403 with the reason. Executing strangers' npm packages on shared
 infrastructure would be this project doing the exact thing it warns about.
 
 ### In CI, on every dependency pull request
@@ -262,12 +262,12 @@ more dangerous answer here than "nothing to check".
 And then, on a fixed list of real packages from the real registry:
 
 ```bash
-STAKEOUT_ALLOW_LOCAL=1 npm run real                      # a short default list
-STAKEOUT_ALLOW_LOCAL=1 npm run real -- chalk 5.3.0 5.4.1
+APOLLO_ALLOW_LOCAL=1 npm run real                      # a short default list
+APOLLO_ALLOW_LOCAL=1 npm run real -- chalk 5.3.0 5.4.1
 ```
 
 ```
-STAKEOUT — real packages, real registry, this machine
+APOLLO — real packages, real registry, this machine
 Watching with "nodert". Node's API surface only — a native addon goes underneath it,
 and the filesystem hook records writes, not reads.
 
@@ -298,9 +298,9 @@ that was not looking.
 
 That is a true, checkable fact about a package with forty million weekly downloads, produced by
 installing both versions and running them. The same run is available from the page: start the
-server with `STAKEOUT_ALLOW_LOCAL=1` and a second button appears, which names the packages it is
+server with `APOLLO_ALLOW_LOCAL=1` and a second button appears, which names the packages it is
 about to install before it does. Without the flag the button stays hidden and `/api/real` returns
-403 — running real code must never be something you get by default. `STAKEOUT_ALLOW_LOCAL=1` is required because these
+403 — running real code must never be something you get by default. `APOLLO_ALLOW_LOCAL=1` is required because these
 packages execute as *you*, with your network and your files — read `adapters/local.js` first. It is
 for proving the pipeline on packages you already trust, never for triaging one you suspect.
 
@@ -410,7 +410,7 @@ command prints:
 
 ```
 ──────────────────────────────────────────────────────────────────────────────
-STAKEOUT  Your lockfile pins versions. This pins behaviour.
+APOLLO  Your lockfile pins versions. This pins behaviour.
 ──────────────────────────────────────────────────────────────────────────────
 
   Dependency tree      1,214 packages
@@ -469,7 +469,7 @@ uninstalled in a week.
 
 **`money-fmt` is the admission.** It changed its rounding mode from `HALF_EVEN` to `HALF_UP` in a
 patch release. Zero observable behavioural difference: it touched nothing new and called nobody.
-Stakeout cannot see it, and says so on the page rather than quietly not mentioning it. A tool that
+Apollo cannot see it, and says so on the page rather than quietly not mentioning it. A tool that
 only advertises its hits is not a security tool.
 
 That `5/500` is computed by `probe/invariant-totals.js`, which you can run. It is deliberately
@@ -643,7 +643,7 @@ one layer up.
 
 `transcript/schema.js` now has `unobserved()`: an install that exited non-zero, or a `nodert` probe
 that never reported, is not an observation. `Index.put` refuses it, so the version stays absent and
-`stakeout check` calls it unknown; `diff()` refuses to compare it, so no caller can turn it into
+`apollo check` calls it unknown; `diff()` refuses to compare it, so no caller can turn it into
 "no change"; `/api/watch` answers "not watched" in words. Any of the 8,940 all-quiet entries could
 have been one of these, so every one was observed again with the fixed builder. 7,953 were
 observed, and all but 9 were still quiet — the quiet entries were right almost everywhere they were
@@ -772,7 +772,7 @@ Stated plainly, because this is the section a judge should be able to trust.
 | The kernel-level strategies (eBPF / proxy / fsdiff) | **Written**; none has watched a real kernel yet |
 | Nemotron calls | **Live, and verified end to end on 2026-09-20.** All three tiers answer on Nebius Token Factory — Nano 30B-A3B, Ultra 550b-a55b, Super 120b-a12b — and `npm run preflight` shows a real parsed verdict and a real cost for each. A full `npm run demo` is 9 calls for about **$0.0074**. Without a key it still falls back to a local deterministic judge, and every simulated verdict is labelled `simulated: true` in the payload and "simulated, no key set" on the page. |
 | Tavily calls | Same pattern — recorded corpus when `TAVILY_API_KEY` is absent, always labelled |
-| The sandbox cost on the bill | **An estimate, and labelled `est.` everywhere it renders.** No sandbox here has ever been billed, so there is no measured price to quote. `pricing.js` holds the one placeholder; set `STAKEOUT_SANDBOX_USD` and the caveat disappears. The model spend next to it is the opposite — measured from real usage blocks and recorded to a ledger on disk. |
+| The sandbox cost on the bill | **An estimate, and labelled `est.` everywhere it renders.** No sandbox here has ever been billed, so there is no measured price to quote. `pricing.js` holds the one placeholder; set `APOLLO_SANDBOX_USD` and the caveat disappears. The model spend next to it is the opposite — measured from real usage blocks and recorded to a ledger on disk. |
 | The 1,214-package tree | **A fixture.** Three packages are deliberately planted, and they are labelled as planted below, in `corpus.js`, and on the page itself. |
 
 A detection you cannot reproduce is a magic trick. This project is meant to be the opposite of one,
@@ -818,7 +818,7 @@ provocation that drew it out is the condition — "it exfiltrates, but only on C
 
 Every value planted is a decoy carrying a fixed marker (the AWS example key, an `npm_` token that is
 all canary, an empty wallet). Every run is **contained**: the probe records a connection attempt and
-a request body, and forwards neither (`observe/probe.js`, `STAKEOUT_CONTAINED`). So a package that
+a request body, and forwards neither (`observe/probe.js`, `APOLLO_CONTAINED`). So a package that
 reads a planted token and tries to POST it is caught with the token in its hand — recorded doing it,
 stopped before a byte leaves. The catch is proven end to end on a synthetic sample:
 
@@ -885,7 +885,7 @@ Six real limitations — one of them now mostly closed. They are listed here rat
 test in `differ/diff.test.js` asserting the failure still fails the way it is described — so a change
 that quietly widens or narrows a blind spot cannot land unnoticed.
 
-**A package that was already malicious in the version you had.** This is the big one. Stakeout
+**A package that was already malicious in the version you had.** This is the big one. Apollo
 compares you to *your previous version*, not to "good". A dependency that has been exfiltrating
 since before you installed it looks, to a differential tool, perfectly well behaved. Differential
 analysis catches the moment a package *turns* — which is how most supply-chain compromises actually
@@ -951,11 +951,11 @@ and each is planted to test a different failure mode:
 
 **PLANTED-1 — `express-fileupload@2.1.1`, credential theft.**
 Reads `AWS_SECRET_ACCESS_KEY`, spawns a shell, posts to `cdn-assets-delivery.workers.dev`. Modelled
-on the shape of the 2026 import-time attacks. *This is the one Stakeout should catch.*
+on the shape of the 2026 import-time attacks. *This is the one Apollo should catch.*
 
 **PLANTED-2 — `money-fmt@2.4.2`, silent breakage.**
 Changes rounding from `HALF_EVEN` to `HALF_UP` in a patch release. No new syscalls, no new hosts,
-no new files. *This is the one Stakeout should MISS — and say so.*
+no new files. *This is the one Apollo should MISS — and say so.*
 
 **PLANTED-4 — `flat-config@3.2.1`, a decoder rather than a payload.**
 Turns a base64 blob into a function, and only then opens a socket. *This one's answer depends on
@@ -963,7 +963,7 @@ who watched it* — see below.
 
 **PLANTED-3 — `node-fetch-retry@2.2.0`, hard negative.**
 Genuinely contacts a new host, and the maintainer documented it in the release notes.
-*This is the one Stakeout should notice and decline to accuse.*
+*This is the one Apollo should notice and decline to accuse.*
 
 The other eleven are ordinary: cache writes, dependency bumps, nothing.
 
@@ -1019,7 +1019,7 @@ The same argument at the scale of the tree rather than one package. Every number
 live demo, and you can get them yourself:
 
 ```bash
-for s in fsdiff proxy nodert ebpf; do curl -s "https://cassandra-nu.vercel.app/api/run?strategy=$s"; done
+for s in fsdiff proxy nodert ebpf; do curl -s "https://apollo-watch.vercel.app/api/run?strategy=$s"; done
 ```
 
 | watching with | findings | alarming | model calls |
@@ -1076,7 +1076,7 @@ judge/index.js           triage → judgement → veto; cost accounting; reply v
 evidence/tavily.js       changelog / advisory / nothing; version-exact matching
 corpus.js                the 1,214-package fixture and the three planted packages
 server.js                zero-dependency dev server; /api/tree and /api/run
-web/                     the site — React, Motion, Radix; its own package.json, so `stakeout`
+web/                     the site — React, Motion, Radix; its own package.json, so `apollo`
                          itself still has no dependencies and no build step
 public/                  what the site and the API both read (fleet-demo.json)
 github/                  the GitHub App: signature, two-hop auth, one check run
@@ -1106,7 +1106,7 @@ under a $1 trial, on purpose.
 ```
 Budget stop: nvidia/NVIDIA-Nemotron-3-Ultra-550B could cost up to $0.000370,
 and $0.2499 of the $0.25 ceiling is already spent.
-  Nothing was called. Raise it deliberately with STAKEOUT_BUDGET_USD=<amount>.
+  Nothing was called. Raise it deliberately with APOLLO_BUDGET_USD=<amount>.
 ```
 
 The ledger is **on disk**, because an in-memory counter fails in exactly the situation it exists
@@ -1124,11 +1124,11 @@ a supported state rather than an error.
 
 ```bash
 NEBIUS_API_KEY=...            # Nemotron judgement (otherwise: local deterministic fallback)
-STAKEOUT_BUDGET_USD=0.25      # the ceiling. raise it consciously, once
+APOLLO_BUDGET_USD=0.25      # the ceiling. raise it consciously, once
 TAVILY_API_KEY=...            # the public record (otherwise: the recorded corpus)
 NEBIUS_SANDBOX_URL=...        # Sandboxes base URL, if it differs
-STAKEOUT_SANDBOX_USD=...      # a real sandbox price; until then the bill renders "est."
-STAKEOUT_JUDGE_CACHE=...      # where verdicts are cached locally
+APOLLO_SANDBOX_USD=...      # a real sandbox price; until then the bill renders "est."
+APOLLO_JUDGE_CACHE=...      # where verdicts are cached locally
 NEMOTRON_NANO=...             # override model ids — but check them against GET /v1/models first;
 NEMOTRON_ULTRA=...            # all three shipped ids were wrong for weeks because nobody had
 SECOND_OPINION=...            # ever called the API to find out

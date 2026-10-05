@@ -71,7 +71,7 @@ const PROVOCATIONS = [
     why: 'time moved months ahead, to trip a payload that waits for a dormancy date before it acts.',
     // Read by the probe's clock shim, not the real system clock — a package that checks `Date.now()`
     // sees the future; nothing on the box actually changes.
-    env: { STAKEOUT_CLOCK_OFFSET_DAYS: '120' },
+    env: { APOLLO_CLOCK_OFFSET_DAYS: '120' },
     files: {},
   },
 ];

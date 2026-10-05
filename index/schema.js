@@ -51,7 +51,7 @@ const SCHEMA = 1;
 
 const CHANNELS = ['net', 'dns', 'fs', 'env', 'proc', 'exec'];
 
-const DEFAULT_DIR = process.env.STAKEOUT_INDEX || path.join(__dirname, 'data');
+const DEFAULT_DIR = process.env.APOLLO_INDEX || path.join(__dirname, 'data');
 
 /** Scoped names (`@scope/name`) are legal filenames nowhere, so everything goes through a hash. */
 function shardFor(name) {
@@ -159,7 +159,7 @@ class Index {
    * What did `name@version` do?
    *
    * @returns {object|null} an entry, or null when the index has never seen this version. Null is a
-   *   real answer and callers must not treat it as "nothing happened" — see `stakeout check`,
+   *   real answer and callers must not treat it as "nothing happened" — see `apollo check`,
    *   which reports `unknown` as its own outcome rather than passing.
    */
   lookup(name, version) {
@@ -182,7 +182,7 @@ class Index {
   /** Write or replace one version's entry. Atomic, so a reader never sees half a file. */
   put(name, transcript) {
     // A version that never installed, or whose probe never reported, is not written at all: absent
-    // is "unknown", and `stakeout check` says so. Written with empty channels it would read as clean.
+    // is "unknown", and `apollo check` says so. Written with empty channels it would read as clean.
     const why = unobserved(transcript);
     if (why) throw new Error(`Refusing to index ${why}.`);
     const file = fileFor(this.dir, name);

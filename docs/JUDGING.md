@@ -6,7 +6,7 @@ and a test asserts that every file named here exists.
 
 ## Start here
 
-**Live:** <https://cassandra-nu.vercel.app> — the same handler this repository runs, no login.
+**Live:** <https://apollo-watch.vercel.app> — the same handler this repository runs, no login.
 
 ```bash
 npm run demo      # the whole argument, in a terminal, in about two seconds
@@ -55,11 +55,11 @@ you how many of your dependency-versions they answered.
 
 ```bash
 cd ~/anything-with-a-package-lock
-node ~/stakeout/cli.js lock --index https://cassandra-nu.vercel.app/index.json
+node ~/apollo/cli.js lock --index https://apollo-watch.vercel.app/index.json
 ```
 
 That reads the **published index** — 7,933 packages, 18,257 versions, about 620 kB over the wire
-— and writes a `stakeout.lock` for your tree. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,969 of their 3,548 dependency-versions are answered (84%)**, up from 56% before the index was grown today; the other 579 come back unknown by name. Most of any tree comes back unknown, because most of
+— and writes a `apollo.lock` for your tree. On six public projects that were **not** used to choose what was indexed — undici, bootstrap, ionic-framework, highlight.js, shelljs and cheerio — **2,969 of their 3,548 dependency-versions are answered (84%)**, up from 56% before the index was grown today; the other 579 come back unknown by name. Most of any tree comes back unknown, because most of
 npm has never been watched by anybody, and that is reported as its own outcome rather than as a
 pass. `scripts/publish-index.js` writes the file; `index/published.js` reads it.
 

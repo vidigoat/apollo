@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Stakeout Live: follow npm's change feed and watch every new stable release of the packages real
+ * Apollo Live: follow npm's change feed and watch every new stable release of the packages real
  * lockfiles depend on, in Nebius Token Factory Sandboxes, as it is published.
  *
  *   node scripts/firehose.js --dry --hours 1          # follow the feed and select; run nothing
@@ -63,7 +63,7 @@ if (args.includes('--status')) {
   // new job continues the old one rather than starting a second watch from "now".
   if (mirror) {
     const got = await mirror.restore(DIR);
-    if (got) { q = new Queue(DIR); console.log(`  restored ${got} file(s) of the watch from ${process.env.STAKEOUT_STATE_S3}`); }
+    if (got) { q = new Queue(DIR); console.log(`  restored ${got} file(s) of the watch from ${process.env.APOLLO_STATE_S3}`); }
   }
   const dry = args.includes('--dry');
   const hours = Number(flag('hours', 24));

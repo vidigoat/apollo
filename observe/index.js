@@ -44,7 +44,7 @@ function commandsFor({ pkg, version, strategy }) {
       // The adapter writes the runner; here we only say what the steps are.
       return [
         { label: 'install', cmd: install },
-        { label: 'import', cmd: 'node __stakeout_runner.js' },
+        { label: 'import', cmd: 'node __apollo_runner.js' },
       ];
     case 'fsdiff':
     default:

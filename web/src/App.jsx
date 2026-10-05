@@ -12,7 +12,7 @@ import Limits from './sections/Limits.jsx';
 import { tree, fleet, published, run, num } from './lib/api.js';
 
 const SECTIONS = [
-  ['top', 'stakeout'],
+  ['top', 'apollo'],
   ['live', 'npm, as it publishes'],
   ['yours', 'try it on yours'],
   ['releases', 'this week\'s releases'],
@@ -153,9 +153,9 @@ export default function App() {
       </main>
 
       <footer className="wrap">
-        <span>Stakeout — a behavioural lockfile</span>
+        <span>Apollo — a behavioural lockfile</span>
         <span>Nebius × NVIDIA · Coding &amp; Agentic Engineering</span>
-        <a href="https://github.com/vidigoat/cassandra">the source</a>
+        <a href="https://github.com/vidigoat/apollo">the source</a>
       </footer>
     </>
   );

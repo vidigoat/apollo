@@ -97,7 +97,7 @@ async function post({ title, note, deps, drifted = null, indexHas, was = null, l
       filesIn: async () => ['package-lock.json', 'src/index.js'],
       // The base commit holds the lockfile as it was before the pull request, when one is given.
       fileAt: async ({ path: p, ref }) =>
-        p.endsWith('stakeout.lock') ? JSON.stringify(lock) : (was && ref === 'ba5e000000000000' ? lockfileText(was) : text),
+        p.endsWith('apollo.lock') ? JSON.stringify(lock) : (was && ref === 'ba5e000000000000' ? lockfileText(was) : text),
       postCheck: async ({ run }) => {
         posted = run;
         return { id: 1 };
@@ -111,7 +111,7 @@ async function post({ title, note, deps, drifted = null, indexHas, was = null, l
   rule();
   console.log(`${C.bold}${title}${C.off}  ${C.dim}${note}${C.off}\n`);
   console.log(`  ${C.dim}POST /repos/someone/app/check-runs  → ${out.status}${C.off}`);
-  console.log(`  ${C.dim}name${C.off}        stakeout`);
+  console.log(`  ${C.dim}name${C.off}        apollo`);
   console.log(`  ${C.dim}conclusion${C.off}  ${tone}${posted.conclusion}${C.off}`);
   console.log(`  ${C.dim}title${C.off}       ${posted.title}\n`);
   for (const line of posted.summary.split('\n')) console.log(`  ${C.dim}│${C.off} ${line}`);
