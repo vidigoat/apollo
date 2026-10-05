@@ -2,7 +2,7 @@
 
 Written 21 Sep 2026, revised 23 Sep (twice). Ordered by **what blocks the most work**, not by effort.
 
-Copy of this file lives in `~/second-set-of-hands/docs/NEEDS.md`; they are kept identical.
+Copy of this file lives in `~/owl/docs/NEEDS.md`; they are kept identical.
 
 ```
 Amazon   freeze 13–15 Oct   22–24 build days left
@@ -63,7 +63,7 @@ minute.
 You said you cannot do these right now. That is genuinely fine, and here is the honest accounting
 so it is not carried as guilt.
 
-**What they are for.** `npm run eval` — in `second-set-of-hands`, not here; this file is kept
+**What they are for.** `npm run eval` — in `owl`, not here; this file is kept
 identical in both repositories — scores the vision reader on nine *rendered* panels — images we
 generated: a specular highlight across the digits, a crouching angle, an unlit utility room, a thumb
 across a corner. It gets **7/9 fault codes, 1/1 model numbers, 0 invented codes**, and the two
@@ -134,7 +134,7 @@ Both are live:
   `/index.json`: 7,933 packages, about 620 kB over the wire. A stranger can point `cli.js lock --index` at
   it and get their own tree answered without building anything, which is the part of the argument
   that used to be unverifiable.
-- **<https://second-set-of-hands.vercel.app>** — and `/review.html` now **reads a manual you drop
+- **<https://owl-repair.vercel.app>** — and `/review.html` now **reads a manual you drop
   on it**. That used to need `pdftotext`, which the host does not have; the reader is written here
   now with no dependencies, so the one capability the project is for is finally reachable from the
   URL. Measured against poppler on 1,881 pages: identical page counts, 98.4–100% of its words,
@@ -145,7 +145,7 @@ Two things that were true when this was written and still are:
 - `~/cassandra` carries a real committed scan of a checkout of vercel/turborepo, so the hosted fleet
   page has measured numbers where there is no filesystem to read — and it says whose tree it is
   rather than letting it read as yours.
-- `~/second-set-of-hands` still shows an **empty review queue** when hosted: the queue is the
+- `~/owl` still shows an **empty review queue** when hosted: the queue is the
   manuals *you* fetched and it is gitignored on purpose. The drop target underneath it is the way
   in now, and the bench says which of the two you are looking at.
 
@@ -153,7 +153,7 @@ Two things that were true when this was written and still are:
 
 - **Does `~/cassandra` go public at submission?** Nebius *requires* it. MIT is already in place. I
   assume yes unless you say otherwise.
-- **Does `~/second-set-of-hands` stay private?** Amazon allows private if shared with
+- **Does `~/owl` stay private?** Amazon allows private if shared with
   `testing@devpost.com` and the six Amazon DevRel GitHub accounts (chris-trag, knmeiss, giolaq, anishamalde, mosesroth, emersonsklar) — invitations expire after 7 days, so send them in the last week. I assume private unless you say otherwise.
 
 ### 9. Rotate the AWS key  ⏱ 5 minutes
@@ -166,13 +166,13 @@ Not urgent for the build. It is a real exposure and it should not go into Decemb
 ### 10. Three new decisions, 23 Sep  ⏱ one reply each
 
 - **AWS credentials on Vercel for the hosted `/talk.html`?** Then a judge can talk to the agent on
-  the demo URL instead of watching the footage (`docs/media/talk.webm`). The global cap is now
+  the demo URL instead of watching the footage (`public/media/talk.webm`). The global cap is now
   built: `mcp/shared-budget.js` keeps the ledger as one DynamoDB item that every instance reserves
   against in a single conditional write — two instances racing for the last cent cannot both get
   it (tested), an unreachable ledger stops the call, and a deployment with keys but no ledger
   refuses to talk. Signing verified against the real DynamoDB endpoint. Turning it on is one
   command, which shows what it will do and asks before touching anything:
-  `AWS_PROFILE=<admin profile> bash ~/second-set-of-hands/scripts/hosted-setup.sh` — a separate
+  `AWS_PROFILE=<admin profile> bash ~/owl/scripts/hosted-setup.sh` — a separate
   IAM user that can only call Nova 2 Lite and touch that one table, a free-tier table, keys piped
   into Vercel unprinted, $5 ceiling for everything together. The same step turns on household
   memory across sessions on the hosted server (a second item in that table — nothing more to
@@ -218,7 +218,7 @@ not blocking — resolves during recording week
 
 still yours to decide
   8   ~/cassandra goes PUBLIC at submission — Nebius requires it, and it is private today
-      ~/second-set-of-hands may stay private if shared with testing@devpost.com and the six Amazon DevRel GitHub accounts (chris-trag, knmeiss, giolaq, anishamalde, mosesroth, emersonsklar) — invitations expire after 7 days, so send them in the last week
+      ~/owl may stay private if shared with testing@devpost.com and the six Amazon DevRel GitHub accounts (chris-trag, knmeiss, giolaq, anishamalde, mosesroth, emersonsklar) — invitations expire after 7 days, so send them in the last week
   9   rotate the AWS key
   10  hosted agent: run scripts/hosted-setup.sh ($5 global cap, built and tested) · Tavily on Vercel (optional)
 
