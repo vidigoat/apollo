@@ -1,4 +1,5 @@
 import { m, useReducedMotion } from 'motion/react';
+import { Camera, Copy, ScrollText, Scale, Filter, Brain, Globe, ShieldCheck } from 'lucide-react';
 import { num } from '../lib/api.js';
 
 /**
@@ -15,44 +16,60 @@ import { num } from '../lib/api.js';
 
 const STEPS = [
   {
-    who: 'checkpoint',
+    who: 'Checkpoint',
+    icon: Camera,
+    phase: 'run',
     what: 'Boot a machine, get it healthy, snapshot it. Everything after this starts from the identical state.',
     cost: 'once',
   },
   {
-    who: 'fork ×2',
+    who: 'Fork two twins',
+    icon: Copy,
+    phase: 'run',
     what: 'Two twins per package, at the same instant. Install the old version in one and the new in the other, then import both — where 2026\'s attacks actually fire.',
     cost: null,   // filled from the tree — see below
   },
   {
-    who: 'transcript',
+    who: 'Transcript',
+    icon: ScrollText,
+    phase: 'run',
     what: 'net · dns · files · env · processes · code built at runtime — at import, and for everything its install scripts do, which npm before 12 runs by default. Temp directories, pids and hashes normalised away, so two identical runs of the same version compare equal.',
     cost: 'free',
   },
   {
-    who: 'behavioural diff',
+    who: 'Behavioural diff',
+    icon: Scale,
+    phase: 'compare',
     what: 'Pure arithmetic. No model involved, reproducible by anyone. Severity comes from rules — alarming, notable, minor, none.',
     cost: 'free',
   },
   {
     who: 'Nemotron Nano 30B',
+    icon: Filter,
+    phase: 'judge',
     model: true,
     what: 'Triage. Is this worth a bigger model\'s time? Runs on the handful that moved, never on the twelve hundred that did not.',
     cost: '~$0.0001 each',
   },
   {
     who: 'Nemotron Ultra 550B',
+    icon: Brain,
+    phase: 'judge',
     model: true,
     what: 'Meaning. What does this change appear to be doing? Reads the diff, never the package.',
     cost: 'only past triage',
   },
   {
     who: 'Tavily',
+    icon: Globe,
+    phase: 'judge',
     what: 'Does the open web know? A changelog, an advisory, or nothing at all — and "nothing at all" about a brand-new host is itself the finding.',
     cost: 'one search',
   },
   {
     who: 'Nemotron Super 120B',
+    icon: ShieldCheck,
+    phase: 'judge',
     model: true,
     what: 'Veto. A second model has to agree before anything is accused. One model\'s confident sentence is not a reason to wake somebody at 3am.',
     cost: 'only before an accusation',
@@ -94,35 +111,34 @@ export default function How({ tree = null, calls = null }) {
         on afterwards — it is the only reason the arithmetic works at all.
       </p>
 
-      <div className="pipe">
-        {steps.map((s, i) => (
-          <m.div
-            className="step"
-            key={s.who}
-            data-model={s.model ? 'true' : 'false'}
-            /*
-             * The step RISES into place. It does not fade in.
-             *
-             * It used to start at `opacity: 0`, and the six steps that name the three models — the
-             * whole pipeline — were found sitting at opacity 0 on the live URL. Chrome had stopped
-             * running requestAnimationFrame for that window, so the reveal began and froze: the
-             * inline style said 0, `once: true` meant the observer never fired again, and the
-             * section was blank to anyone looking at it in a background or occluded window.
-             *
-             * An animation is allowed to move something. It is not allowed to be the reason
-             * something is visible — if it never runs, the reader must still get the page.
-             */
-            initial={{ y: still ? 0 : 8 }}
-            whileInView={{ y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: still ? 0 : 0.4, delay: still ? 0 : Math.min(i * 0.05, 0.3) }}
-          >
-            <span className="step__who">{s.who}</span>
-            <p className="step__what">{s.what}</p>
-            <span className="step__cost">{s.cost}</span>
-          </m.div>
-        ))}
-      </div>
+      {[
+        ['run', 'Run', 'Nebius Sandboxes'],
+        ['compare', 'Compare', 'Rules, in code — no model'],
+        ['judge', 'Judge', 'NVIDIA Nemotron on Nebius Token Factory, and Tavily'],
+      ].map(([phase, title, where]) => (
+        <div className="phase" key={phase}>
+          <p className="phase__head"><b>{title}</b><span>{where}</span></p>
+          <ol className="pipe">
+            {steps.map((s, i) => ({ ...s, n: i + 1 })).filter((s) => s.phase === phase).map((s, i) => (
+              <m.li
+                className="step"
+                key={s.who}
+                data-model={s.model ? 'true' : 'false'}
+                initial={{ y: still ? 0 : 8 }}
+                whileInView={{ y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: still ? 0 : 0.4, delay: still ? 0 : Math.min(i * 0.05, 0.3) }}
+              >
+                <span className="step__n" aria-hidden="true">{s.n}</span>
+                <span className="step__icon" aria-hidden="true"><s.icon size={16} /></span>
+                <span className="step__who">{s.who}</span>
+                <p className="step__what">{s.what}</p>
+                <span className="step__cost">{s.cost}</span>
+              </m.li>
+            ))}
+          </ol>
+        </div>
+      ))}
 
       <div className="coverage" style={{ marginTop: 44 }}>
         <div>
