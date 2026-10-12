@@ -458,7 +458,9 @@ Three things are built on that record, none of which runs anything:
 
 - **the pull request** — the GitHub App, and `apollo upgrade` for any other CI, compare the
   lockfile with the base commit's and say, for each version a pull request bumps, whether the new
-  release behaves like the one it replaces;
+  release behaves like the one it replaces. It runs for real on
+  [vidigoat/apollo-demo#1](https://github.com/vidigoat/apollo-demo/pull/1): a bump of `source-map-js`
+  from 1.2.1 to 1.2.2 fails the check, from the live watch's record, without installing anything;
 - **the page** — "watch two versions" answers a pair the watcher already ran from that record,
   instantly;
 - **the report** — `npm run live:report` drafts what would be sent to npm about a catch, from the

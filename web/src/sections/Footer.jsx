@@ -4,7 +4,7 @@ import { Logo, NebiusLogo } from '../lib/logos.jsx';
 /** Every way into this project, grouped by what a visitor came for. */
 const COLUMNS = [
   ['On this page', [['#live', 'Live watch'], ['#yours', 'Check your lockfile'], ['#check', 'On a pull request'], ['#limits', 'Limits']]],
-  ['Use it', [['https://github.com/apps/apollo-behaviour', 'The GitHub App'], ['https://github.com/vidigoat/apollo#readme', 'The apollo CLI'], ['/index.json', 'The published index']]],
+  ['Use it', [['https://github.com/vidigoat/apollo-demo/pull/1', 'A real pull request'], ['https://github.com/apps/apollo-behaviour', 'The GitHub App'], ['https://github.com/vidigoat/apollo#readme', 'The apollo CLI'], ['/index.json', 'The published index']]],
   ['The project', [['https://github.com/vidigoat/apollo', 'Source on GitHub'], ['https://github.com/vidigoat/apollo/blob/main/docs/DEEP-DIVE.md', 'The deep dive'], ['https://github.com/vidigoat/apollo/blob/main/LICENSE', 'MIT licence']]],
 ];
 

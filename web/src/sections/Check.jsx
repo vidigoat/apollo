@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { m, AnimatePresence, useReducedMotion } from 'motion/react';
-import { GitPullRequestArrow } from 'lucide-react';
+import { GitPullRequestArrow, ArrowUpRight, CircleX } from 'lucide-react';
 import { Logo } from '../lib/logos.jsx';
 
 /**
@@ -60,6 +60,11 @@ const OUTCOMES = [
 
 export default function Check() {
   const [which, setWhich] = useState('drift');
+  const [real, setReal] = useState(null);
+  // The pull request this check really ran on, recorded from GitHub's API by scripts/real-pr.js.
+  useEffect(() => {
+    fetch('/real-pr.json').then((r) => (r.ok ? r.json() : null)).then(setReal).catch(() => {});
+  }, []);
   const still = useReducedMotion();
   const shown = OUTCOMES.find((o) => o.key === which);
 
@@ -68,12 +73,41 @@ export default function Check() {
       <header className="head">
         <h2>On every pull request that bumps a dependency</h2>
         <p className="lede">
-          The <code>apollo-behaviour</code> GitHub App reads the lockfile at the head commit and
-          says, for each version the pull request changes, whether the new release behaves like the
-          one it replaces. It installs nothing and runs no one's code.
+          As one step in GitHub Actions, or as the <code>apollo-behaviour</code> GitHub App, Apollo
+          reads the lockfile and says, for each version a pull request changes, whether the new
+          release behaves like the one it replaces. It installs nothing and runs no one's code.
         </p>
       </header>
 
+      {real && (
+        <div className="pr">
+          <div className="pr__head">
+            <GitPullRequestArrow size={18} className="pr__icon" aria-hidden="true" />
+            <div className="pr__text">
+              <p className="pr__title">{real.pr.title} <span>#{real.pr.number}</span></p>
+              <p className="pr__by"><Logo name="github" height={13} title={false} />{real.repo} · a real pull request</p>
+            </div>
+            <a className="pr__open" href={real.pr.url} target="_blank" rel="noreferrer">Open on GitHub<ArrowUpRight size={14} aria-hidden="true" /></a>
+          </div>
+          <p className="pr__checks">
+            <Logo name="githubactions" height={14} title={false} />
+            <span>Checks</span>
+            <span className={`pr__state pr__state--${real.run.conclusion}`}>{real.run.conclusion === 'failure' ? '1 failing' : real.run.conclusion}</span>
+          </p>
+          <div className="pr__run">
+            <CircleX size={18} className="pr__x" aria-hidden="true" />
+            <div>
+              <p className="pr__runname"><b>Apollo</b> / {real.run.name}</p>
+              {real.annotations.map((a) => (
+                <p className="pr__ann" key={a.title}><b>{a.title.replace(/^Apollo: /, '')}</b>{a.message}</p>
+              ))}
+            </div>
+            <a className="pr__details" href={real.run.url} target="_blank" rel="noreferrer">Details</a>
+          </div>
+        </div>
+      )}
+
+      <h3 className="check__h3">The three answers it gives</h3>
       <div className="seg" role="tablist" aria-label="what the check says">
         {OUTCOMES.map((o) => (
           <button
@@ -89,15 +123,6 @@ export default function Check() {
         ))}
       </div>
 
-      <div className="pr">
-        <div className="pr__head">
-          <GitPullRequestArrow size={18} className="pr__icon" aria-hidden="true" />
-          <div>
-            <p className="pr__title">Bump express-fileupload from 2.1.0 to 2.1.1</p>
-            <p className="pr__by"><Logo name="dependabot" height={13} title={false} />dependabot wants to merge 1 commit · an example from the bundled corpus</p>
-          </div>
-        </div>
-        <p className="pr__checks"><Logo name="githubactions" height={14} title={false} />Checks</p>
       <div className="check" data-conclusion={shown.conclusion}>
         <AnimatePresence mode="wait">
           <m.div
@@ -131,7 +156,6 @@ export default function Check() {
             </div>
           </m.div>
         </AnimatePresence>
-      </div>
       </div>
 
       <p className="footnote">

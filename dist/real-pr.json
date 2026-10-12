@@ -1,0 +1,22 @@
+{
+  "repo": "vidigoat/apollo-demo",
+  "pr": {
+    "number": 1,
+    "title": "Bump source-map-js from 1.2.1 to 1.2.2",
+    "url": "https://github.com/vidigoat/apollo-demo/pull/1",
+    "state": "open"
+  },
+  "run": {
+    "name": "What these upgrades change",
+    "conclusion": "failure",
+    "url": "https://github.com/vidigoat/apollo-demo/actions/runs/38259896824/job/114847408995",
+    "completedAt": "2026-10-12T14:01:50Z"
+  },
+  "annotations": [
+    {
+      "level": "failure",
+      "title": "Apollo: source-map-js 1.2.1 → 1.2.2 is alarming",
+      "message": "builds and runs code that did not exist in the source (Function)"
+    }
+  ]
+}
