@@ -12,8 +12,8 @@ import { Logo } from '../lib/logos.jsx';
 export const SECTIONS = [
   ['live', 'Live watch'],
   ['yours', 'Check yours'],
-  ['check', 'Pull requests'],
   ['run', 'The run'],
+  ['check', 'Pull requests'],
   ['how', 'How it works'],
   ['limits', 'Limits'],
 ];
@@ -40,10 +40,12 @@ export default function Nav() {
     const look = () => {
       frame = 0;
       const line = window.innerHeight * 0.35;
+      // By position on the page, not by order in the menu: the nearest section above the line.
       let at = '';
+      let best = -Infinity;
       for (const [id] of SECTIONS) {
-        const el = document.getElementById(id);
-        if (el && el.getBoundingClientRect().top <= line) at = id;
+        const top = document.getElementById(id)?.getBoundingClientRect().top;
+        if (top != null && top <= line && top > best) { best = top; at = id; }
       }
       setHere(at);
     };

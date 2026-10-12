@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { m, AnimatePresence, useReducedMotion } from 'motion/react';
+import { GitPullRequestArrow } from 'lucide-react';
+import { Logo } from '../lib/logos.jsx';
 
 /**
  * The answer, where the decision is actually made.
@@ -63,19 +65,20 @@ export default function Check() {
 
   return (
     <section className="wrap" id="check">
-      <h2>A check run that never says "passed" about something it has not seen</h2>
-      <p className="lede">
-        A GitHub App, authenticating as an app rather than as somebody's personal token — a
-        signed JWT exchanged for a token scoped to one installation, expiring in an hour. It reads
-        the lockfile at the head commit and asks the index. It installs nothing and executes no
-        one's code, which for a supply-chain tool is not a detail.
-      </p>
+      <header className="head">
+        <h2>On every pull request that bumps a dependency</h2>
+        <p className="lede">
+          The <code>apollo-behaviour</code> GitHub App reads the lockfile at the head commit and
+          says, for each version the pull request changes, whether the new release behaves like the
+          one it replaces. It installs nothing and runs no one's code.
+        </p>
+      </header>
 
-      <div className="tabs" role="tablist" aria-label="what the check says">
+      <div className="seg" role="tablist" aria-label="what the check says">
         {OUTCOMES.map((o) => (
           <button
             key={o.key}
-            className="tab"
+            className="seg__item"
             role="tab"
             aria-selected={which === o.key}
             data-state={which === o.key ? 'active' : 'idle'}
@@ -86,6 +89,15 @@ export default function Check() {
         ))}
       </div>
 
+      <div className="pr">
+        <div className="pr__head">
+          <GitPullRequestArrow size={18} className="pr__icon" aria-hidden="true" />
+          <div>
+            <p className="pr__title">Bump express-fileupload from 2.1.0 to 2.1.1</p>
+            <p className="pr__by"><Logo name="dependabot" height={13} title={false} />dependabot wants to merge 1 commit · an example from the bundled corpus</p>
+          </div>
+        </div>
+        <p className="pr__checks"><Logo name="githubactions" height={14} title={false} />Checks</p>
       <div className="check" data-conclusion={shown.conclusion}>
         <AnimatePresence mode="wait">
           <m.div
@@ -120,10 +132,12 @@ export default function Check() {
           </m.div>
         </AnimatePresence>
       </div>
+      </div>
 
-      <p className="lede">
-        The middle one is the important one. Unknown is <b>neutral</b>, never a failure — a check
-        that red-lights on the day it is installed is switched off before it ever finds anything.
+      <p className="footnote">
+        Never observed is <b>neutral</b>, never a failure: a check that red-lights on the day it is
+        installed is switched off before it ever finds anything. The app authenticates as itself, with
+        a token scoped to one installation that expires in an hour.
       </p>
     </section>
   );
