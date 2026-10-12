@@ -975,3 +975,29 @@ main h2 { font: 600 var(--t-head)/1.05 var(--sans); letter-spacing: -0.045em; co
   .pr__head { flex-wrap: wrap; }
   .pr__run { flex-wrap: wrap; }
 }
+
+/* ── what the track asks for ─────────────────────────────────────────────── */
+.asked { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); border-radius: 14px; background: #fff; overflow: hidden; }
+.asked li { display: grid; grid-template-columns: 28px minmax(0, 1fr) 36px; gap: 16px; align-items: center; padding: 18px 20px; }
+.asked li + li { border-top: 1px solid var(--rule-soft); }
+.asked__tick { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--bone); color: #fff; }
+.asked__what { margin: 0; font-weight: 600; color: var(--bone); }
+.asked__how { margin: 4px 0 0; font-size: 0.9rem; line-height: 1.55; color: var(--dim); }
+.asked__go { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--rule); color: var(--bone); }
+.asked__go:hover { background: #fafafa; }
+
+/* ── measured, not claimed ───────────────────────────────────────────────── */
+.evidence-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 14px; background: #fff; overflow: hidden; }
+.measure { margin: 0; padding: 22px; display: flex; flex-direction: column; border-right: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); }
+.measure:nth-child(2n) { border-right: 0; }
+.measure:nth-last-child(-n + 2) { border-bottom: 0; }
+.measure__fig { margin: 0; font: 600 clamp(1.8rem, 3vw, 2.3rem)/1 var(--sans); letter-spacing: -0.05em; color: var(--bone); font-variant-numeric: tabular-nums; }
+.measure__label { margin: 10px 0 0; font-weight: 600; font-size: 0.9375rem; color: var(--bone); }
+.measure__detail { margin: 6px 0 16px; font-size: 0.875rem; line-height: 1.55; color: var(--dim); }
+.measure figcaption { margin-top: auto; display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--dimmer); }
+.measure figcaption code { font-size: 0.72rem; }
+@media (max-width: 760px) {
+  .evidence-grid { grid-template-columns: minmax(0, 1fr); }
+  .measure { border-right: 0; border-bottom: 1px solid var(--rule-soft) !important; }
+  .measure:last-child { border-bottom: 0 !important; }
+}

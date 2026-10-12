@@ -15,6 +15,7 @@ export const SECTIONS = [
   ['run', 'The run'],
   ['check', 'Pull requests'],
   ['how', 'How it works'],
+  ['evidence', 'Evidence'],
   ['limits', 'Limits'],
 ];
 

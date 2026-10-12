@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "figure": "299 / 300",
+      "label": "Mac observations reproduced on Nebius",
+      "detail": "Re-observed in Nebius Sandboxes and matched on every channel; 1 did not, and is named in the report.",
+      "source": "docs/crossval.json",
+      "measured": "2026-09-23"
+    },
+    {
+      "figure": "74%",
+      "label": "of unseen repositories answered at once",
+      "detail": "23,596 of 32,052 dependency-versions across 46 public repositories never used to build the index.",
+      "source": "docs/holdout-46.json",
+      "measured": "2026-09-24"
+    },
+    {
+      "figure": "7,506",
+      "label": "packages watched through install",
+      "detail": "403 ran an install script; 31 reached the network and 25 read a credential-like variable while doing it.",
+      "source": "docs/install-phase.json",
+      "measured": "2026-09-24"
+    },
+    {
+      "figure": "3,207 / 3,259",
+      "label": "top releases behaved exactly as before",
+      "detail": "The newest release of each of the most-downloaded packages, against the one before; 9 alarming, each read by hand.",
+      "source": "docs/release-watch.json",
+      "measured": "2026-09-24"
+    }
+  ]
+}

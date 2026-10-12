@@ -4,6 +4,8 @@ import Hero from './sections/Hero.jsx';
 import Stack from './sections/Stack.jsx';
 import Footer from './sections/Footer.jsx';
 import Why from './sections/Why.jsx';
+import Evidence from './sections/Evidence.jsx';
+import Track from './sections/Track.jsx';
 import Run from './sections/Run.jsx';
 import Fleet from './sections/Fleet.jsx';
 import How from './sections/How.jsx';
@@ -43,12 +45,14 @@ export default function App() {
         {/* The real registry first: what was watched as it published, before anything a visitor does. */}
         <Live />
         <Stack published={index} />
+        <Track />
         <Yours />
         <Releases />
         <Run strategies={meta?.strategies || []} tree={meta} />
         <Check />
         {scan && <Fleet data={scan} published={index} />}
         <How tree={meta} calls={calls} />
+        <Evidence />
         <Limits />
       </main>
 
