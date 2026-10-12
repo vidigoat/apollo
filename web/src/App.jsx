@@ -3,6 +3,7 @@ import Nav from './sections/Nav.jsx';
 import Hero from './sections/Hero.jsx';
 import Stack from './sections/Stack.jsx';
 import Footer from './sections/Footer.jsx';
+import Why from './sections/Why.jsx';
 import Run from './sections/Run.jsx';
 import Fleet from './sections/Fleet.jsx';
 import How from './sections/How.jsx';
@@ -36,6 +37,8 @@ export default function App() {
 
       <main>
         <Hero />
+
+        <Why />
 
         {/* The real registry first: what was watched as it published, before anything a visitor does. */}
         <Live />

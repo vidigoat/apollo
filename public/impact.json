@@ -1,0 +1,26 @@
+{
+  "why": "Every figure here is quoted from its source, linked, and kept in this file rather than typed into the page.",
+  "facts": [
+    {
+      "figure": "454,600+",
+      "claim": "new malicious open-source packages were identified in 2025.",
+      "quote": "Sonatype identified more than 454,600 new malicious packages",
+      "source": "Sonatype, State of the Software Supply Chain 2026",
+      "url": "https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware"
+    },
+    {
+      "figure": "99%",
+      "claim": "of that open-source malware was published to npm.",
+      "quote": "This year, over 99% of open source malware occurred on npm.",
+      "source": "Sonatype, State of the Software Supply Chain 2026",
+      "url": "https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware"
+    },
+    {
+      "figure": "2B+",
+      "claim": "weekly downloads between the packages hijacked in one September 2025 account takeover — chalk, debug and others.",
+      "quote": "Collectively, these packages see more than 2 billion downloads every week",
+      "source": "Sonatype, npm chalk and debug packages hit in supply chain attack",
+      "url": "https://www.sonatype.com/blog/npm-chalk-and-debug-packages-hit-in-software-supply-chain-attack"
+    }
+  ]
+}
