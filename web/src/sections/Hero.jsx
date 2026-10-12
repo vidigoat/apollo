@@ -1,135 +1,104 @@
-import { m, useReducedMotion } from "motion/react";
+import { ArrowDown, ShieldAlert } from 'lucide-react';
+import { useLive, readable, channelName } from '../lib/live.js';
+import { Logo, NebiusLogo } from '../lib/logos.jsx';
+import { num } from '../lib/api.js';
 
 /**
- * The first screen.
+ * ── The first screen ────────────────────────────────────────────────────────
  *
- * Not a description of the product — the product, performed once. Two lines of a lockfile, one
- * patch release apart, and then the evidence that arrived underneath the second one. Somebody who
- * reads nothing else on this page has still seen the entire idea.
- *
- * This is the only thing on the site that moves without being asked, and it happens once. The scan
- * line is not decoration: it is the moment of looking, which is the thing being sold.
- *
- * Every string below is from the bundled corpus, which is planted, labelled as planted in the
- * repository, and reproducible with `npm run demo`. A first screen that invented a finding would
- * be the exact kind of thing this project exists to catch.
+ * The claim, what it runs on, and then the evidence — not a planted example but the most severe
+ * release the live watch has actually caught, read from its record. Every figure here comes from
+ * that record; if it cannot be fetched, the strip and the card are simply not drawn.
  */
 
-const ROWS = [
-  {
-    gutter: " ",
-    text: "express-fileupload@2.1.0",
-    when: "your lockfile, 14 Aug",
-  },
-  { gutter: " ", text: "express-fileupload@2.1.1", when: "the patch release" },
-];
-
-const FOUND = [
-  { channel: "env", what: "AWS_SECRET_ACCESS_KEY" },
-  { channel: "env", what: "GITHUB_TOKEN" },
-  { channel: "env", what: "NPM_TOKEN" },
-  { channel: "net", what: "cdn-assets-delivery.workers.dev:443" },
-];
+const RANK = { alarming: 3, notable: 2, minor: 1 };
 
 export default function Hero() {
-  const still = useReducedMotion();
-
-  // With motion turned off the evidence is simply there. The point survives without the sweep;
-  // it is the sweep that is optional, not the finding.
-  const at = (s) => (still ? 0 : s);
+  const live = useLive();
+  const top = live?.moved?.slice().sort((a, b) => (RANK[b.severity] || 0) - (RANK[a.severity] || 0) || (b.weeklyDownloads || 0) - (a.weeklyDownloads || 0))[0];
 
   return (
-    <section className="hero wrap" id="top">
-      {/*
-        The words are THERE. They do not fade in.
-
-        The first version staggered the mark, the headline and the paragraph over about a second,
-        so the first thing anybody saw on the live URL was a blank dark screen. A page that
-        withholds its own headline to make an entrance has made the entrance the point. The
-        orchestrated moment is the evidence arriving underneath a version that did not move; the
-        sentence explaining it has no business being suspense.
-      */}
-      <div className="hero__said">
-        <p className="hero__mark">Apollo</p>
+    <section className="hero" id="top">
+      <div className="hero__inner wrap">
+        <p className="badge">
+          <span>Runs on</span>
+          <NebiusLogo height={13} title />
+          <span className="badge__rule" aria-hidden="true" />
+          <Logo name="nvidia" height={13} />
+          <span>Nemotron</span>
+        </p>
 
         <h1>
           Your lockfile pins versions.
-          <span className="quiet">This pins behaviour.</span>
+          <br />
+          Apollo pins behaviour.
         </h1>
 
-        <p className="hero__sub">
-          Every dependency gets its own disposable copy of your machine. We install it, import it,
-          and write down what it actually did — then do the same with the version you had before,
-          from the identical starting state, and show you what changed.
+        <p className="hero__lead">
+          Every new release of an npm package is installed and run in a disposable Nebius sandbox,
+          beside the version before it. Apollo tells you what the new code started doing — before
+          you upgrade.
         </p>
 
-        <p className="hero__scroll">
-          from the bundled corpus — planted, labelled as planted, reproducible with{' '}
-          <code>npm run demo</code>
-        </p>
-      </div>
+        <div className="hero__actions">
+          <a className="button button--solid" href="#yours">Check your lockfile</a>
+          <a className="button button--line" href="#live">See what it caught<ArrowDown size={16} strokeWidth={2} /></a>
+        </div>
 
-      <div className="exhibit">
-        {ROWS.map((r) => (
-          <div className="exhibit__row exhibit__row--was" key={r.text}>
-            <span className="exhibit__gutter">{r.gutter}</span>
-            <span>{r.text}</span>
-            <span className="exhibit__when">{r.when}</span>
-          </div>
-        ))}
-
-        {/* What the space says while it is being looked at, rather than nothing. */}
-        {!still && <m.span
-          className="exhibit__watching"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 1.1, delay: 0.2, times: [0, 0.2, 0.7, 1] }}
-        >
-          watching
-        </m.span>}
-
-        {/* The look. One pass, top to bottom, and then it is gone. */}
-        {!still && (
-          <m.span
-            className="exhibit__scan"
-            initial={{ top: 0, opacity: 0 }}
-            animate={{ top: ["0%", "100%"], opacity: [0, 1, 1, 0] }}
-            transition={{ duration: 0.8, delay: 0.15, ease: "easeInOut" }}
-          />
+        {live && (
+          <p className="pulse">
+            <span className="pulse__dot" aria-hidden="true" />
+            <span>Watching npm now</span>
+            <span className="pulse__sep" aria-hidden="true" />
+            <span><b>{num(live.releasesWatched)}</b> releases compared</span>
+            {live.medianMinutesToVerdict != null && (
+              <>
+                <span className="pulse__sep" aria-hidden="true" />
+                <span>verdict <b>{live.medianMinutesToVerdict} min</b> after publish</span>
+              </>
+            )}
+            <span className="pulse__sep" aria-hidden="true" />
+            <span><b>{num(live.caught)}</b> changed behaviour</span>
+          </p>
         )}
-
-        {FOUND.map((f, i) => (
-          <m.div
-            className="exhibit__row exhibit__row--found"
-            key={f.what}
-            initial={{ opacity: 0, x: still ? 0 : -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.34, delay: at(0.62 + i * 0.09) }}
-          >
-            <span className="exhibit__gutter">+</span>
-            <span>
-              {f.channel}
-              {"   "}
-              {f.what}
-            </span>
-            <span className="exhibit__when">
-              {i === 0 ? "not in 2.1.0" : ""}
-            </span>
-          </m.div>
-        ))}
-
-        <m.div
-          className="exhibit__verdict"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: at(1.02) }}
-        >
-          <span>
-            a patch release that now reads three credentials and calls a host{" "}
-            <b>nothing on the open web mentions</b>
-          </span>
-        </m.div>
       </div>
+
+      {top && (
+        <div className="wrap">
+          <article className="catch" aria-label="The most severe release the live watch has caught">
+            <header className="catch__head">
+              <span className="catch__traffic" aria-hidden="true"><i /><i /><i /></span>
+              <span className="catch__title">Caught by the live watch</span>
+              <span className={`sev sev--${top.severity}`}>
+                <ShieldAlert size={13} strokeWidth={2.4} aria-hidden="true" />
+                {top.severity}
+              </span>
+            </header>
+            <div className="catch__body">
+              <p className="catch__pkg">
+                <Logo name="npm" height={12} title={false} />
+                <b>{top.pkg}</b>
+                <span className="catch__ver">{top.from}</span>
+                <span className="catch__arrow" aria-hidden="true">→</span>
+                <span className="catch__ver catch__ver--new">{top.to}</span>
+                {top.weeklyDownloads ? <span className="catch__dl">{num(top.weeklyDownloads)} downloads a week</span> : null}
+              </p>
+              <ul className="catch__lines">
+                {Object.entries(top.gained || {}).flatMap(([c, g]) =>
+                  (g.added || []).slice(0, 3).map((a) => (
+                    <li key={`${c}${a}`}>
+                      <span className="catch__plus" aria-hidden="true">+</span>
+                      <span className="catch__ch">{channelName(c)}</span>
+                      <code>{readable(a)}</code>
+                    </li>
+                  ))
+                )}
+              </ul>
+              {top.reasons?.[0] && <p className="catch__why">{top.reasons[0]}</p>}
+            </div>
+          </article>
+        </div>
+      )}
     </section>
   );
 }

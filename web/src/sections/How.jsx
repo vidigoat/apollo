@@ -79,7 +79,6 @@ export default function How({ tree = null, calls = null }) {
 
   return (
     <section className="wrap" id="how">
-      <p className="eyebrow">how it works</p>
       {/*
         "Nine" was typed, and true only for the run this page happens to default to — the same
         corpus watched four ways takes two to ten. It slipped past the check for typed figures

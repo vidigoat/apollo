@@ -138,7 +138,6 @@ export default function Fleet({ data, published }) {
 
   return (
     <section className="wrap" id="fleet">
-      <p className="eyebrow">the fleet</p>
       <h2>Run a package once. Answer for every repository that depends on it.</h2>
       <p className="lede">
         {data.demo ? (

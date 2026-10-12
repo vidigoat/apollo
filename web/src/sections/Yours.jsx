@@ -285,13 +285,13 @@ export default function Yours() {
   const [which, setWhich] = useState('lockfile');
   return (
     <section className="wrap" id="yours">
-      <p className="eyebrow">yours</p>
-      <h2>Try it on your own packages</h2>
-      <p className="lede">
-        Everything above is the planted corpus. These two are not: your real tree, answered from the
-        published index without running anything — and any real upgrade, watched in two{' '}
-        <b>Nebius Token Factory Sandboxes</b> forked from one checkpoint, while you wait.
-      </p>
+      <header className="head">
+        <h2>Check your own packages</h2>
+        <p className="lede">
+          Your real tree, answered from the published index without running anything — or any real
+          upgrade, watched in two <b>Nebius Sandboxes</b> forked from one checkpoint while you wait.
+        </p>
+      </header>
 
       <div className="tabs" role="tablist" aria-label="what to try">
         {[['lockfile', 'check a lockfile'], ['watch', 'watch an upgrade on Nebius']].map(([k, label]) => (

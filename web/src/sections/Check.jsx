@@ -63,7 +63,6 @@ export default function Check() {
 
   return (
     <section className="wrap" id="check">
-      <p className="eyebrow">on the pull request</p>
       <h2>A check run that never says "passed" about something it has not seen</h2>
       <p className="lede">
         A GitHub App, authenticating as an app rather than as somebody's personal token — a

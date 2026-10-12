@@ -37,7 +37,6 @@ const LIMITS = [
 export default function Limits() {
   return (
     <section className="wrap" id="limits">
-      <p className="eyebrow">what this cannot do</p>
       <h2>The silences that mean nothing</h2>
       <p className="lede">
         Every item here produces a clean result for a reason that has nothing to do with safety. A

@@ -1,129 +1,127 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { Radio, Timer, GitCompareArrows, ShieldAlert, Fingerprint } from 'lucide-react';
+import ReleaseRow from '../components/ReleaseRow.jsx';
 import { num } from '../lib/api.js';
+import { useLive } from '../lib/live.js';
 
 /**
- * The live watch: npm as it publishes, not a fixed list on a fixed day.
+ * ── npm, watched as it publishes ────────────────────────────────────────────
  *
- * Everything here is read from `live-watch.json`, which `scripts/firehose-publish.js` writes from the
- * running watcher's own record. It reports the honest state, whatever it is — on a quiet week that is
- * "watched N, caught 0", and it says exactly that. The number that matters is the time from a release
- * being published to a verdict existing, because that is the window in which a bad release is loose.
+ * The watcher follows npm's change feed and, for every new release of a package the index holds,
+ * forks two Nebius Sandboxes from one checkpoint, installs and imports the new release and the one
+ * before it, and diffs them. This is its record: the totals, every release that behaved
+ * differently with the evidence one click away, and the new packages imitating popular names.
+ *
+ * A release caught up after downtime is said to be one — "minutes after publish" is a claim about
+ * the watcher while it is running, and folding catch-up verdicts into it would flatter it.
  */
 
-const readable = (item) => {
-  let x = item;
-  if (typeof item === 'string' && item.startsWith('{')) { try { x = JSON.parse(item); } catch { return item; } }
-  if (typeof x === 'string') return x;
-  if (Array.isArray(x.argv)) return x.argv.filter(Boolean).join(' ');
-  if (x.host) return `${x.host}${x.port ? `:${x.port}` : ''}`;
-  if (x.how) return x.how;
-  if (x.path) return `${x.op || ''} ${x.path}`.trim();
-  return JSON.stringify(x);
-};
-
+const RANK = { alarming: 3, notable: 2, minor: 1 };
 const daysSince = (iso) => (iso ? Math.max(0, Math.round((Date.now() - new Date(iso)) / 86400000)) : null);
 
 export default function Live() {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    /*
-     * Two copies, and the newer one wins. The one bundled with the site is as old as the last
-     * deploy; the watcher's machine also publishes the same summary where it can update it on its
-     * own (live-source.json says where). Whichever was written later is shown, with the time it
-     * was written — so a watcher that has stopped shows as an old timestamp, never as a fresh page.
-     */
-    const get = (url) => fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    let alive = true;
-    get('/live-watch.json').then((bundled) => { if (alive && bundled) setData((d) => d || bundled); });
-    get('/live-source.json').then((src) => (src?.liveWatch ? get(src.liveWatch) : null)).then((remote) => {
-      if (!alive || !remote || typeof remote.releasesWatched !== 'number') return;
-      setData((d) => (!d || Date.parse(remote.publishedAt) > Date.parse(d.publishedAt) ? remote : d));
-    });
-    return () => { alive = false; };
-  }, []);
+  const data = useLive();
+  const [open, setOpen] = useState(null);
+  const [all, setAll] = useState(false);
   if (!data) return null;
 
   const days = daysSince(data.watchingSince);
-  const moved = data.moved || [];
+  const moved = (data.moved || []).slice().sort((a, b) => (RANK[b.severity] || 0) - (RANK[a.severity] || 0) || (b.weeklyDownloads || 0) - (a.weeklyDownloads || 0));
   const looks = data.lookalikes || { found: 0, recent: [] };
 
   return (
     <section className="wrap" id="live">
-      <p className="eyebrow">live</p>
-      <h2>npm, watched as it publishes</h2>
-      <p className="lede">
-        The watcher follows npm's change feed and runs each new release of a package the index holds in a
-        Nebius Sandbox, against the release before it — minutes after it is published.{' '}
-        <b>{num(data.releasesWatched)}</b> releases watched{days != null ? ` over ${days === 0 ? 'today' : `${num(days)} day${days === 1 ? '' : 's'}`}` : ''},
-        {data.medianMinutesToVerdict != null
-          ? <> {data.watchedLive != null ? <><b>{num(data.watchedLive)}</b> of them seen as they were published, with</> : null} a verdict a median of <b>{data.medianMinutesToVerdict} minutes</b> after publish.</>
-          : ' each with a verdict soon after it was published.'}
-        {data.publishedAt ? <> <span className="yours__quiet">As of {new Date(data.publishedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}.</span></> : null}
-        {data.caughtUp ? <> The other {num(data.caughtUp)} were published while the watcher was down, and watched when it came back — nothing in the gap was skipped.</> : null}
-      </p>
-
-      <div className="yours__panel">
-        {moved.length === 0 ? (
-          <>
-            <h3 className="yours__h3">Nothing has behaved differently — and that is the usual answer</h3>
-            <p className="yours__quiet">
-              Every one of the {num(data.releasesWatched)} releases did what the version before it did, on every
-              channel. That is what a healthy week on npm looks like, and a watch that only reports when something
-              is wrong cannot tell you it looked. When a release does move, it appears here with the evidence — the
-              new connection, the new file, the install script — the same way the fixed survey below shows them.
-            </p>
-          </>
-        ) : (
-          <>
-            <h3 className="yours__h3">The {num(moved.length)} that behaved differently</h3>
-            {moved.map((r) => (
-              <div key={`${r.pkg}@${r.from}→${r.to}`} className="channel">
-                <span className="channel__name">{r.severity}</span>
-                <span>
-                  <b>{r.pkg}</b> {r.from} → {r.to}
-                  {r.weeklyDownloads ? <span className="yours__quiet"> · {num(r.weeklyDownloads)} downloads a week</span> : null}
-                  {r.minutesToVerdict != null
-                    ? <span className="yours__quiet"> · {r.live === false ? `watched on catching up, ${Math.round(r.minutesToVerdict / 1440)} days after publish` : `caught ${r.minutesToVerdict} min after publish`}</span>
-                    : null}
-                  <br />
-                  {Object.entries(r.gained || {}).map(([c, g]) => (
-                    <span key={c} className="channel__gained">
-                      {c.startsWith('install.') ? 'at install, ' : ''}{c.replace(/^install\./, '')}: {g.added?.length ? `now ${g.added.slice(0, 12).map(readable).join(', ')}` : ''}
-                      {g.removed?.length ? `${g.added?.length ? ' · ' : ''}no longer ${g.removed.slice(0, 6).map(readable).join(', ')}` : ''}
-                      <br />
-                    </span>
-                  ))}
-                  {r.signals?.length ? <span className="yours__quiet">publish signals: {r.signals.join(', ')}</span> : null}
-                  {r.explained ? <><br /><span className="yours__quiet">what that is: {r.explained}</span></> : null}
-                </span>
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-
-      <div className="yours__panel">
-        <h3 className="yours__h3">
-          {looks.found === 0 ? 'No new package is imitating a popular name right now' : `${num(looks.found)} new package${looks.found === 1 ? '' : 's'} imitating a popular name`}
-        </h3>
-        {looks.recent && looks.recent.length > 0 ? (
-          looks.recent.map((l) => (
-            <div key={l.name} className="channel">
-              <span className="channel__name">{l.kind}</span>
-              <span>
-                <b>{l.name}</b> looks like <b>{l.imitates}</b>
-                {l.signals?.length ? <span className="yours__quiet"> · {l.signals.join('; ')}</span> : null}
-              </span>
-            </div>
-          ))
-        ) : (
-          <p className="yours__quiet">
-            Brand-new packages whose names imitate popular ones are found on the feed and described from their
-            published metadata — never run. Executing a suspected package with the network open is the one thing
-            this will not do; drawing it out safely is what the interrogation does, contained, instead.
+      <header className="head head--split">
+        <div>
+          <h2>npm, watched as it publishes</h2>
+          <p className="lede">
+            For every new release of a package in the index, two Nebius Sandboxes fork from one
+            checkpoint: one installs the new version, one the version before it. What differs is the
+            verdict, usually minutes after publish.
+          </p>
+        </div>
+        {data.publishedAt && (
+          <p className="asof">
+            <span className="pulse__dot" aria-hidden="true" />
+            Updated {new Date(data.publishedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
           </p>
         )}
+      </header>
+
+      <dl className="stats">
+        <div>
+          <dt><GitCompareArrows size={15} aria-hidden="true" />Releases compared</dt>
+          <dd>{num(data.releasesWatched)}</dd>
+          {days != null && <span>over {num(days)} day{days === 1 ? '' : 's'}</span>}
+        </div>
+        <div>
+          <dt><Timer size={15} aria-hidden="true" />Median time to verdict</dt>
+          <dd>{data.medianMinutesToVerdict != null ? `${data.medianMinutesToVerdict} min` : '—'}</dd>
+          {data.watchedLive != null && <span>across {num(data.watchedLive)} seen as they published</span>}
+        </div>
+        <div>
+          <dt><ShieldAlert size={15} aria-hidden="true" />Behaved differently</dt>
+          <dd>{num(moved.length)}</dd>
+          <span>{num(moved.filter((m) => m.severity === 'alarming').length)} alarming</span>
+        </div>
+        <div>
+          <dt><Fingerprint size={15} aria-hidden="true" />Imitating a popular name</dt>
+          <dd>{num(looks.found)}</dd>
+          <span>new packages, never run</span>
+        </div>
+      </dl>
+
+      <div className="list" role="list">
+        <div className="list__head" aria-hidden="true">
+          <span>Release</span>
+          <span>What changed</span>
+          <span>Downloads / week</span>
+          <span>Verdict</span>
+        </div>
+        {moved.length === 0 && (
+          <p className="list__empty">
+            Every release did what the version before it did, on every channel. That is what a
+            healthy week on npm looks like.
+          </p>
+        )}
+        {(all ? moved : moved.slice(0, 8)).map((r) => {
+          const id = `${r.pkg}@${r.from}→${r.to}`;
+          return <ReleaseRow key={id} r={r} open={open === id} onToggle={() => setOpen(open === id ? null : id)} />;
+        })}
       </div>
+      {moved.length > 8 && (
+        <button type="button" className="button button--line list__more" aria-expanded={all} onClick={() => setAll((x) => !x)}>
+          {all ? 'Show fewer' : `Show all ${num(moved.length)}`}
+        </button>
+      )}
+      <p className="footnote">
+        "Alarming" means read it before you merge, never "malicious". A changed release is a question
+        for a person, and the evidence is here so they can answer it.
+      </p>
+
+      {looks.recent?.length > 0 && (
+        <div className="lookalikes">
+          <h3><Radio size={16} aria-hidden="true" />New packages imitating popular names</h3>
+          <p className="footnote">Described from their published metadata only. A suspected package is never run with the network open.</p>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr><th scope="col">New package</th><th scope="col">Looks like</th><th scope="col">How</th><th scope="col">Signals</th></tr>
+              </thead>
+              <tbody>
+                {looks.recent.slice(0, 8).map((l) => (
+                  <tr key={l.name}>
+                    <td className="mono">{l.name}</td>
+                    <td className="mono">{l.imitates}</td>
+                    <td>{l.kind}</td>
+                    <td className="wrapcell">{(l.signals || []).join('; ') || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

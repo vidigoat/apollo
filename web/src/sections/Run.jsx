@@ -42,8 +42,15 @@ export default function Run({ strategies = [], tree = null }) {
 
   return (
     <section className="wrap" id="run">
-      <p className="eyebrow">the run</p>
       <h2>Two twins per package, forked from one checkpoint at the same instant</h2>
+      {/*
+        The one section built on the bundled corpus, so it says so where it is used: the packages
+        here are planted, labelled as planted, and the run reproduces with one command.
+      */}
+      <p className="planted">
+        A demonstration on the bundled corpus: its suspicious packages are planted and labelled as
+        planted, and the whole run reproduces with <code>npm run demo</code>.
+      </p>
       {/*
         The count comes from the tree, and if the tree has not answered yet the sentence simply does
         not claim one. It used to fall back to the literal "1,214" — correct on the day it was

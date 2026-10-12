@@ -60,37 +60,25 @@ const it = async (name, fn) => {
 
   /* ── the first screen is true ───────────────────────────────────────────── */
 
-  await it('every claim in the hero is a claim about the real corpus', () => {
+  await it('every claim in the hero comes from the live record, not from the page', () => {
     /*
-     * The hero says a patch release started reading three credentials and calling a host. If that
-     * were a nice sentence somebody typed, this whole project would be the thing it warns about.
+     * The hero leads with the most severe release the live watch has caught. If its package name or
+     * its versions were typed into the component, the first screen would be a sentence somebody
+     * wrote rather than a fact the watcher recorded — the thing this whole project warns about.
      */
-    const corpus = fs.readFileSync(path.join(__dirname, 'corpus.js'), 'utf8');
-
-    const claims = [
-      'express-fileupload',
-      'AWS_SECRET_ACCESS_KEY',
-      'GITHUB_TOKEN',
-      'NPM_TOKEN',
-      'cdn-assets-delivery.workers.dev',
-    ];
-    for (const claim of claims) {
-      assert.ok(hero.includes(claim), `the hero no longer mentions ${claim}`);
-      assert.ok(corpus.includes(claim), `the hero claims ${claim} and the corpus has no such thing`);
-    }
-
-    // And the versions it prints are the versions that package actually moves between.
-    const pkg = corpus.slice(corpus.indexOf('express-fileupload'));
-    for (const v of ['2.1.0', '2.1.1']) {
-      assert.ok(hero.includes(v), `the hero no longer shows ${v}`);
-      assert.ok(pkg.slice(0, 600).includes(v), `the hero shows ${v}, which is not what the corpus moves between`);
-    }
+    assert.match(hero, /useLive\(\)/, 'the hero no longer reads the live record');
+    assert.doesNotMatch(hero, /source-map-js|express-fileupload/, 'the hero types a package name');
+    assert.doesNotMatch(hero, /['"`]\d+\.\d+\.\d+['"`]/, 'the hero types a version');
+    // And it draws nothing when the record cannot be fetched, rather than a placeholder.
+    assert.match(hero, /\{live && \(/);
+    assert.match(hero, /\{top && \(/);
   });
 
-  await it('the hero says the corpus is planted, on the first screen', () => {
-    // A detection you cannot reproduce is a magic trick. This says so before anybody scrolls.
-    assert.match(hero, /planted/i, 'the first screen no longer admits the corpus is planted');
-    assert.match(hero, /npm run demo/, 'it does not say how to reproduce it');
+  await it('the section built on the planted corpus says so, where it is used', () => {
+    // A detection you cannot reproduce is a magic trick.
+    const run = read('sections', 'Run.jsx');
+    assert.match(run, /planted/i, 'the run no longer admits its corpus is planted');
+    assert.match(run, /npm run demo/, 'it does not say how to reproduce it');
   });
 
   /* ── no number is invented ──────────────────────────────────────────────── */
@@ -203,7 +191,7 @@ const it = async (name, fn) => {
     // `{scan && <Fleet …>}` rather than a Fleet that quietly draws a default fleet.
     const app = read('App.jsx');
     assert.match(app, /\{scan && <Fleet/, 'the fleet renders even when the server did not answer');
-    assert.match(app, /\{meta && \(/, 'the figures render even when the server did not answer');
+    assert.match(read('sections', 'Stack.jsx'), /\{c && \(/, 'the index figures render even when the server did not answer');
     assert.match(read('sections', 'Fleet.jsx'), /if \(!data\?\.scanned\) return null;/);
   });
 
@@ -349,14 +337,14 @@ const it = async (name, fn) => {
     assert.match(css, /--gut: clamp\(20px/, 'the side gutter can collapse to nothing on a phone');
   });
 
-  await it('every section the spine points at exists', () => {
-    const app = read('App.jsx');
-    const ids = [...app.matchAll(/\['([a-z]+)', '[^']+'\]/g)].map((m) => m[1]);
-    assert.ok(ids.length >= 5, `found ${ids.length} sections in the spine`);
+  await it('every section the menu points at exists', () => {
+    const nav = read('sections', 'Nav.jsx');
+    const ids = [...nav.matchAll(/\['([a-z]+)', '[^']+'\]/g)].map((m) => m[1]);
+    assert.ok(ids.length >= 5, `found ${ids.length} sections in the menu`);
 
     const all = files.map(([, s]) => s).join('\n');
     for (const id of ids) {
-      assert.ok(all.includes(`id="${id}"`), `the spine points at #${id}, which nothing renders`);
+      assert.ok(all.includes(`id="${id}"`), `the menu points at #${id}, which nothing renders`);
     }
   });
 
