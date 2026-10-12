@@ -81,7 +81,7 @@ class PublishedIndex {
   versions(name) {
     const all = this.doc.packages[name] || {};
     return Object.entries(all)
-      .map(([version, e]) => ({ version, ...this.lookup(name, version), version }))
+      .map(([version]) => ({ ...this.lookup(name, version), version }))
       .sort((a, b) => String(b.observedAt).localeCompare(String(a.observedAt)));
   }
 
