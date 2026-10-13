@@ -31,9 +31,10 @@ for (const file of files) {
   const rel = path.relative(ROOT, file);
   let out = '';
   try {
-    out = execFileSync(process.execPath, [file], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' });
+    // Three minutes a suite: one waiting on something a fresh machine lacks fails by name, not silently.
+    out = execFileSync(process.execPath, [file], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe', timeout: 180000, killSignal: 'SIGKILL' });
   } catch (e) {
-    out = `${e.stdout || ''}${e.stderr || ''}`;
+    out = `${e.stdout || ''}${e.stderr || ''}${e.signal === 'SIGKILL' ? `\n  FAIL ${rel} timed out after three minutes\n` : ''}`;
     failed.push(rel);
   }
   process.stdout.write(out);

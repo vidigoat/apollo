@@ -371,7 +371,7 @@ const json = async (p) => (await get(p)).json();
      * a demo URL showing something the repository does not do is worse than no demo URL.
      *
      * `index/data` is deliberately NOT here. It is gitignored — a published index is its own
-     * artefact, see PLAN.md — so the hosted fleet page answers from the committed scan's own
+     * artefact, see docs/THESIS.md — so the hosted fleet page answers from the committed scan's own
      * recorded index size and says so.
      */
     const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, 'vercel.json'), 'utf8'));

@@ -10,7 +10,13 @@
 
 <br>
 
-[**Live demo**](https://apollo-watch.vercel.app) · [The deep dive](docs/DEEP-DIVE.md) · [For reviewers](docs/JUDGING.md) · MIT
+[**Live demo**](https://apollo-watch.vercel.app) · [A real pull request](https://github.com/vidigoat/apollo-demo/pull/1) · [The deep dive](docs/DEEP-DIVE.md) · [For reviewers](docs/JUDGING.md)
+
+[![tests](https://github.com/vidigoat/apollo/actions/workflows/test.yml/badge.svg)](https://github.com/vidigoat/apollo/actions/workflows/test.yml)
+[![licence: MIT](https://img.shields.io/badge/licence-MIT-0a0a0a)](LICENSE)
+[![zero dependencies](https://img.shields.io/badge/dependencies-zero-0a0a0a)](package.json)
+[![Nebius Sandboxes](https://img.shields.io/badge/runs_on-Nebius_Sandboxes-0a0a0a)](adapters/contree.js)
+[![NVIDIA Nemotron](https://img.shields.io/badge/judged_by-NVIDIA_Nemotron-0a0a0a)](judge/nemotron.js)
 
 <br>
 
@@ -68,6 +74,42 @@ npm run install:proof   # what install scripts do in a box with nothing to reach
 
 No `npm install`. **Zero dependencies, no build step** — a supply-chain tool that arrives with a
 dependency tree is telling on itself. Node 20+.
+
+## How it works
+
+```mermaid
+flowchart LR
+  F["npm change feed<br/>or a lockfile you give it"] --> S["Two Nebius Sandboxes<br/>forked from one checkpoint"]
+  S -- "old release" --> T1["Transcript<br/>net · dns · files · env<br/>processes · code built at runtime"]
+  S -- "new release" --> T2["Transcript"]
+  T1 --> D["Behavioural diff<br/>rules in code, no model"]
+  T2 --> D
+  D -- "unchanged" --> Q["Recorded: behaves the same"]
+  D -- "changed" --> N["Nemotron Nano: triage"]
+  N --> U["Nemotron Ultra: what is it doing?"]
+  U --> V["Nemotron Super: must agree<br/>before anything is accused"]
+  V --> O["The record<br/>live page · CLI · GitHub check"]
+  Q --> O
+```
+
+Severity always comes from the rules. The models explain a change; they never decide one.
+
+## Where things are
+
+| Path | What is in it |
+|---|---|
+| [`firehose/`](firehose) | The live watch: npm's change feed, selection, the queue, and the published record |
+| [`adapters/`](adapters) | Where twins run — [`contree.js`](adapters/contree.js) is Nebius Sandboxes; `local.js` and `simulated.js` for development |
+| [`observe/`](observe), [`transcript/`](transcript) | The in-process probe and what a run's transcript records |
+| [`differ/`](differ) | The behavioural diff and its severity rules |
+| [`judge/`](judge) | Nemotron Nano, Ultra and Super on Nebius Token Factory, with a hard spend budget |
+| [`interrogate/`](interrogate), [`proof/`](proof) | Provoking a waiting stealer, contained with no network, and the labelled proof corpus |
+| [`index/`](index), [`lock.js`](lock.js), [`cli.js`](cli.js) | The published index, the behavioural lockfile, and the `apollo` CLI |
+| [`github/`](github) | The GitHub App: webhook, check runs, and what a bump changes |
+| [`evidence/`](evidence) | Tavily: what the open web says about a change |
+| [`web/`](web), [`server.js`](server.js), [`api/`](api) | The site and its API |
+| [`docs/`](docs) | [Judging map](docs/JUDGING.md), [thesis](docs/THESIS.md), [architecture](docs/ARCHITECTURE.md), [decision records](docs/decisions), [feedback](docs/FEEDBACK-NOTES.md) |
+| `*.test.js` | Beside the code they check; `npm test` runs every one |
 
 ### On the site, with your own packages
 

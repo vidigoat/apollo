@@ -92,7 +92,7 @@ pass. `scripts/publish-index.js` writes the file; `index/published.js` reads it.
 
 | what to look at | where |
 |---|---|
-| The thesis, and the primitive it reduces to | `PLAN.md` §2 |
+| The thesis, and the primitive it reduces to | [`docs/THESIS.md`](THESIS.md) |
 | What this cannot do, stated rather than discovered | `README.md` → "What this cannot do" |
 | The decisions that were close, with the losing option written down | `docs/decisions/` |
 | What went wrong and what it cost | `docs/SUBMISSION.md` → "Challenges we ran into" |

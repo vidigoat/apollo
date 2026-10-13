@@ -11,7 +11,7 @@ node_modules/
 # failed only on a fresh clone, which is the only place it mattered.
 
 # The built index. Large, machine-generated, and rebuildable with `npm run index:build`.
-# A published index is a deliberate artefact — see PLAN.md — not something that rides along
+# A published index is a deliberate artefact — see docs/THESIS.md — not something that rides along
 # in every commit.
 index/data/
 
@@ -29,3 +29,7 @@ proof/.work/
 
 # npm-report drafts (name real packages before review) — working files, not history.
 proof/reports/
+
+# Internal working notes: kept on the laptop, never published.
+PLAN.md
+docs/NEEDS.md

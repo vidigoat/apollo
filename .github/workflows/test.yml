@@ -1,0 +1,27 @@
+# Every check in the repository, on every push and pull request. No secrets: the suites that call
+# Nebius or Tavily use labelled stand-ins without keys and say so. The proof image is built first,
+# so the contained-malware suites run for real here, with no network inside the container.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Build the contained proof image
+        run: docker build -t apollo-proof:node22 proof/
+      - run: npm test
+        env:
+          CI: '1'
