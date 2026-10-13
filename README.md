@@ -14,7 +14,7 @@
 
 <br>
 
-<img src="docs/images/catch-panel.png" alt="A patch release that started reading three credentials and calling a host nothing on the open web mentions" width="860">
+<img src="docs/images/catch-panel.png" alt="Apollo's site: the live watch caught source-map-js 1.2.2, 137 million downloads a week, building and running code at import that 1.2.1 never did" width="860">
 
 <br>
 
@@ -178,7 +178,7 @@ A package's behaviour does not depend on who imported it, so it is observed once
 that. Pointed at a whole machine — 76 projects and 20,897 dependency-versions — 2,120 observations in
 the index answered 12,986 of them, **62%**, from an index you could build in an afternoon.
 
-<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched under a ceiling hairline — 2,969 of 3,548 dependency-versions answered" width="100%">
+<img src="docs/images/fleet.jpg" alt="Six held-out public projects drawn as a band: observed surface filled, never-observed surface hatched — the share of each tree the published index already answers" width="100%">
 
 The scan bundled with this repository is of six **held-out** public projects — undici, bootstrap,
 ionic-framework, highlight.js, shelljs and cheerio — none of which was used to choose what went into
