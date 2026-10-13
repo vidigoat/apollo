@@ -100,8 +100,17 @@ it('a nonsense ledger is refused, not believed', () => {
 it('a spend that cannot be recorded is an error, not a shrug', () => {
   // The one state it must never leave behind: money gone, ledger silent, next run believing it is
   // still available.
-  const b = new Budget({ ceiling: 1, file: '/proc/nowhere/spend.json' });
-  assert.throws(() => b.record(0.05), /could not record it/);
+  // A ledger that reads as fresh (no file yet) but cannot be written: its directory is read-only.
+  // Root ignores directory permissions, so as root there is nothing to test here.
+  if (process.getuid && process.getuid() === 0) return;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'readonly-'));
+  fs.chmodSync(dir, 0o555);
+  try {
+    const b = new Budget({ ceiling: 1, file: path.join(dir, 'spend.json') });
+    assert.throws(() => b.record(0.05), /could not record it/);
+  } finally {
+    fs.chmodSync(dir, 0o755);
+  }
 });
 
 it('a ledger is never left half-written', () => {

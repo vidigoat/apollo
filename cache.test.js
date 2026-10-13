@@ -17,6 +17,14 @@ const os = require('node:os');
 const path = require('node:path');
 const { BehaviourCache, keyFor, SCHEMA } = require('./cache');
 
+// A directory that can never be created, on any system: it runs through a regular file. It used to
+// sit under /proc, which fails at once on macOS and sends a recursive mkdir into a loop on Linux.
+const unwritable = () => {
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'unwritable-')), 'a-file');
+  fs.writeFileSync(file, '');
+  return path.join(file, 'not', 'writable');
+};
+
 let passed = 0;
 const it = (name, fn) => {
   try {
@@ -108,7 +116,7 @@ it('an entry from an older schema is not reused', () => {
 });
 
 it('a cache that cannot be written is a slower tool, not a broken one', () => {
-  const c = new BehaviourCache({ dir: '/proc/definitely/not/writable' });
+  const c = new BehaviourCache({ dir: unwritable() });
   assert.doesNotThrow(() => c.put(JOB, DIFF));
   assert.equal(c.get(JOB), null);
   assert.equal(c.writes, 0);

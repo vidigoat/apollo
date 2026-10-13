@@ -137,6 +137,10 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
       // Absolute, always: docker reads a relative path as the NAME of a volume and refuses it.
       '-v', `${path.resolve(dir)}:/run/sample:ro`,
       '-v', `${work}:/run/work`,
+      // On a native-Linux host, run as the host's own user, so what the container writes into the
+      // work dir is the host's to delete afterwards. (Docker Desktop and colima map ownership
+      // themselves; there the image's unprivileged `node` user is right.) Still unprivileged here.
+      ...(process.platform === 'linux' && process.getuid ? ['--user', `${process.getuid()}:${process.getgid()}`] : []),
       ...envArgs,
       IMAGE,
       '/run/work/runner.js',
@@ -144,7 +148,8 @@ function runContained({ dir, provocation = { env: {}, files: {} }, canary = '', 
     execFile('docker', args, { timeout: (install ? timeoutMs * 3 : timeoutMs) + 10000, maxBuffer: 8 * 1024 * 1024 }, (err) => {
       let observed = null;
       try { observed = JSON.parse(fs.readFileSync(path.join(work, 'report.json'), 'utf8')); } catch { observed = null; }
-      fs.rmSync(work, { recursive: true, force: true });
+      // A work dir that cannot be removed is litter under proof/.work (ignored), never a failed run.
+      try { fs.rmSync(work, { recursive: true, force: true }); } catch { /* left for the next clean */ }
       resolve({ observed, timedOut: Boolean(err && err.killed), code: err ? (err.code ?? 1) : 0 });
     });
   });
