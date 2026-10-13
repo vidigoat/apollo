@@ -1,5 +1,34 @@
 # The recording script
 
+## FINAL — record from this (13 October)
+
+Everything below this section is how the film got here; this is the one to shoot. About 2:45.
+It spends no Nebius credits: every shot reads the live record or the committed runs. The audio has
+to say Nebius and NVIDIA out loud — the rules require it — and shots 3, 5 and 8 do.
+
+**Setup:** Chrome at 1280×800 on <https://apollo-watch.vercel.app>, a second tab on
+<https://github.com/vidigoat/apollo-demo/pull/1>. Screen Studio, your voice on.
+
+| # | time | on screen | you say (plainly — your own words are fine) |
+|---|---|---|---|
+| 1 | 0:00 | black, or the npm logo | "Most attacks on open source arrive as an ordinary update to a package you already trust. A version number can't tell you what changed." |
+| 2 | 0:10 | the site's first screen: the headline, then the live strip | "This is Apollo. Your lockfile pins versions; Apollo pins behaviour." |
+| 3 | 0:20 | scroll to the dark card: **source-map-js 1.2.1 → 1.2.2, Alarming** | "Every new npm release runs in a Nebius sandbox next to the version before it. This patch release — a hundred and thirty-seven million downloads a week — started building and running code at import that the old one never did." |
+| 4 | 0:45 | **Live watch** section: the stats, then open one row | "It's been watching npm live for over two weeks. Most releases behave exactly as before. These didn't — and here's the evidence, line by line." |
+| 5 | 1:10 | open a row in **This week's releases** that shows *Nemotron read this diff* | "When something changes, NVIDIA Nemotron explains it: Nano triages, Ultra explains, Super has to agree. But the model never decides the severity — the rules do." |
+| 6 | 1:35 | switch to the GitHub tab: the pull request, then **Checks → Details**, the red annotation | "And it works where developers already are. This is a real pull request bumping that package. One step in GitHub Actions — and the check fails, with the reason. Nothing was installed to know that." |
+| 7 | 2:00 | back to the site: **Check yours** — click `cheeriojs/cheerio` | "You can check any public project's lockfile right here, from what's already been watched." |
+| 8 | 2:15 | **How it works** — the three phases — then **Measured, not claimed** | "Run on Nebius Sandboxes, compare with rules, judge with Nemotron on Nebius Token Factory. And every number here comes from a measurement in the repository." |
+| 9 | 2:35 | black: **Apollo** | "Your lockfile pins versions. Apollo pins behaviour." |
+
+Three rules: **say "Nebius" and "NVIDIA Nemotron" out loud** (shots 3, 5, 8). **Don't speed past
+shot 6** — a real failing check on a real pull request is the moment that makes it a tool. **End on
+shot 9.**
+
+---
+
+## Earlier scripts
+
 Shot list for the ≤3 minute submission video. Numbered so a second take can pick up anywhere.
 
 **Setup:** `npm start` → `localhost:8791`. Have a terminal ready in a second window for shots 9–11,
