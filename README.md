@@ -78,18 +78,18 @@ dependency tree is telling on itself. Node 20+.
 ## How it works
 
 ```mermaid
-flowchart LR
-  F["npm change feed<br/>or a lockfile you give it"] --> S["Two Nebius Sandboxes<br/>forked from one checkpoint"]
-  S -- "old release" --> T1["Transcript<br/>net · dns · files · env<br/>processes · code built at runtime"]
-  S -- "new release" --> T2["Transcript"]
-  T1 --> D["Behavioural diff<br/>rules in code, no model"]
-  T2 --> D
-  D -- "unchanged" --> Q["Recorded: behaves the same"]
-  D -- "changed" --> N["Nemotron Nano: triage"]
-  N --> U["Nemotron Ultra: what is it doing?"]
-  U --> V["Nemotron Super: must agree<br/>before anything is accused"]
-  V --> O["The record<br/>live page · CLI · GitHub check"]
+flowchart TD
+  F["A new npm release<br/>or a lockfile you give it"] --> S["Two Nebius Sandboxes<br/>forked from one checkpoint"]
+  S --> T["Old and new release, run side by side<br/>network · files · env · processes · code built at runtime"]
+  T --> D{"Behavioural diff<br/>rules in code, no model"}
+  D -->|"same behaviour"| Q["Recorded: unchanged"]
+  D -->|"changed"| N["NVIDIA Nemotron on Nebius Token Factory<br/>Nano triages · Ultra explains · Super must agree"]
+  N --> O["The record<br/>live page · CLI · GitHub check"]
   Q --> O
+  classDef node fill:#ffffff,stroke:#0a0a0a,color:#0a0a0a
+  classDef gate fill:#0a0a0a,stroke:#0a0a0a,color:#ffffff
+  class F,S,T,Q,N,O node
+  class D gate
 ```
 
 Severity always comes from the rules. The models explain a change; they never decide one.
